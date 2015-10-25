@@ -2,3 +2,5 @@ __*
 *.egg-info
 !__init__.py
 .DS_Store
+dist/
+dist/
