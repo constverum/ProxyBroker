@@ -5,7 +5,7 @@ PyProxyChecker
 PyProxyChecker is a asynchronous proxy checker.
 
 * Asynchronous check
-* Check proxy lists for working with protocols: HTTP, CONNECT, SOCKS4, SOCKS5
+* Check proxy lists for working with protocols: HTTP, CONNECT(HTTPS), SOCKS4, SOCKS5
 * Check the level of anonymity proxy
 * Recognize different formats of proxy list (specifying the type of proxy and without);
 * Remove duplicate
