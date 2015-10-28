@@ -5,6 +5,7 @@ import logging
 from collections import defaultdict, Counter, Iterable
 
 from .errors import *
+from .utils import mmdbReader
 
 log = logging.getLogger(__package__)
 
@@ -15,7 +16,6 @@ class Proxy:
     # _expectedType = dict()
     # _runtimes = defaultdict(list)
     # _anonymity = defaultdict(dict)
-
     myRealIP = None
     IPPattern = re.compile(
         b'(?:(?:25[0-5]|2[0-4]\d|[01]?\d\d?)\.){3}'
@@ -39,17 +39,7 @@ class Proxy:
 
         self.host = host
         self.port = int(port)
-
-        if isinstance(types, str):
-            types = types.split(',')
-        elif isinstance(types, Iterable):
-            pass
-        else:
-            raise ValueError('Proxy <types> var can be a string '
-                             '(ex: "HTTP" or "HTTP,HTTPS") or any '
-                             'iterable type (ex: ["HTTP", "HTTPS"])')
-        self._types = [t for t in types if t in ['HTTP', 'HTTPS', 'CONNECT',
-                                                 'SOCKS4', 'SOCKS5']]
+        self._types = self.check_inp_types(types)
 
         self.ngtr = ngtr
         self.judge = judge
@@ -57,17 +47,20 @@ class Proxy:
         self.isWorking = None
         self.reader = None
         self.writer = None
+        self.geo = {}
+        self.avgRespTime = None
+        # self.geo = {'country': {'code': None, 'name': None}}
+        # 'city': {'code': None, 'name': None},
 
-        # self.country = None
-        # self.geo = {'city': {'code': None, 'name': None},
-        #             'country': {'code': None, 'name': None}}
 
     def check_on_errors(self, msg):
         err = None
-        if 'timeout' in msg:
-            err = 'timeout'
+        if 'Connection: timeout' in msg:
+            err = 'connection_timeout'
         elif 'Connection: failed' in msg:
             err = 'connection_failed'
+        elif 'Received: timeout' in msg:
+            err = 'received_timeout'
         elif 'Received: failed' in msg:
             err = 'connection_is_reset'
         elif 'Received: 0 bytes' in msg:
@@ -76,13 +69,57 @@ class Proxy:
             err = 'ssl_unknown_protocol'
         elif 'SSL: CERTIFICATE_VERIFY_FAILED' in msg:
             err = 'ssl_verified_failed'
-
         if err:
             self.errors[err] += 1
 
     def get_descendant(self, ngtr):
         descendant = Proxy(ancestor=self, ngtr=ngtr.name)
         return descendant
+
+    # @staticmethod
+    def check_inp_types(self, types):
+        if isinstance(types, str):
+            types = types.split(',')
+        elif isinstance(types, (list, tuple)):
+            pass
+        else:
+            raise ProxyTypeError
+        return [t for t in types if t in ['HTTP', 'HTTPS', 'CONNECT',
+                                          'SOCKS4', 'SOCKS5']]
+
+    # @staticmethod
+    # def check_inp_anonymity(lvls):
+    #     if isinstance(lvls, str):
+    #         lvls = lvls.split(',')
+    #     elif isinstance(lvls, Iterable):
+    #         pass
+    #     else:
+    #         raise ProxyAnonLvlError
+    #     return [l for l in lvls if l in ['Transparent', 'Anonymous', 'High']]
+
+    # @staticmethod
+    # def check_inp_country(country):
+    #     if isinstance(country, str):
+    #         country = country.split(',')
+    #     elif isinstance(country, Iterable):
+    #         pass
+    #     else:
+    #         raise ProxyISOCountryError
+    #     return [c for c in country if len(c) == 2]
+
+    def set_geo(self):
+        try:
+            ipInfo = mmdbReader.get(self.host)
+        except InvalidDatabaseError:
+            pass
+        else:
+            self.geo = ipInfo['country']
+
+    def set_avg_resp_time(self):
+        if not self.types:
+            self.avgRespTime = 0
+        else:
+            self.avgRespTime = '%.2f' % (sum(self.runtimes)/len(self.runtimes))
 
     def log(self, msg=None, stime=None):
         if msg:
@@ -232,31 +269,17 @@ class Proxy:
         # _, body = resp.decode().split('\r\n\r\n')
         # data = json.loads(body)
 
-    def get_avg_runtime(self):
-        if not self.types:
-            result = 0
-        else:
-            result = '%.2f' % (sum(self.runtimes)/len(self.runtimes))
-        # runtimes = defaultdict(list)
-        # for ngtr, runtime in self.runtimes:
-        #     if ngtr in self.types:
-        #         runtimes[ngtr].append(runtime)
-        # for ngtr, runtime in runtimes.items():
-        #     results.append('%s: AVG: %.2f, MAX: %.2f' % (ngtr, sum(runtime)/len(runtime), max(runtime)))
-        # print('RUNTIME: %s: %s' % (self.host, runtimes))
-        return result
-
     def __repr__(self):
         if self.types:
             types = ', '.join(['{tp}: {anonLvl}'.format(tp=k, anonLvl=v)
                                for k, v in self.types.items()])
         else:
             types = '-'
-        return '<Proxy ({avg}) [{types}] {host}:{port}>'.format(
-               types=types, host=self.host, port=self.port,
-               avg=self.get_avg_runtime())
+
+        code = '%s ' % self.geo.get('iso_code', '')
+        # name = self.geo['names']['en'] if self.geo else ''
+        return '<Proxy {code}{avg}s [{types}] {host}:{port}>'.format(
+               code=code, types=types, host=self.host, port=self.port,
+               avg=self.avgRespTime)
         # <Proxy US [HTTP: Anonymous, HTTPS: High] 10.0.0.1:8080>,
         # Runtime: {avg}  avg=self.get_avg_runtime()
-
-This product includes GeoLite2 data created by MaxMind, available from
-<a href="http://www.maxmind.com">http://www.maxmind.com</a>.

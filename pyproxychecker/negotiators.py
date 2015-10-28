@@ -121,11 +121,10 @@ class HttpsNgtr(BaseNegotiator):
 
     @connector
     async def __call__(self, p):
-        await p.send(('CONNECT {host}:443 HTTP/1.1\r\nHost: {host}\r\n'
-                     'Connection: keep-alive\r\n\r\n').format(
-                      host=p.judge.host).encode())
-
         try:
+            await p.send(('CONNECT {host}:443 HTTP/1.1\r\nHost: {host}\r\n'
+                         'Connection: keep-alive\r\n\r\n').format(
+                          host=p.judge.host).encode())
             resp = await p.recv(128)
         except (ProxyTimeoutError, ProxyRecvError):
             return
@@ -147,7 +146,8 @@ class HttpsNgtr(BaseNegotiator):
                         server_hostname=p.host),
                     timeout=self.timeout)
                 msg = 'SSL: enabled'
-            except ConnectionResetError:
+            except (ConnectionResetError, OSError):
+                # OSError: [Errno 9] Bad file descriptor
                 msg = 'SSL: failed'
                 return
             except asyncio.TimeoutError:

@@ -1,9 +1,17 @@
+# import gzip
 import asyncio
+import os.path
+
+import maxminddb
 
 from .errors import *
 
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-MaxConcurrentConnections = asyncio.Semaphore(10000)
+mmdbSrc = os.path.join(BASE_DIR, 'data/GeoLite2-Country.mmdb')
+mmdbReader = maxminddb.open_database(mmdbSrc)
+
+MaxConcurrentConnections = asyncio.Semaphore(50)
 
 
 def connector(ngtr_fn):

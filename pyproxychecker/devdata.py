@@ -3,6 +3,7 @@ import pprint
 import os.path
 from collections import defaultdict, Counter
 
+from .utils import BASE_DIR
 
 def test(s, show=False):
     try:
@@ -16,7 +17,7 @@ def test(s, show=False):
         lastResults = {}
         # print('lastResults::: %r' % lastResults)
 
-    proxies = s.get_good_proxies()
+    proxies = s.get_proxies()
     # proxies = sorted(proxies, key=lambda p: (len(p.host[:p.host.find('.')]), p.host[:3]))
     new = defaultdict(list)
     notFound = defaultdict(list)
@@ -37,18 +38,10 @@ def test(s, show=False):
             if p.host not in all_good_hosts:
                 notFound[pt].append(p.host)
 
-    lmb = lambda p: (len(p.host[:p.host.find('.')]), p.host[:3])
-    s5 = sorted(s.get_good_proxies('SOCKS5'), key=lmb)
-    s4 = sorted(s.get_good_proxies('SOCKS4'), key=lmb)
-    c = sorted(s.get_good_proxies('CONNECT'), key=lmb)
-    hs = sorted(s.get_good_proxies('HTTPS'), key=lmb)
-    h = sorted(s.get_good_proxies('HTTP'), key=lmb)
-    print('The amount of good proxies: {all}\n'
-          'SOCKS5 (count: {ls5}): {s5}\nSOCKS4 (count: {ls4}): {s4}\n'
-          'CONNECT (count: {lc}): {c}\nHTTPS (count: {lhs}): {hs}\n'
-          'HTTP (count: {lh}): {h}\n'.format(
-            all=len(proxies), s5=s5, ls5=len(s5), s4=s4, ls4=len(s4),
-            c=c, lc=len(c), hs=hs, lhs=len(hs), h=h, lh=len(h)))
+    # hHigh = sorted(s.get_proxies(types='HTTP:High'), key=lmb)
+    # print('\nHTTP-High:')
+    # pprint.pprint(hHigh)
+
 
     with open(resultsPath, 'wb') as f:
         data = {p.host: p for p in proxies}
@@ -65,16 +58,15 @@ def test(s, show=False):
         pprint.pprint(badAnonLvl)
 
 def show_stats(s):
-    proxies = s.get_good_proxies()
+    proxies = s.get_proxies()
     errors = Counter()
-    stat = {'Connection failed': [],
+    [errors.update(p.errors) for p in s.proxies['clean']]
+    stat = {'Connection success': [],
             'Connection timeout': [],
-            'Connection success': []}
+            'Connection failed': []}
 
     for p in sorted(proxies, key=lambda p: p.host):
-        errors.update(p.errors)
         msgs = [l[0] for l in p.log()]
-
         if 'Connection: success' in ' '.join(msgs):
             print(p)
             stat['Connection success'].append(p)
@@ -107,18 +99,31 @@ def show_stats(s):
         else:
             stat['Connection timeout'].append(p)
     pprint.pprint(stat)
+
+
+    lmb = lambda p: (len(p.host[:p.host.find('.')]), p.host[:3])
+    s5 = sorted(s.get_proxies(types='SOCKS5'), key=lmb)
+    s4 = sorted(s.get_proxies(types='SOCKS4'), key=lmb)
+    c = sorted(s.get_proxies(types='CONNECT'), key=lmb)
+    hs = sorted(s.get_proxies(types='HTTPS'), key=lmb)
+    h = sorted(s.get_proxies(types='HTTP'), key=lmb)
+    print('The amount of good proxies: {all}\n'
+          'SOCKS5 (count: {ls5}): {s5}\nSOCKS4 (count: {ls4}): {s4}\n'
+          'CONNECT (count: {lc}): {c}\nHTTPS (count: {lhs}): {hs}\n'
+          'HTTP (count: {lh}): {h}\n'.format(
+            all=len(proxies), s5=s5, ls5=len(s5), s4=s4, ls4=len(s4),
+            c=c, lc=len(c), hs=hs, lhs=len(hs), h=h, lh=len(h)))
     print('Errors:', errors)
 
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-resultsPath = BASE_DIR+'/data/results.dat'
+resultsPath = os.path.join(BASE_DIR, 'data/results.dat')
 
-proxyListPath = BASE_DIR+'/data/proxy_list.txt'
+proxyListPath = os.path.join(BASE_DIR, 'data/proxy_list.txt')
 with open(proxyListPath, 'r') as f:
     proxies = [p.lstrip().split(':') for p in f.readlines()
                                      if p and not p.startswith('#')]
 
-judgeListPath = BASE_DIR+'/data/judge_list.txt'
+judgeListPath = os.path.join(BASE_DIR, 'data/judge_list.txt')
 with open(judgeListPath, 'r') as f:
     judges = [p for p in f.readlines() if p and not p.startswith('#')]
 

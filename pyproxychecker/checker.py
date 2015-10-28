@@ -29,11 +29,10 @@ import random
 import urllib.request
 from collections import defaultdict, Counter, Iterable
 
-
 from .errors import *
 from .proxy import Proxy
 from .judge import Judge
-from .utils import connector
+from .utils import connector, mmdbSrc
 from .negotiators import *
 
 log = logging.getLogger(__package__)
@@ -45,7 +44,8 @@ class ProxyChecker:
                  timeout=6,
                  connects=3,
                  sslverify=False,
-                 judges=[]):  # dest=None, **kwargs
+                 judges=[],
+                 getgeo=True):  # dest=None, **kwargs
         if not proxies:
             raise ValueError('You must set proxy list in <proxies> var')
         if not isinstance(judges, Iterable):
@@ -56,12 +56,14 @@ class ProxyChecker:
         #                   SOCKS4=Socks4Ngtr, SOCKS5=Socks5Ngtr)
         self.ngtrs = dict(HTTP=HttpNgtr(), HTTPS=HttpsNgtr(), CONNECT=ConnectNgtr(),
                           SOCKS4=Socks4Ngtr(), SOCKS5=Socks5Ngtr())
+        self.getgeo = getgeo
         self.judges = judges
         Judge.timeout = timeout
         Proxy.timeout = timeout
         BaseNegotiator.timeout = timeout
         BaseNegotiator.attemptsConnect = connects
         BaseNegotiator.sslContext = sslverify or ssl._create_unverified_context()
+        self.countries = []
         # self.timeout = timeout  # in seconds
         # self.sslContext = True if sslverify else ssl._create_unverified_context()
         # self.attemptsConnect = connects
@@ -127,6 +129,27 @@ class ProxyChecker:
     #         return self.loop.run_in_executor(
     #                 None, socket.gethostbyname, name)
 
+    def show_stats(self):
+        if not self.getgeo:
+            return False
+        count = defaultdict(Counter)
+        for p in self.get_proxies():
+            country = '{iso}: {name:<20}'.format(
+                iso=p.geo.get('iso_code', 'Unknown'),
+                name=p.geo.get('names', {}).get('en', 'Unknown'))
+            for tp, lvl in p.types.items():
+                tplvl = '{type}: {lvl}'.format(type=tp, lvl=lvl)
+                count[country][tplvl] += 1
+
+        stat = {country: tplvls for country, tplvls in count.items()}
+        # stat['Number of live proxies'] = len(self.get_proxies())
+        # stat['HTTP'] = len(self.get_proxies('HTTP'))
+        # stat['HTTPS'] = len(self.get_proxies('HTTPS'))
+        # stat['CONNECT'] = len(self.get_proxies('CONNECT'))
+        # stat['SOCKS4'] = len(self.get_proxies('SOCKS4'))
+        # stat['SOCKS5'] = len(self.get_proxies('SOCKS5'))
+        return stat
+
     async def check_judges(self):
         log.debug('Start check judges')
         stime = time.time()
@@ -171,25 +194,66 @@ class ProxyChecker:
         finally:
             p.log(msg, stime)
 
-    def get_good_proxies(self, types=None):
-        if not types:
+    def get_proxies(self, types=[], country=None):
+        # TODO: rewrite this shit
+        def check_types(types):
+            _types = []
+            if isinstance(types, str):             # ex: 'HTTPS:High'
+                _types.append(types.split(':'))
+            elif isinstance(types, (list, tuple)): # ex: ['HTTP:High', 'SOCKS5']
+                _types.extend([t.split(':') for t in types])
+            else:
+                raise ValueError('To get proxies preferred type use format: '
+                                 '"HTTP:High" or if you you need multiple '
+                                 'types: ["HTTP:Anonymous", "HTTPS"]')
+            types = {t[0]: t[1] if len(t) == 2 else '' for t in _types}
+            return types
+
+        def check_country(country):
+            if isinstance(country, str):
+                country = country.split(',')
+            elif isinstance(country, (list, tuple)):
+                pass
+            else:
+                raise ValueError('To get proxies preferred country use format: '
+                                 '"US" or if you you need a few countries: '
+                                 '["US", "GB", "DE"])')
+            return set(c for c in country if len(c) == 2)
+
+        if not (types or country):
             return self.proxies['good']
 
-        selectTypes = []
-        if isinstance(types, str):
-            selectTypes.append(types)
-        elif isinstance(types, (list, tuple)):
-            selectTypes.extend(types)
-        else:
-            raise ValueError('<types> var must be a list of'
-                             'the types or a string of the type')
+        if types:
+            types = check_types(types)
+            # print('types after check: %s' % types)
+        if country:
+            country = check_country(country)
+            # print('country after check: %s' % country)
+
         res = []
-        for sType in selectTypes:
-            # if sType == 'HTTPS':
-            #     sType = 'CONNECT'
-            for proxy in self.proxies['good']:
-                if sType.upper() in proxy.types:
-                    res.append(proxy)
+        aLvlIsOk = lambda types, p: any(tp == _tp and (not lvl or lvl == _lvl)
+                for tp, lvl in types.items() for _tp, _lvl in p.types.items())
+
+        # (types.keys() & p.types.keys()) and\
+        for p in self.proxies['good']:
+            # print('\n\n', p)
+            if (not types or aLvlIsOk(types, p)) and\
+               (not country or p.geo.get('iso_code') in country):
+                # print('not types: %s; aLvlIsOk(types, p): %s' % (not types, aLvlIsOk(types, p)))
+                # print('(not types or aLvlIsOk(types, p)): %s' % (not types or aLvlIsOk(types, p)))
+                # print('not country: %s; p.geo.get(iso_code) in country: %s' % (not country, (p.geo.get('iso_code') in country) if country else '::not country::'))
+                # print('(not country or p.geo.get(iso_code) in country): %s' % (not country or p.geo.get('iso_code') in country))
+
+                res.append(p)
+            # elif types and aLvlIsOk(types, p):
+            #     res.append(p)
+            # elif country and (p.geo.get('iso_code') in country):
+            #     res.append(p)
+            else:
+                pass
+                # print('\n\nIF:::\ncount: %s; types: %s; country: %s\nProxy: %s' % (count, types, country, p))
+                # raise Exception('WTF?')
+
         return res
 
     def get_my_ip(self):
@@ -228,6 +292,14 @@ class ProxyChecker:
             for n in ngtrs])
         p.isWorking = True if any(results) else False
 
+        if p.isWorking:
+            if self.getgeo:
+                p.set_geo()
+            p.set_avg_resp_time()
+            self.proxies['good'].append(p)
+        else:
+            self.proxies['bad'].append(p)
+
             # p.reader, p.writer = await asyncio.wait_for(
             #         asyncio.open_connection(p.host, p.port),
             #         timeout=self.timeout)
@@ -245,8 +317,6 @@ class ProxyChecker:
         #     p.types = None
         #     p.isWorking = False
         # print('%s: isWorking: %r;' % (p.host, p.isWorking))
-
-        self.proxies['good' if p.isWorking else 'bad'].append(p)
         # p.log('Status: %s' % p.isWorking)
 
 
