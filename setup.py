@@ -27,7 +27,7 @@ setup(
     # package_data=find_package_data(
     #         PACKAGE,
     #         only_in_packages=False),
-    # include_package_data=True,
+    include_package_data=True,
     classifiers=[
         "Development Status :: 3 - Alpha",
         "Environment :: Console",
