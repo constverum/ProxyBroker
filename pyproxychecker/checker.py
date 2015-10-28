@@ -21,7 +21,7 @@ import time
 import json
 import socket
 import struct
-import aiohttp
+# import aiohttp
 import asyncio
 import logging
 import pprint

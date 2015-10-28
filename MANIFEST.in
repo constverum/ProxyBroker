@@ -1,4 +1,6 @@
-include LICENSE README.rst
+include LICENSE
+include README.rst
 recursive-include src *.txt
 recursive-include src *.dat
+recursive-include src *.mmdb
 recursive-include pysrc *.py
