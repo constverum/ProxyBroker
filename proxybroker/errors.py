@@ -1,5 +1,3 @@
-from maxminddb.errors import InvalidDatabaseError
-
 class ProxyError(Exception):
     pass
 
@@ -19,12 +17,19 @@ class ProxyTimeoutError(ProxyError):
 class ProxyEmptyRecvError(ProxyError):
     pass
 
+
 class ProxyTypeError(ValueError):
     def __init__(self):
         self.msg = ('Proxy <types> var can be a string '
                     '(ex: "HTTP" or "HTTP,HTTPS") or any '
                     'iterable type (ex: ["HTTP", "HTTPS"])')
         self.args = (self.msg,)
+
+
+class BadStatusError(Exception):
+    pass
+
+
 
 # class ProxyAnonLvlError(ValueError):
 #     def __init__(self):

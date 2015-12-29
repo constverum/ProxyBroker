@@ -1,102 +1,178 @@
 ==============
-PyProxyChecker
+ProxyBroker
 ==============
 
-PyProxyChecker is a asynchronous proxy checker.
+ProxyBroker is a asynchronous finder working proxies with requested parameters (type, anonymity, country). Supports HTTP(S) and SOCKS proxies!
 
-* Asynchronous check
-* Check proxy lists for working with protocols: HTTP, CONNECT(HTTPS), SOCKS4, SOCKS5
-* Check the level of anonymity proxy
-* Recognize different formats of proxy list (specifying the type of proxy and without);
-* Remove duplicate
-* Returns living proxy requested type (or all types)
+Features
+--------
+* Search and collecting proxies from 50 sources (~7k working proxies).
+* Identifies proxy in raw input data
+* Checks proxies on working with protocols: HTTP, HTTPS, SOCKS4, SOCKS5
+* Checks the level of anonymity proxy
+* Removes duplicates
 
-.. Can check HTTP proxies for HTTPS (HTTP + SSL) support;
-.. Can check HTTP proxies for FTP support;
-
-Requirements:
--------------
+Requirements
+------------
 * Python 3.5 or higher
+* `aiohttp <https://pypi.python.org/pypi/aiohttp>`_
+* `aiodns <https://pypi.python.org/pypi/aiodns>`_
+* `maxminddb <https://pypi.python.org/pypi/maxminddb>`_
 
-Usage:
-------
-PyProxyChecker accepts proxies in format::
+Usage
+-----
 
-    ip:port
-    domain:port
+Broker parameters
+""""""""""""""""""
 
-You can also specify the type of proxy::
+:queue:                 Queue to which will be added proxies
+:timeout:               Timeout is set to all the actions carried by the network. In seconds. By default = 8.
+:attempts_conn:         Limiting the maximum number of connection attempts. By default = 3.
+:max_concurrent_conn:   Limiting the maximum number of concurrent connections. It may be specified as a number,
+                        or have used in your program semaphore (*asyncio.Semaphore()*). By default = 200.
+:providers:             The list of sites that distribute proxy lists (proxy providers).
+:judges:                The list of sites that show http-headers (proxy judges).
+                        You can specify a proxy judges or use judges defined by default.
+:verify_ssl:            Check ssl certifications? By default = False.
+:loop:                  Event loop.
 
-    ip:port:SOCKS4
-    ip:port:HTTP,CONNECT
 
-**Note**:
-    * If the type of proxy is specified, it will be tested only the specified protocols.
-    * If the type of proxy is **not** specified, it will be tested for all possible protocols.
+Broker methods
+""""""""""""""
 
-To check the level of anonymity, the script sends requests to external sites (proxy judge), which provide information on the received http-headers.
-You can set a list of such sites judges manually or let the script to find them for you automatically.
+:.find(): Searching and checking proxies with requested parameters:
 
-Example
-~~~~~~~~~
+          *data*
+              As a source of proxies can be specified raw data. In this case,
+              search on the sites with a proxy does not happen. By default is empy.
+          *types*
+              The list of types (protocols) which must be checked. Use a tuple if you want to specify the levels of anonymity: (Type, AnonLvl). By default, checks are enabled for all types at all levels of anonymity.
+              .. Dict where the key - the type (protocol) of proxy, and the value - a string or a list of the levels of anonymity.
+          *countries*
+              List of ISO country codes, which must be located proxies.
+          *limit*
+              Limit the search to a definite number of working proxies.
 
-Basic example:
+:.grab(): Only searching the proxies without checking their working. Parameters:
 
-.. Mixed proxy list at input and automatic search for the proxy judges.
+          *countries*
+              List of ISO country codes, which must be located proxies.
+          *limit*
+              Limit the search to a definite number of working proxies.
 
-::
+:.show_stats(): Shows statistics on errors, and proxies log.
 
-    from pyproxychecker import ProxyChecker
+          *full*
+            If is False (by default) - will show a short version of stats (without proxies log),
+            if is True - show full version of stats (with proxies log).
 
-    proxies = ['192.168.1.1:8000',
-               '192.168.1.2:3128:HTTP',
-               '192.168.1.3:1080:SOCKS4,SOCKS5']
 
-    worker = ProxyChecker(proxies)
-    worker.start()
-    liveProxies = worker.get_good_proxies()
+In result you get a proxy objects with the following properties::
 
-    print(liveProxies)
-    # Output:
-    # <Proxy [HTTP: Anonymous] 192.168.1.2:3128>,
-    # <Proxy [SOCKS5: High] 192.168.1.3:1080>,
+    Proxy.host  - The IP address of the proxy
+         .port  - The port of the proxy
+         .types - The dict of supported protocols and their levels of anonymity
 
-You got a proxy objects with the following properties::
+Examples
+""""""""
 
-    Proxy.ptype      - The list of supported protocols
-         .anonymity  - The dict of supported protocols and their level of anonymity
-         .host       - The IP address of the proxy
-         .port       - The port of the proxy
+**Basic example**::
 
-You can override the default values of checking. Timeout and attempts a connection::
+    import asyncio
+    from proxybroker import Broker
 
-    ...
-    worker = ProxyChecker(proxies, timeout=6, connects=3)
-    ...
+    loop = asyncio.get_event_loop()
 
-Example of a manual specifying the proxy judges::
+    proxies = asyncio.Queue(loop=loop)
+    broker = Broker(proxies, loop=loop)
 
-    ...
-    judges = ['http://proxyjudge.info/',
-              'http://proxyjudge.us/']
+    loop.run_until_complete(broker.find())
 
-    worker = ProxyChecker(proxies, judges=judges)
-    ...
+    found_proxies = []
+    while True:
+        proxy = pQueue.get_nowait()
+        if proxy is None: break
+        found_proxies.append(proxy)
 
-Instead of getting a list of all the living proxy you can get a list of only the specific type of proxy::
 
-    liveProxies = worker.get_good_proxies('SOCKS5')
+**Advanced example**::
+
+    import asyncio
+    from proxybroker import Broker
+
+    async def use_example(pQueue):
+        while True:
+            proxy = await pQueue.get()
+            if proxy is None:
+                break
+            print('Received: %s' % proxy)
+
+    async def find_advanced_example(pQueue, loop):
+        broker = Broker(queue=pQueue,
+                        timeout=6,
+                        attempts_conn=4,
+                        max_concurrent_conn=100,
+                        judges=['https://httpheader.net/', 'http://httpheader.net/'],
+                        providers=['http://www.proxylists.net/', 'http://fineproxy.org/freshproxy/'],
+                        verify_ssl=False,
+                        loop=loop)
+        .. # any level of anonymity for all types:
+        .. types = ['HTTP' 'HTTPS', 'SOCKS4', 'SOCKS5']
+        .. # the same:
+        .. types = [{'HTTP': ['Transparent', 'Anonymous', 'High']}, 'HTTPS', 'SOCKS4', 'SOCKS5']
+        ..
+        .. types = {'HTTP': ['Anonymous', 'High'], # Anonymous & High levels of anonymity
+        ..          'HTTPS': 'High',               # only High level of anonymity
+        ..          'SOCKS4': '',                  # any level of anonymity
+        ..          'SOCKS5': None}                # the same - any level of anonymity
+        # only anonymous & high levels of anonymity for http protocol and high for others:
+        types = [('HTTP', ('Anonymous', 'High')), 'HTTPS', 'SOCKS4', 'SOCKS5']
+        countries = ['US', 'GB', 'DE']
+        limit = 10
+
+        await broker.find(data=None, types=types, countries=countries, limit=limit)
+
+    if __name__ == '__main__':
+        loop = asyncio.get_event_loop()
+        pQueue = asyncio.Queue(loop=loop)
+        # Start searching and checking. At the same time, using the received proxies to another part of the program
+        tasks = asyncio.gather(find_advanced_example(pQueue, loop), use_example(pQueue))
+        loop.run_until_complete(tasks)
+
+**Advanced example with your raw data instead of providers**::
+
+    data = '''10.0.0.1:80
+              OK 10.0.0.2:   80 HTTP 200 OK 1.214
+              10.0.0.3;80;SOCKS5 check date 21-01-02
+              >>>10.0.0.4@80 HTTP HTTPS status OK
+              ...'''
+
+    await broker.find(data=data)
+    # Note: At the moment, information about the type of proxies in the raw data is ignored =(
+
+**Example only collect proxies (without checking)**::
+    broker = Broker(queue=pQueue, loop=loop)
+    await broker.grab(countries=['US'], limit=100)
+
 
 TODO
 ----
 
-* Support for authentication (ip:port:login:pass)
-* Check the ping
+* Check the ping, response time and speed of data transfer
+* Check on work with the Cookies/Referrer/POST
+* Check site access (Google, Twitter, etc)
+* Check proxy on spam. Search proxy ip in spam databases (DNSBL)
+* Information about uptime
+* Checksum of data returned
+* Support for proxy authentication
+* Finding outgoing IP for cascading proxy
+* The ability to send mail. Check on open 25 port (SMTP)
 * The ability to specify the address of the proxy without port (try to connect on defaulted ports)
-* The ability to save live proxies to a file (in formats: text / json / xml)
+* The ability to save working proxies to a file (text/json/xml)
 
 License
 -------
 
 Licensed under the Apache License, Version 2.0
 
+*This product includes GeoLite2 data created by MaxMind, available from `http://www.maxmind.com <http://www.maxmind.com>`_.
