@@ -15,22 +15,13 @@ limitations under the License.
 """
 
 __title__ = 'ProxyBroker'
-__version__ = "0.1b1"
+__version__ = "0.1b2"
 __author__ = 'Constverum'
 __license__ = 'Apache 2.0'
 __copyright__ = 'Copyright 2015 Constverum'
 
-# import pkg_resources
-# pkg_resources.declare_namespace(__name__)
-# https://packaging.python.org/en/latest/distributing/
-# import logging
-# import proxychecker
-# print(proxychecker.Proxy)
-# from . import devdata
 from .proxy import Proxy
 from .judge import Judge
 from .checker import ProxyChecker
-# from .finder import ProxyFinder
-from .api import Broker#, find, check, show_stats
-# print(Proxy)
+from .api import Broker
 

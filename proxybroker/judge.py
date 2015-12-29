@@ -14,7 +14,6 @@ class Judge:
     _loop = None
     _timeout = None
     _verifySSL = False
-    # _semAioHttp = None
     allJudges = {'HTTP': [], 'HTTPS': []}
     ev = {'HTTP': asyncio.Event(loop=_loop),
           'HTTPS': asyncio.Event(loop=_loop)}
@@ -54,7 +53,7 @@ class Judge:
         self.isWorking = False
         page = False
         headers, rv = get_headers(rv=True)
-        with (await self._sem): # , (await self._semAioHttp)
+        with (await self._sem):
             req = aiohttp.get(url=self.url, headers=headers,
                               allow_redirects=False, connector=self.connector)
             try:

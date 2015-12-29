@@ -7,8 +7,8 @@ class BaseNegotiator:
     _attemptsConnect = 0
 
     async def __call__(self, p):
-        result = False
         attempt = 0
+        result = False
         while attempt < self._attemptsConnect:
             with (await self._sem), (await p.sem):
                 attempt += 1
@@ -122,103 +122,3 @@ class HttpNgtr(BaseNegotiator):
     async def negotiate(self, p):
         result = await p.check_working()
         return result
-
-
-
-# class ConnectNgtr(BaseNegotiator):
-#     def __init__(self):
-#         self.name = 'CONNECT'
-
-#     @connector
-#     async def __call__(self, p):
-#         try:
-#             await p.send((
-#                 'CONNECT {host}:443 HTTP/1.1\r\nHost: {host}\r\n'
-#                 'User-Agent: {ua}\r\nConnection: keep-alive\r\n\r\n').format(
-#                 host=p.judge.host, ua='Mozilla/5.0 (Macintosh; Intel Mac OS X 10.10; rv:40.0) '
-#                                       'Gecko/20100101 Firefox/40.0').encode())
-#             resp = await p.recv(128)
-#         except (ProxyTimeoutError, ProxyRecvError):
-#             return
-#         except ProxyEmptyRecvError:
-#             return False
-
-#         httpStatusCode = resp[9:12]
-#         if httpStatusCode != b'200':
-#             p.log('Failed (error)')
-#             return False
-#         else:
-#             result = await p.check_get_request() # scheme='HTTPS'
-#         return result
-
-# def connector(ngtr_fn):
-#     async def wrapper(self, p):
-#         result = False
-#         attempt = 0
-#         while attempt < self._attemptsConnect:
-#             with (await self.maxConcurrentConnections):
-#                 attempt += 1
-
-#                 # et = p.expected_type
-#                 # firstCharNgtr = p.ngtr[0]
-#                 # if et and attempt > 1 and et != firstCharNgtr:  # 'S' or 'H'
-#                 #     result = False
-#                 #     p.log('Expected another proxy type')
-#                 #     break
-
-#                 try:
-#                     await p.connect()
-#                 except ProxyTimeoutError:
-#                     continue
-#                 except ProxyConnError:
-#                     break
-#                 else:
-#                     result = await ngtr_fn(self, p)
-#                 finally:
-#                     p.close()
-
-#                 # if result is True:
-#                 #     p.expected_type = firstCharNgtr
-#                 #     p.log('Set expected proxy type: %s' % firstCharNgtr)
-
-#                 if result is not None:  # True or False
-#                     break
-#         return result or False
-#     return wrapper
-
-
-# def connector(Cls):
-#     class Wrapper(Cls):
-#         async def __call__(self, p):
-#             print('In Wrapper __call__')
-#             # if self.__class__ == Wrapper:
-#             #     aClass.numInstances += 1
-#             result = False
-#             attempt = 0
-#             while attempt < Cls._attemptsConnect:
-#                 with (await Cls.maxConcurrentConnections):
-#                     attempt += 1
-#                     try:
-#                         await p.connect()
-#                     except ProxyTimeoutError:
-#                         continue
-#                     except ProxyConnError:
-#                         break
-#                     result = await Cls.__call__(self, p) # ngtr_fn(self, p)
-#                     p._writer.close()
-#                     p.log('Connection: closed')
-
-#                     if result is not None:  # True or False
-#                         break
-#             return result or False
-#     return Wrapper
-
-
-# class MetaNegotiator(type):
-#     def __new__(cls, name, bases, _dict):
-
-
-
-
-
-

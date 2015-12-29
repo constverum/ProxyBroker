@@ -11,15 +11,12 @@ class ProxyChecker:
               'SOCKS4': Socks4Ngtr(), 'SOCKS5': Socks5Ngtr()}
 
     def __init__(self,
-                 # q_check,
                  broker,
                  judges,
                  loop=None):
-        # self._qCheck = q_check
         self._broker = broker
         self._judges = judges
         self._types = None
-        # self._sem_checking = asyncio.Semaphore(100)
         self._countries = None
         self._loop = loop
 
@@ -96,9 +93,3 @@ class ProxyChecker:
         if self._types_check_passed(p):
             self._broker.push_to_result(p)
             log.debug('In results pushed: %s' % p)
-
-    # def close(self):
-    #     while not self._qCheck.empty():
-    #         fut = self._qCheck.get_nowait()
-    #         if not fut.cancelled():
-    #             fut.cancel()

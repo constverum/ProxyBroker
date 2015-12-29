@@ -18,7 +18,6 @@ class ProxyProvider:
     _loop = None
     _timeout = 20
     _pattern = IPPortPatternGlobal
-    # _semAioHttp = None
     _attemptsConnect = 3
 
     def __init__(self, url=None, proto=(), max_conn=4):
@@ -103,7 +102,7 @@ class ProxyProvider:
             req = aiohttp.request(method, url, data=data, headers=hdrs, cookies=cookies)
             try:
                 with aiohttp.Timeout(self._timeout, loop=self._loop):
-                    # log.info('prov. Try to get proxies from: %s' % url)
+                    # log.debug('prov. Try to get proxies from: %s' % url)
                     async with req as resp:
                         if resp.status == 200:
                             page = await resp.text()
