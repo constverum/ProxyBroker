@@ -46,8 +46,9 @@ Broker methods
               As a source of proxies can be specified raw data. In this case,
               search on the sites with a proxy does not happen. By default is empy.
           *types*
-              The list of types (protocols) which must be checked. Use a tuple if you want to specify the levels of anonymity: (Type, AnonLvl). By default, checks are enabled for all types at all levels of anonymity.
-.. Dict where the key - the type (protocol) of proxy, and the value - a string or a list of the levels of anonymity.
+              The list of types (protocols) which must be checked.
+              Use a tuple if you want to specify the levels of anonymity: (Type, AnonLvl).
+              By default, checks are enabled for all types at all levels of anonymity.
           *countries*
               List of ISO country codes, which must be located proxies.
           *limit*
