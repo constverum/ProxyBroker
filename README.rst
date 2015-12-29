@@ -1,8 +1,8 @@
-==============
 ProxyBroker
-==============
+===========
 
 ProxyBroker is a asynchronous finder working proxies with requested parameters (type, anonymity, country). Supports HTTP(S) and SOCKS proxies!
+
 
 Features
 --------
@@ -12,6 +12,7 @@ Features
 * Checks the level of anonymity proxy
 * Removes duplicates
 
+
 Requirements
 ------------
 * Python 3.5 or higher
@@ -19,11 +20,12 @@ Requirements
 * `aiodns <https://pypi.python.org/pypi/aiodns>`_
 * `maxminddb <https://pypi.python.org/pypi/maxminddb>`_
 
+
 Usage
 -----
 
 Broker parameters
-""""""""""""""""""
+"""""""""""""""""
 
 :queue:                 Queue to which will be added proxies
 :timeout:               Timeout is set to all the actions carried by the network. In seconds. By default = 8.
@@ -74,10 +76,14 @@ In result you get a proxy objects with the following properties::
          .port  - The port of the proxy
          .types - The dict of supported protocols and their levels of anonymity
 
+
 Examples
 """"""""
 
-**Basic example**::
+
+**Basic example**:
+
+.. code-block:: python
 
     import asyncio
     from proxybroker import Broker
@@ -96,7 +102,9 @@ Examples
         found_proxies.append(proxy)
 
 
-**Advanced example**::
+**Advanced example**:
+
+.. code-block:: python
 
     import asyncio
     from proxybroker import Broker
@@ -128,21 +136,15 @@ Examples
     if __name__ == '__main__':
         loop = asyncio.get_event_loop()
         pQueue = asyncio.Queue(loop=loop)
-        # Start searching and checking. At the same time, using the received proxies to another part of the program
+        # Start searching and checking.
+        # At the same time, using the received proxies to another part of the program
         tasks = asyncio.gather(find_advanced_example(pQueue, loop), use_example(pQueue))
         loop.run_until_complete(tasks)
 
-.. # any level of anonymity for all types:
-.. types = ['HTTP' 'HTTPS', 'SOCKS4', 'SOCKS5']
-.. # the same:
-.. types = [{'HTTP': ['Transparent', 'Anonymous', 'High']}, 'HTTPS', 'SOCKS4', 'SOCKS5']
-..
-.. types = {'HTTP': ['Anonymous', 'High'], # Anonymous & High levels of anonymity
-..          'HTTPS': 'High',               # only High level of anonymity
-..          'SOCKS4': '',                  # any level of anonymity
-..          'SOCKS5': None}                # the same - any level of anonymity
 
-**Advanced example with your raw data instead of providers**::
+**Advanced example with your raw data instead of providers**:
+
+.. code-block:: python
 
     data = '''10.0.0.1:80
               OK 10.0.0.2:   80 HTTP 200 OK 1.214
@@ -153,7 +155,9 @@ Examples
     await broker.find(data=data)
     # Note: At the moment, information about the type of proxies in the raw data is ignored =(
 
-**Example only collect proxies (without checking)**::
+**Example only collect proxies (without checking)**:
+
+.. code-block:: python
 
     broker = Broker(queue=pQueue, loop=loop)
     await broker.grab(countries=['US'], limit=100)
@@ -174,9 +178,10 @@ TODO
 * The ability to specify the address of the proxy without port (try to connect on defaulted ports)
 * The ability to save working proxies to a file (text/json/xml)
 
+
 License
 -------
 
 Licensed under the Apache License, Version 2.0
 
-*This product includes GeoLite2 data created by MaxMind, available from `http://www.maxmind.com <http://www.maxmind.com>`_.
+*This product includes GeoLite2 data created by MaxMind, available from* `http://www.maxmind.com <http://www.maxmind.com>`_.
