@@ -14,7 +14,7 @@ from .providers import ProxyProvider, get_providers
 class Broker:
     def __init__(self,
                  queue,
-                 timeout=12,
+                 timeout=8,
                  attempts_conn=3,
                  max_concurrent_conn=200,
                  judges=None,
