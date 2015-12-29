@@ -1,6 +1,5 @@
 include LICENSE
 include README.rst
-recursive-include *.txt
-recursive-include *.dat
-recursive-include *.mmdb
-recursive-include *.py
+include requirements.txt
+include proxybroker/data/*.txt
+include proxybroker/data/*.mmdb
