@@ -6,6 +6,7 @@ ProxyBroker is a asynchronous finder working proxies with requested parameters (
 
 Features
 --------
+
 * Search and collecting proxies from 50 sources (~7k working proxies).
 * Identifies proxy in raw input data
 * Checks proxies on working with protocols: HTTP, HTTPS, SOCKS4, SOCKS5
@@ -13,8 +14,19 @@ Features
 * Removes duplicates
 
 
+Installation
+------------
+
+To install ProxyBroker, simply:
+
+.. code-block:: bash
+
+    $ pip install proxybroker
+
+
 Requirements
 ------------
+
 * Python 3.5 or higher
 * `aiohttp <https://pypi.python.org/pypi/aiohttp>`_
 * `aiodns <https://pypi.python.org/pypi/aiodns>`_
@@ -23,6 +35,7 @@ Requirements
 
 Usage
 -----
+
 
 Broker parameters
 """""""""""""""""
