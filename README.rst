@@ -47,7 +47,7 @@ Broker methods
               search on the sites with a proxy does not happen. By default is empy.
           *types*
               The list of types (protocols) which must be checked. Use a tuple if you want to specify the levels of anonymity: (Type, AnonLvl). By default, checks are enabled for all types at all levels of anonymity.
-              .. Dict where the key - the type (protocol) of proxy, and the value - a string or a list of the levels of anonymity.
+.. Dict where the key - the type (protocol) of proxy, and the value - a string or a list of the levels of anonymity.
           *countries*
               List of ISO country codes, which must be located proxies.
           *limit*
@@ -90,7 +90,7 @@ Examples
 
     found_proxies = []
     while True:
-        proxy = pQueue.get_nowait()
+        proxy = proxies.get_nowait()
         if proxy is None: break
         found_proxies.append(proxy)
 
@@ -116,15 +116,7 @@ Examples
                         providers=['http://www.proxylists.net/', 'http://fineproxy.org/freshproxy/'],
                         verify_ssl=False,
                         loop=loop)
-        .. # any level of anonymity for all types:
-        .. types = ['HTTP' 'HTTPS', 'SOCKS4', 'SOCKS5']
-        .. # the same:
-        .. types = [{'HTTP': ['Transparent', 'Anonymous', 'High']}, 'HTTPS', 'SOCKS4', 'SOCKS5']
-        ..
-        .. types = {'HTTP': ['Anonymous', 'High'], # Anonymous & High levels of anonymity
-        ..          'HTTPS': 'High',               # only High level of anonymity
-        ..          'SOCKS4': '',                  # any level of anonymity
-        ..          'SOCKS5': None}                # the same - any level of anonymity
+
         # only anonymous & high levels of anonymity for http protocol and high for others:
         types = [('HTTP', ('Anonymous', 'High')), 'HTTPS', 'SOCKS4', 'SOCKS5']
         countries = ['US', 'GB', 'DE']
@@ -139,6 +131,16 @@ Examples
         tasks = asyncio.gather(find_advanced_example(pQueue, loop), use_example(pQueue))
         loop.run_until_complete(tasks)
 
+.. # any level of anonymity for all types:
+.. types = ['HTTP' 'HTTPS', 'SOCKS4', 'SOCKS5']
+.. # the same:
+.. types = [{'HTTP': ['Transparent', 'Anonymous', 'High']}, 'HTTPS', 'SOCKS4', 'SOCKS5']
+..
+.. types = {'HTTP': ['Anonymous', 'High'], # Anonymous & High levels of anonymity
+..          'HTTPS': 'High',               # only High level of anonymity
+..          'SOCKS4': '',                  # any level of anonymity
+..          'SOCKS5': None}                # the same - any level of anonymity
+
 **Advanced example with your raw data instead of providers**::
 
     data = '''10.0.0.1:80
@@ -151,6 +153,7 @@ Examples
     # Note: At the moment, information about the type of proxies in the raw data is ignored =(
 
 **Example only collect proxies (without checking)**::
+
     broker = Broker(queue=pQueue, loop=loop)
     await broker.grab(countries=['US'], limit=100)
 

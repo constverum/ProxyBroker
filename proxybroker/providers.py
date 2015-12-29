@@ -523,28 +523,28 @@ class Proxyb_net(ProxyProvider):
 
 
 extProviders = [
-    # Proxy_list_org(proto=('HTTP', 'HTTPS')),                  # 140/87 HTTP(S)
-    # Xseo_in(proto=('HTTP', 'HTTPS')),                         # 252/113 HTTP(S)
-    # Spys_ru(proto=('HTTP', 'HTTPS')),                         # 693/238 HTTP(S)
-    # Aliveproxy_com(),                                         # 210/63 SOCKS(~10)/HTTP(S)
-    # Proxyb_net(),                                             # 4309/4113 SOCKS(~11)
-    # Hitsozler_com(proto=('HTTP', 'HTTPS')),                   # 13546/6463
-    # Freeproxylists_com(),                                     # 6094/4203 SOCKS/HTTP(S)
-    # Any_blogspot_com(),                                       # 4471/2178 ... 8234/
-    # Webanetlabs_net(),                                        # 2737/700
-    # Checkerproxy_net(),                                       # 8382/1279 SOCKS(~30)/HTTP(S)
-    # Proxz_com(proto=('HTTP', 'HTTPS'), max_conn=2),           # 3800/3486 HTTP(S)
-    # Maxiproxies_com(),                                        # 626/169 SOCKS(~15)/HTTP(S)
-    # _50kproxies_com(),                                        # 934/218 SOCKS(~38)/HTTP(S)
-    # Proxymore_com(proto=('HTTP', 'HTTPS')),                   # 1356/780
-    # Proxylist_me(proto=('HTTP', 'HTTPS')),                    # 1078/587
-    # Foxtools_ru(proto=('HTTP', 'HTTPS'), max_conn=1),         # 500/187 HTTP(S)
-    # Gatherproxy_com(),                                        # 2524/1264 SOCKS/HTTP(S)
-    # Tools_rosinstrument_com(),                                # 7142/2367 SOCKS(~30)/HTTP(S)
-    # Nntime_com(proto=('HTTP', 'HTTPS')),                      # 1050/582 HTTP(S)
-    # Proxynova_com(proto=('HTTP', 'HTTPS')),                   # 1229/878 HTTP(S)
-    # My_proxy_com(max_conn=2),                                 # 894/408 SOCKS(~10)/HTTP(S)
-    # Free_proxy_cz(),                                          # 330/195 SOCKS(~2)
+    Proxy_list_org(proto=('HTTP', 'HTTPS')),                  # 140/87 HTTP(S)
+    Xseo_in(proto=('HTTP', 'HTTPS')),                         # 252/113 HTTP(S)
+    Spys_ru(proto=('HTTP', 'HTTPS')),                         # 693/238 HTTP(S)
+    Aliveproxy_com(),                                         # 210/63 SOCKS(~10)/HTTP(S)
+    Proxyb_net(),                                             # 4309/4113 SOCKS(~11)
+    Hitsozler_com(proto=('HTTP', 'HTTPS')),                   # 13546/6463
+    Freeproxylists_com(),                                     # 6094/4203 SOCKS/HTTP(S)
+    Any_blogspot_com(),                                       # 4471/2178 ... 8234/
+    Webanetlabs_net(),                                        # 2737/700
+    Checkerproxy_net(),                                       # 8382/1279 SOCKS(~30)/HTTP(S)
+    Proxz_com(proto=('HTTP', 'HTTPS'), max_conn=2),           # 3800/3486 HTTP(S)
+    Maxiproxies_com(),                                        # 626/169 SOCKS(~15)/HTTP(S)
+    _50kproxies_com(),                                        # 934/218 SOCKS(~38)/HTTP(S)
+    Proxymore_com(proto=('HTTP', 'HTTPS')),                   # 1356/780
+    Proxylist_me(proto=('HTTP', 'HTTPS')),                    # 1078/587
+    Foxtools_ru(proto=('HTTP', 'HTTPS'), max_conn=1),         # 500/187 HTTP(S)
+    Gatherproxy_com(),                                        # 2524/1264 SOCKS/HTTP(S)
+    Tools_rosinstrument_com(),                                # 7142/2367 SOCKS(~30)/HTTP(S)
+    Nntime_com(proto=('HTTP', 'HTTPS')),                      # 1050/582 HTTP(S)
+    Proxynova_com(proto=('HTTP', 'HTTPS')),                   # 1229/878 HTTP(S)
+    My_proxy_com(max_conn=2),                                 # 894/408 SOCKS(~10)/HTTP(S)
+    Free_proxy_cz(),                                          # 330/195 SOCKS(~2)
 ]
 
 

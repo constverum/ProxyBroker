@@ -2,43 +2,43 @@ HTTP,HTTPS|http://ipaddress.com/proxy-list/
 # 54/40
 HTTP,HTTPS|http://proxy.rufey.ru/
 # 153/28
-# HTTP,HTTPS|http://www.sslproxies.org/
-# # 100/56
-# HTTP,HTTPS|http://fineproxy.org/freshproxy/
-# # 44/26
-# HTTP,HTTPS|http://www.proxylists.net/
-# # 49/23
-# HTTP,HTTPS|http://httptunnel.ge/proxylistforfree.aspx/Media/ProxyChecker.aspx
-# # 100/46
-# HTTP,HTTPS|http://mitituti.com/content/proxy.txt
-# # 227/72
-# SOCKS4,SOCKS5|http://www.socks-proxy.net/
-# # 80/20
-# HTTP,HTTPS|http://hugeproxies.com/home/
-# # 142/36
-# http://www.get-proxy.net/proxy-archives
-# # 227/131
-# HTTP,HTTPS|https://freshfreeproxylist.wordpress.com/
-# # 168/69
-# HTTP,HTTPS|http://2-proxy.com/proxylist?sort=last&order=DESC&maxtime=30000&perpage=1000
-# # 273/175
-# HTTP,HTTPS|http://marcosbl.com/lab/proxies/
-# # 297/250
-# HTTP,HTTPS|http://txt.proxyspy.net/proxy.txt
-# # 300/217
-# HTTP,HTTPS|http://free-proxy-list.net/
-# # 300/200
-# HTTP,HTTPS|http://geekelectronics.org/my-servisy/proxy
-# # 395/20
-# HTTP,HTTPS|http://www.proxyservers.eu/
-# # 1574/588 ... 9189/
-# HTTP,HTTPS|http://socks24.ru/proxy/httpProxies.txt
+HTTP,HTTPS|http://www.sslproxies.org/
+# 100/56
+HTTP,HTTPS|http://fineproxy.org/freshproxy/
+# 44/26
+HTTP,HTTPS|http://www.proxylists.net/
+# 49/23
+HTTP,HTTPS|http://httptunnel.ge/proxylistforfree.aspx/Media/ProxyChecker.aspx
+# 100/46
+HTTP,HTTPS|http://mitituti.com/content/proxy.txt
+# 227/72
+SOCKS4,SOCKS5|http://www.socks-proxy.net/
+# 80/20
+HTTP,HTTPS|http://hugeproxies.com/home/
+# 142/36
+http://www.get-proxy.net/proxy-archives
+# 227/131
+HTTP,HTTPS|https://freshfreeproxylist.wordpress.com/
+# 168/69
+HTTP,HTTPS|http://2-proxy.com/proxylist?sort=last&order=DESC&maxtime=30000&perpage=1000
+# 273/175
+HTTP,HTTPS|http://marcosbl.com/lab/proxies/
+# 297/250
+HTTP,HTTPS|http://txt.proxyspy.net/proxy.txt
+# 300/217
+HTTP,HTTPS|http://free-proxy-list.net/
+# 300/200
+HTTP,HTTPS|http://geekelectronics.org/my-servisy/proxy
+# 395/20
+HTTP,HTTPS|http://www.proxyservers.eu/
+# 1574/588 ... 9189/
+HTTP,HTTPS|http://socks24.ru/proxy/httpProxies.txt
 # 2395/1853 ... 8272/
-# HTTP,HTTPS|http://proxytime.ru/http
-# # 5489/254
-# http://proxy-lists.orcahub.com/proxy-lists/checked-anonymous-proxy-list.txt
-# # 3643/1665
-# http://blackstarsecurity.com/proxy-list.txt
-# # 1760/556 (~5 SOCKS)
-# HTTP,HTTPS|http://www.ip-adress.com/proxy_list/?k=time
-# # 57/42
+HTTP,HTTPS|http://proxytime.ru/http
+# 5489/254
+http://proxy-lists.orcahub.com/proxy-lists/checked-anonymous-proxy-list.txt
+# 3643/1665
+http://blackstarsecurity.com/proxy-list.txt
+# 1760/556 (~5 SOCKS)
+HTTP,HTTPS|http://www.ip-adress.com/proxy_list/?k=time
+# 57/42
