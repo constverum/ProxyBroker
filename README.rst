@@ -144,7 +144,7 @@ Examples
         countries = ['US', 'GB', 'DE']
         limit = 10
 
-        await broker.find(data=None, types=types, countries=countries, limit=limit)
+        await broker.find(types=types, countries=countries, limit=limit)
 
     if __name__ == '__main__':
         loop = asyncio.get_event_loop()
