@@ -155,9 +155,17 @@ Examples
         loop.run_until_complete(tasks)
 
 
-**Advanced example with your raw data instead of providers**:
+**Example with your raw data instead of providers**:
 
 .. code-block:: python
+
+    import asyncio
+    from proxybroker import Broker
+
+    loop = asyncio.get_event_loop()
+
+    proxies = asyncio.Queue(loop=loop)
+    broker = Broker(proxies, loop=loop)
 
     data = '''10.0.0.1:80
               OK 10.0.0.2:   80 HTTP 200 OK 1.214
@@ -165,15 +173,19 @@ Examples
               >>>10.0.0.4@80 HTTP HTTPS status OK
               ...'''
 
-    await broker.find(data=data)
-    # Note: At the moment, information about the type of proxies in the raw data is ignored =(
+    # Note: At the moment, information about the type of proxies in the raw data is ignored
+    loop.run_until_complete(broker.find(data=data))
+
+    found_proxies = [proxies.get_nowait() for _ in range(proxies.qsize())]
+
 
 **Example only collect proxies (without checking)**:
 
 .. code-block:: python
-
+    # ...
     broker = Broker(queue=pQueue, loop=loop)
     await broker.grab(countries=['US'], limit=100)
+    # ...
 
 
 TODO
