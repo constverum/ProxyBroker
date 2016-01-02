@@ -214,6 +214,7 @@ class Proxy_list_org(ProxyProvider):
 
 
 class Aliveproxy_com(ProxyProvider):
+    # more: http://www.aliveproxy.com/socks-list/socks5.aspx/United_States-us
     domain = 'aliveproxy.com'
     async def _pipe(self):
         paths = [
