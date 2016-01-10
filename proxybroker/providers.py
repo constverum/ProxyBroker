@@ -114,8 +114,9 @@ class ProxyProvider:
                             raise BadStatusError('Status: %s' % resp.status)
             # urllib.error.HTTPError, urllib.error.URLError, socket.timeout,
             # ConnectionResetError, UnicodeEncodeError, aiohttp.ClientOSError
-            except (BadStatusError, asyncio.TimeoutError, aiohttp.ClientOSError,
-                    aiohttp.ClientResponseError, aiohttp.ServerDisconnectedError) as e:
+            except (UnicodeDecodeError, BadStatusError, asyncio.TimeoutError,
+                    aiohttp.ClientOSError, aiohttp.ClientResponseError,
+                    aiohttp.ServerDisconnectedError) as e:
                 log.error('%s is failed. Error: %r;' % (url, e))
         return page
 

@@ -40,7 +40,7 @@ setup(
         "Topic :: Internet :: Proxy Servers",
         "License :: OSI Approved :: Apache Software License",
     ],
-    keywords='proxy finder grabber checker broker async asynchronous http https connect socks socks4 socks5',
+    keywords='proxy finder grabber scrapper checker broker async asynchronous http https connect socks socks4 socks5',
     zip_safe=False,
 )
 
