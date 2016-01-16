@@ -529,7 +529,7 @@ extProviders = [
     Spys_ru(proto=('HTTP', 'HTTPS')),                         # 693/238 HTTP(S)
     Aliveproxy_com(),                                         # 210/63 SOCKS(~10)/HTTP(S)
     Proxyb_net(),                                             # 4309/4113 SOCKS(~11)
-    Hitsozler_com(proto=('HTTP', 'HTTPS')),                   # 13546/6463
+    # Hitsozler_com(proto=('HTTP', 'HTTPS')),                   # 13546/6463
     Freeproxylists_com(),                                     # 6094/4203 SOCKS/HTTP(S)
     Any_blogspot_com(),                                       # 4471/2178 ... 8234/
     Webanetlabs_net(),                                        # 2737/700

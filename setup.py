@@ -3,7 +3,7 @@ from setuptools import setup  # find_packages, find_package_data
 
 PACKAGE = "proxybroker"
 NAME = PACKAGE
-DESCRIPTION = "Asynchronous finder working proxies with requested parameters (type, anonymity, country). Supports HTTP(S) and SOCKS proxies."
+DESCRIPTION = "Async finds working public proxies and concurrently checks them (type, anonymity, country). Supports HTTP(S) and SOCKS proxies."
 AUTHOR = "Constverum"
 AUTHOR_EMAIL = "constverum@gmail.com"
 URL = "https://github.com/constverum/ProxyBroker"

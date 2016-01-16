@@ -36,7 +36,7 @@ HTTP,HTTPS|http://socks24.ru/proxy/httpProxies.txt
 # 2395/1853 ... 8272/
 HTTP,HTTPS|http://proxytime.ru/http
 # 5489/254
-http://proxy-lists.orcahub.com/proxy-lists/checked-anonymous-proxy-list.txt
+# http://proxy-lists.orcahub.com/proxy-lists/checked-anonymous-proxy-list.txt
 # 3643/1665
 http://blackstarsecurity.com/proxy-list.txt
 # 1760/556 (~5 SOCKS)
