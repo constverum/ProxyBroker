@@ -15,7 +15,7 @@ limitations under the License.
 """
 
 __title__ = 'ProxyBroker'
-__version__ = "0.1b2"
+__version__ = "0.1b3"
 __author__ = 'Constverum'
 __license__ = 'Apache 2.0'
 __copyright__ = 'Copyright 2015 Constverum'
