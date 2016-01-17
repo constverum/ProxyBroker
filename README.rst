@@ -1,5 +1,13 @@
 ProxyBroker
 ===========
+.. image:: https://img.shields.io/pypi/v/proxybroker.svg
+    :target: https://pypi.python.org/pypi/proxybroker/
+.. image:: https://img.shields.io/pypi/dm/proxybroker.svg
+    :target: https://pypi.python.org/pypi/proxybroker/
+.. image:: https://img.shields.io/pypi/pyversions/proxybroker.svg
+    :target: https://pypi.python.org/pypi/proxybroker/
+.. image:: https://img.shields.io/pypi/l/proxybroker.svg
+    :target: https://pypi.python.org/pypi/proxybroker/
 
 ProxyBroker is a asynchronous finder working proxies with requested parameters (type, anonymity, country). Supports HTTP(S) and SOCKS proxies!
 
