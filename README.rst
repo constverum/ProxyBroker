@@ -6,8 +6,8 @@ ProxyBroker
     :target: https://pypi.python.org/pypi/proxybroker/
 .. image:: https://img.shields.io/pypi/wheel/proxybroker.svg
     :target: https://pypi.python.org/pypi/proxybroker/
-.. image:: https://img.shields.io/travis/constverum/proxybroker.svg
-    :target: https://travis-ci.org/constverum/proxybroker
+.. image:: https://img.shields.io/travis/constverum/ProxyBroker.svg
+    :target: https://travis-ci.org/constverum/ProxyBroker
 .. image:: https://img.shields.io/pypi/dm/proxybroker.svg
     :target: https://pypi.python.org/pypi/proxybroker/
 .. image:: https://img.shields.io/pypi/l/proxybroker.svg
