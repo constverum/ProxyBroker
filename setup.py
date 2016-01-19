@@ -42,6 +42,7 @@ setup(
     ],
     keywords='proxy finder grabber scrapper checker broker async asynchronous http https connect socks socks4 socks5',
     zip_safe=False,
+    test_suite='tests',
 )
 
 # packages=find_packages(exclude=["tests.*", "tests"]),
