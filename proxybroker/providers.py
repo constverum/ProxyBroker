@@ -17,6 +17,7 @@ class ProxyProvider:
     _sem = None
     _loop = None
     _timeout = 20
+    _cookies = {}
     _pattern = IPPortPatternGlobal
     _attemptsConnect = 3
 
@@ -33,9 +34,17 @@ class ProxyProvider:
         if isinstance(proto, str):
             proto = tuple(proto.split(','))
         self.proto = proto
+        self._session = None
         # 4 concurrent connections on provider
         self._sem_provider = asyncio.Semaphore(max_conn)
-        self._cookies = {}
+
+
+    @property
+    def session(self):
+        if self._session is None:
+            self._session = aiohttp.ClientSession(cookies=self._cookies,
+                                                  loop=self._loop)
+        return self._session
 
     @property
     def proxies(self):
@@ -68,10 +77,8 @@ class ProxyProvider:
                 tasks.append(self._find_on_page(url))
         await asyncio.gather(*tasks)
 
-    async def _find_on_page(self, url, data=None, headers={},
-                            cookies={}, method='GET'):
-        page = await self.get(url, data=data, headers=headers,
-                              cookies=cookies, method=method)
+    async def _find_on_page(self, url, data=None, headers={}, method='GET'):
+        page = await self.get(url, data=data, headers=headers, method=method)
         oldcount = len(self.proxies)
         try:
             received = self.find_proxies(page)
@@ -84,26 +91,24 @@ class ProxyProvider:
         log.debug('%d(%d) proxies added(received) from %s' % (
             added, len(received), url))
 
-    async def get(self, url, data=None, headers={}, cookies={}, method='GET'):
+    async def get(self, url, data=None, headers={}, method='GET'):
         attempt = 0
         while attempt < self._attemptsConnect:
             attempt += 1
-            page = await self._get(url, data=data, headers=headers,
-                                   cookies=cookies, method=method)
+            page = await self._get(url, data=data, headers=headers, method=method)
             if page:
                 break
         return page
 
-    async def _get(self, url, data=None, headers={}, cookies={}, method='GET'):
+    async def _get(self, url, data=None, headers={}, method='GET'):
         page = ''
         hdrs = {**get_headers(), **headers} or None
-        cookies = {**self._cookies, **cookies} or None
         with (await self._sem), (await self._sem_provider):
-            req = aiohttp.request(method, url, data=data, headers=hdrs, cookies=cookies)
             try:
                 with aiohttp.Timeout(self._timeout, loop=self._loop):
                     # log.debug('prov. Try to get proxies from: %s' % url)
-                    async with req as resp:
+                    async with self.session.request(method, url, data=data,
+                                                     headers=hdrs) as resp:
                         if resp.status == 200:
                             page = await resp.text()
                         else:
@@ -149,8 +154,8 @@ class Freeproxylists_com(ProxyProvider):
 
 class Any_blogspot_com(ProxyProvider):
     domain = 'blogspot.com'
+    _cookies = {'NCR': 1}
     async def _pipe(self):
-        self._cookies = {'NCR': 1}
         exp = r'''<a href\s*=\s*['"]([^'"]*\.\w+/\d{4}/\d{2}/[^'"#]*)['"]>'''
         domains = ['proxyserverlist-24.blogspot.com', 'newfreshproxies24.blogspot.com',
                    'irc-proxies24.blogspot.com', 'googleproxies24.blogspot.com',

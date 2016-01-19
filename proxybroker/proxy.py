@@ -127,7 +127,7 @@ class Proxy:
         return self._geo
 
     def _set_geo(self):
-        self._geo['code'], self._geo['names'] = get_ip_info(self.host)
+        self._geo['code'], self._geo['name'] = get_ip_info(self.host)
 
     def log(self, msg=None, stime=None):
         if msg:

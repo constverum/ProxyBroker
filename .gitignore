@@ -1,7 +1,6 @@
 __*
-*.egg-info
 !__init__.py
+*.egg-info
 .DS_Store
-.egg-info
 build
 dist

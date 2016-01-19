@@ -76,16 +76,14 @@ def get_ip_info(ip):
     except (maxminddb.errors.InvalidDatabaseError, ValueError):
         ipInfo = {}
 
+    code, name = '--', 'Unknown'
     if 'country' in ipInfo:
         code = ipInfo['country']['iso_code']
-        names = ipInfo['country']['names']
+        name = ipInfo['country']['names']['en']
     elif 'continent' in ipInfo:
         code = ipInfo['continent']['code']
-        names = ipInfo['continent']['names']
-    else:
-        code = '--'
-        names = {'en': 'Unknown'}
-    return code, names
+        name = ipInfo['continent']['names']['en']
+    return code, name
 
 def host_is_ip(host):
     # TODO: add IPv6 support
@@ -103,17 +101,17 @@ def get_all_ip(page):
 
 async def set_my_ip(timeout=3, loop=None):
     global REAL_IP
-    req = aiohttp.get('http://httpbin.org/get?show_env')
     try:
         with aiohttp.Timeout(timeout, loop=loop):
-            async with req as resp:
-                data = await resp.json()
+            with aiohttp.ClientSession(loop=loop) as session:
+                async with session.get('http://httpbin.org/get?show_env') as resp:
+                    data = await resp.json()
     except asyncio.TimeoutError as e:
         raise RuntimeError('Could not get a external IP. Error: %s' % e)
 
-    ip = data['origin'].split(', ')[0]
-    REAL_IP = ip
+    REAL_IP = data['origin'].split(', ')[0]
     log.debug('Real external IP: %s' % REAL_IP)
+    return REAL_IP
 
 def get_my_ip():
     return REAL_IP
