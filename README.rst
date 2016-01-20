@@ -16,7 +16,7 @@ ProxyBroker
 
 ProxyBroker is a asynchronous finder working proxies with requested parameters (type, anonymity, country). Supports HTTP(S) and SOCKS proxies!
 
-.. contents:: Содержание
+.. contents:: Contents
    :depth: 3
 
 Features
