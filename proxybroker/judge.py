@@ -53,19 +53,18 @@ class Judge:
         self.isWorking = False
         page = False
         headers, rv = get_headers(rv=True)
-        with (await self._sem):
-            try:
-                # log.debug('Try to get judge: %s' % self)
-                with aiohttp.Timeout(self._timeout, loop=self._loop):
-                    with aiohttp.ClientSession(connector=self.connector,
-                                               loop=self._loop) as session:
-                        async with session.get(url=self.url, headers=headers,
-                                               allow_redirects=False) as resp:
-                            page = await resp.text()
-            except (asyncio.TimeoutError, aiohttp.ClientOSError,
-                    aiohttp.ClientResponseError, aiohttp.ServerDisconnectedError) as e:
-                log.error('%s is failed. Error: %r;' % (self, e))
-                return
+        try:
+            with (await self._sem),\
+                 aiohttp.Timeout(self._timeout, loop=self._loop),\
+                 aiohttp.ClientSession(connector=self.connector,
+                                       loop=self._loop) as session:
+                async with session.get(url=self.url, headers=headers,
+                                       allow_redirects=False) as resp:
+                    page = await resp.text()
+        except (asyncio.TimeoutError, aiohttp.ClientOSError,
+                aiohttp.ClientResponseError, aiohttp.ServerDisconnectedError) as e:
+            log.error('%s is failed. Error: %r;' % (self, e))
+            return
 
         page = page.lower()
 

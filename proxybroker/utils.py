@@ -102,10 +102,10 @@ def get_all_ip(page):
 async def set_my_ip(timeout=3, loop=None):
     global REAL_IP
     try:
-        with aiohttp.Timeout(timeout, loop=loop):
-            with aiohttp.ClientSession(loop=loop) as session:
-                async with session.get('http://httpbin.org/get?show_env') as resp:
-                    data = await resp.json()
+        with aiohttp.Timeout(timeout, loop=loop),\
+             aiohttp.ClientSession(loop=loop) as session:
+            async with session.get('http://httpbin.org/get?show_env') as resp:
+                data = await resp.json()
     except asyncio.TimeoutError as e:
         raise RuntimeError('Could not get a external IP. Error: %s' % e)
 

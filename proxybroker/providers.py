@@ -18,6 +18,7 @@ class ProxyProvider:
     _loop = None
     _timeout = 20
     _cookies = {}
+    _headers = get_headers()
     _pattern = IPPortPatternGlobal
     _attemptsConnect = 3
 
@@ -34,17 +35,13 @@ class ProxyProvider:
         if isinstance(proto, str):
             proto = tuple(proto.split(','))
         self.proto = proto
-        self._session = None
         # 4 concurrent connections on provider
         self._sem_provider = asyncio.Semaphore(max_conn)
+        self._session = aiohttp.ClientSession(
+            headers=self._headers, cookies=self._cookies, loop=self._loop)
 
-
-    @property
-    def session(self):
-        if self._session is None:
-            self._session = aiohttp.ClientSession(cookies=self._cookies,
-                                                  loop=self._loop)
-        return self._session
+    def __del__(self):
+        self._session.close()
 
     @property
     def proxies(self):
@@ -59,6 +56,7 @@ class ProxyProvider:
         await self._pipe()
         log.info('%d proxies received from %s' % (
                  len(self.proxies), self.domain))
+        self._session.close()
         return self.proxies
 
     async def _pipe(self):
@@ -77,7 +75,7 @@ class ProxyProvider:
                 tasks.append(self._find_on_page(url))
         await asyncio.gather(*tasks)
 
-    async def _find_on_page(self, url, data=None, headers={}, method='GET'):
+    async def _find_on_page(self, url, data=None, headers=None, method='GET'):
         page = await self.get(url, data=data, headers=headers, method=method)
         oldcount = len(self.proxies)
         try:
@@ -91,7 +89,7 @@ class ProxyProvider:
         log.debug('%d(%d) proxies added(received) from %s' % (
             added, len(received), url))
 
-    async def get(self, url, data=None, headers={}, method='GET'):
+    async def get(self, url, data=None, headers=None, method='GET'):
         attempt = 0
         while attempt < self._attemptsConnect:
             attempt += 1
@@ -100,29 +98,26 @@ class ProxyProvider:
                 break
         return page
 
-    async def _get(self, url, data=None, headers={}, method='GET'):
+    async def _get(self, url, data=None, headers=None, method='GET'):
         page = ''
-        hdrs = {**get_headers(), **headers} or None
-        with (await self._sem), (await self._sem_provider):
-            try:
-                with aiohttp.Timeout(self._timeout, loop=self._loop):
-                    # log.debug('prov. Try to get proxies from: %s' % url)
-                    async with self.session.request(method, url, data=data,
-                                                     headers=hdrs) as resp:
-                        if resp.status == 200:
-                            page = await resp.text()
-                        else:
-                            _page = await resp.text()
-                            log.debug('Url: %s\nErr.Headers: %s\nErr.Cookies: '
-                                      '%s\nErr.Page:\n%s' % (
-                                      url, resp.headers, resp.cookies, _page))
-                            raise BadStatusError('Status: %s' % resp.status)
-            # urllib.error.HTTPError, urllib.error.URLError, socket.timeout,
-            # ConnectionResetError, UnicodeEncodeError, aiohttp.ClientOSError
-            except (UnicodeDecodeError, BadStatusError, asyncio.TimeoutError,
-                    aiohttp.ClientOSError, aiohttp.ClientResponseError,
-                    aiohttp.ServerDisconnectedError) as e:
-                log.error('%s is failed. Error: %r;' % (url, e))
+        try:
+            with (await self._sem),\
+                 (await self._sem_provider),\
+                 aiohttp.Timeout(self._timeout, loop=self._loop):
+                async with self._session.request(
+                    method, url, data=data, headers=headers) as resp:
+                    if resp.status == 200:
+                        page = await resp.text()
+                    else:
+                        _page = await resp.text()
+                        log.debug('Url: %s\nErr.Headers: %s\nErr.Cookies: '
+                                  '%s\nErr.Page:\n%s' % (
+                                  url, resp.headers, resp.cookies, _page))
+                        raise BadStatusError('Status: %s' % resp.status)
+        except (UnicodeDecodeError, BadStatusError, asyncio.TimeoutError,
+                aiohttp.ClientOSError, aiohttp.ClientResponseError,
+                aiohttp.ServerDisconnectedError) as e:
+            log.error('%s is failed. Error: %r;' % (url, e))
         return page
 
     def find_proxies(self, page):
