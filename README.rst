@@ -74,9 +74,7 @@ Examples
         if proxy is None: break
         print('Found proxy: %s' % proxy)
 
-.. code-block:: bash
-
-    In result you get a proxy objects:
+In result you get a proxy objects::
 
     Found proxy: <Proxy AU 0.72s [HTTP: Transparent] 1.1.1.1:80>
     Found proxy: <Proxy FR 0.33s [HTTP: High, HTTPS] 2.2.2.2:3128>
