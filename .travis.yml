@@ -1,7 +1,7 @@
 language: python
 python:
   - 3.5
-  - nightly
+  # - nightly
 os:
   - linux
 install:
@@ -16,3 +16,4 @@ deploy:
   on:
     tags: true
     branch: master
+    python: 3.5
