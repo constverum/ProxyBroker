@@ -1,18 +1,18 @@
 language: python
 python:
-    - 3.5
-    - nightly
+  - 3.5
+  - nightly
 os:
-    - linux
+  - linux
 install:
-    - pip install -r requirements.txt
+  - pip install -r requirements.txt
 script: python setup.py test
 deploy:
-    provider: pypi
-    user: constverum
-    password:
-        secure: gtKAcFgZvV3Ufnwl1s2AEeO8eAQHM+5zuwPK8V35HqbliETl7UAcgMpd52mk3MCntEUL268aheKRT35d3ZdTRwh57vsXojfP/xC7wcn7hBxyTDRsk8ti25fqdND3Ux8yFgi3dYXFgs3lPGYyC+YU8Zq5LwbvGlrLxJ6sKiMyDhAJvpr1hc/NVxeuznrXy9bqzqK0pASc2wMDqHkxZ/oFHYXymjezX/phGsqXuOfvvW92ZedfGhOtRSKi74uR6psbuDQTKUNPSMc1PoCuAkLRjKpODm3HYkzMq6gg9vAtjz8q2TYvwJLxgdWp2rCJzG89AxYpYOptQmBvsoq1pCohysxSgZUts+BwGp+5KMuw6j2C+o1eMopnncA+4HOf58DLO2Sro7B6003lIkTtdqAZeFLaXDnA64s7+5E26zrXeQH+72CKsDBXbW/af24p6HJGWcHeY6hn550yftapHv0vHUeyixH8kQUplMwEmCLyww2uENZydPolt2EFOCKgRKpFQohKLtaIcgA4ydJcn9qofFzzp2IC5E+82kd7KcXhInz70Mvbhzr3jY9etWfxRA06MTPYDb7DjtLNHPTx0JxazJFqx5CJ+RoXUR2bLJ1tqGMmnuwA0PYErZ4BC2aw9LxhQQTUsPY1vnrhYVqeSWc/nVb9sRz9xNNm3+20lLjSex0=
-    distributions: sdist bdist_wheel
-    on:
-        tags: true
-        branch: master
+  provider: pypi
+  user: constverum
+  password:
+    secure: gtKAcFgZvV3Ufnwl1s2AEeO8eAQHM+5zuwPK8V35HqbliETl7UAcgMpd52mk3MCntEUL268aheKRT35d3ZdTRwh57vsXojfP/xC7wcn7hBxyTDRsk8ti25fqdND3Ux8yFgi3dYXFgs3lPGYyC+YU8Zq5LwbvGlrLxJ6sKiMyDhAJvpr1hc/NVxeuznrXy9bqzqK0pASc2wMDqHkxZ/oFHYXymjezX/phGsqXuOfvvW92ZedfGhOtRSKi74uR6psbuDQTKUNPSMc1PoCuAkLRjKpODm3HYkzMq6gg9vAtjz8q2TYvwJLxgdWp2rCJzG89AxYpYOptQmBvsoq1pCohysxSgZUts+BwGp+5KMuw6j2C+o1eMopnncA+4HOf58DLO2Sro7B6003lIkTtdqAZeFLaXDnA64s7+5E26zrXeQH+72CKsDBXbW/af24p6HJGWcHeY6hn550yftapHv0vHUeyixH8kQUplMwEmCLyww2uENZydPolt2EFOCKgRKpFQohKLtaIcgA4ydJcn9qofFzzp2IC5E+82kd7KcXhInz70Mvbhzr3jY9etWfxRA06MTPYDb7DjtLNHPTx0JxazJFqx5CJ+RoXUR2bLJ1tqGMmnuwA0PYErZ4BC2aw9LxhQQTUsPY1vnrhYVqeSWc/nVb9sRz9xNNm3+20lLjSex0=
+  distributions: sdist bdist_wheel
+  on:
+    tags: true
+    branch: master
