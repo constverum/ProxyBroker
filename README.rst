@@ -51,11 +51,6 @@ Requirements
 Usage
 -----
 
-In result you get a proxy objects. Example repl of proxy objects::
-
-    <Proxy US 1.11s [HTTP: Anonymous, HTTPS] 8.8.8.8:80>
-    <Proxy -- 0.45s [SOCKS4, SOCKS5] 192.168.1.1:1080>
-
 
 Examples
 """"""""
@@ -74,11 +69,20 @@ Examples
 
     loop.run_until_complete(broker.find())
 
-    found_proxies = []
     while True:
         proxy = proxies.get_nowait()
         if proxy is None: break
-        found_proxies.append(proxy)
+        print('Found proxy: %s' % proxy)
+
+.. code-block:: bash
+
+    In result you get a proxy objects:
+
+    Found proxy: <Proxy AU 0.72s [HTTP: Transparent] 1.1.1.1:80>
+    Found proxy: <Proxy FR 0.33s [HTTP: High, HTTPS] 2.2.2.2:3128>
+    Found proxy: <Proxy US 1.11s [HTTP: Anonymous, HTTPS] 8.8.8.8:8000>
+    Found proxy: <Proxy -- 0.45s [SOCKS4, SOCKS5] 192.168.1.2:1080>
+    ...
 
 
 **Advanced example**:
