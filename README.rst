@@ -16,7 +16,7 @@ ProxyBroker
 
 ProxyBroker is a asynchronous finder working proxies with requested parameters (type, anonymity, country). Supports HTTP(S) and SOCKS proxies!
 
-.. contents:: Contents
+.. contents::
    :depth: 3
 
 Features
@@ -51,16 +51,14 @@ Requirements
 Usage
 -----
 
-In result you get a proxy objects with the following properties::
+In result you get a proxy objects. Example repl of proxy objects::
 
-    Example repl of proxy objects:
-        <Proxy US 1.11s [HTTP: Anonymous, HTTPS] 8.8.8.8:80>
-        <Proxy -- 0.45s [SOCKS4, SOCKS5] 192.168.1.1:1080>
+    <Proxy US 1.11s [HTTP: Anonymous, HTTPS] 8.8.8.8:80>
+    <Proxy -- 0.45s [SOCKS4, SOCKS5] 192.168.1.1:1080>
 
 
 Examples
 """"""""
-
 
 **Basic example**:
 
