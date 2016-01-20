@@ -104,7 +104,7 @@ async def set_my_ip(timeout=3, loop=None):
     try:
         with aiohttp.Timeout(timeout, loop=loop),\
              aiohttp.ClientSession(loop=loop) as session:
-            async with session.get('http://httpbin.org/get?show_env') as resp:
+            async with session.get('http://httpbin.org/ip') as resp:
                 data = await resp.json()
     except asyncio.TimeoutError as e:
         raise RuntimeError('Could not get a external IP. Error: %s' % e)
