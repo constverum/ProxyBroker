@@ -53,9 +53,10 @@ Usage
 
 
 Examples
-""""""""
+~~~~~~~~
 
-**Basic example**:
+Basic example
+"""""""""""""
 
 .. code-block:: python
 
@@ -83,7 +84,8 @@ In result you get a proxy objects::
     ...
 
 
-**Advanced example**:
+Advanced example
+""""""""""""""""
 
 .. code-block:: python
 
@@ -123,7 +125,8 @@ In result you get a proxy objects::
         loop.run_until_complete(tasks)
 
 
-**Example with your raw data instead of providers**:
+Example with your raw data instead of providers
+"""""""""""""""""""""""""""""""""""""""""""""""
 
 .. code-block:: python
 
@@ -147,7 +150,8 @@ In result you get a proxy objects::
     found_proxies = [proxies.get_nowait() for _ in range(proxies.qsize())]
 
 
-**Example only collect proxies (without checking)**:
+Example only collect proxies (without checking)
+"""""""""""""""""""""""""""""""""""""""""""""""
 
 .. code-block:: python
 
@@ -157,10 +161,12 @@ In result you get a proxy objects::
 
 
 API
-"""
+---
 
 
-.. table:: **Proxy properties**
+Proxy properties
+~~~~~~~~~~~~~~~~
+.. table::
 
     +------------+------+-----------------------------------------+----------------------------------------------------------------------+
     |Property    | Type | Example                                 | Description                                                          |
@@ -177,30 +183,34 @@ API
     +------------+------+-----------------------------------------+----------------------------------------------------------------------+
 
 
-.. table:: **Broker parameters**
+Broker parameters
+~~~~~~~~~~~~~~~~~
+.. table::
 
     +--------------------+----------+----------------------------+-------------------+--------------------------------------------------------------------------------------------------------------+
-    |Parameter           | Required | Type                       | Default           | Description                                                                                                  |
+    | Parameter          | Required | Type                       | Default           | Description                                                                                                  |
     +====================+==========+============================+===================+==============================================================================================================+
-    |queue               + Yes      | str                        |                   | Queue to which will be added proxies.                                                                        |
+    | queue              + Yes      | str                        |                   | Queue to which will be added proxies.                                                                        |
     +--------------------+----------+----------------------------+-------------------+--------------------------------------------------------------------------------------------------------------+
-    |timeout             + No       | int                        | 8                 | Timeout is set to all the actions carried by the network. In seconds.                                        |
+    | timeout            + No       | int                        | 8                 | Timeout is set to all the actions carried by the network. In seconds.                                        |
     +--------------------+----------+----------------------------+-------------------+--------------------------------------------------------------------------------------------------------------+
-    |attempts_conn       | No       | int                        | 3                 | Limiting the maximum number of connection attempts.                                                          |
+    | attempts_conn      | No       | int                        | 3                 | Limiting the maximum number of connection attempts.                                                          |
     +--------------------+----------+----------------------------+-------------------+--------------------------------------------------------------------------------------------------------------+
     |max_concurrent_conn | No       | int or asyncio.Semaphore() | 200               | Limiting the maximum number of concurrent connections (as a number, or have used in your program semaphore). |
     +--------------------+----------+----------------------------+-------------------+--------------------------------------------------------------------------------------------------------------+
-    |providers           | No       | list of strings            | list of ~50 sites | The list of sites that distribute proxy lists (proxy providers).                                             |
+    | providers          | No       | list of strings            | list of ~50 sites | The list of sites that distribute proxy lists (proxy providers).                                             |
     +--------------------+----------+----------------------------+-------------------+--------------------------------------------------------------------------------------------------------------+
-    |judges              | No       | list of strings            | list of ~10 sites | The list of sites that show http-headers (proxy judges).                                                     |
+    | judges             | No       | list of strings            | list of ~10 sites | The list of sites that show http-headers (proxy judges).                                                     |
     +--------------------+----------+----------------------------+-------------------+--------------------------------------------------------------------------------------------------------------+
-    |verify_ssl          | No       | bool                       | False             | Check ssl certifications.                                                                                    |
+    | verify_ssl         | No       | bool                       | False             | Check ssl certifications.                                                                                    |
     +--------------------+----------+----------------------------+-------------------+--------------------------------------------------------------------------------------------------------------+
-    |loop                | No       | asyncio event loop         | None              | Event loop                                                                                                   |
+    | loop               | No       | asyncio event loop         | None              | Event loop                                                                                                   |
     +--------------------+----------+----------------------------+-------------------+--------------------------------------------------------------------------------------------------------------+
 
 
-.. table:: **Broker methods**
+Broker methods
+~~~~~~~~~~~~~~
+.. table::
 
     +-----------------+---------------------------------------------------------------------------------------------------+--------------------------------------------------------------------------+
     | Method          | Optional parameters                                                                               | Description                                                              |
@@ -225,8 +235,6 @@ API
     | show_stats      | full        | If is False (by default) - will show a short version of stats (without proxieslog), | Limiting the maximum number of connection attempts.                      |
     |                 |             | if is True - show full version of stats (with proxies log).                         |                                                                          |
     +-----------------+-------------+-------------------------------------------------------------------------------------+--------------------------------------------------------------------------+
-
-
 
 
 TODO
