@@ -14,7 +14,7 @@ ProxyBroker
     :target: https://pypi.python.org/pypi/proxybroker/
 
 
-ProxyBroker is a asynchronous finder working proxies with requested parameters (type, anonymity, country). Supports HTTP(S) and SOCKS proxies!
+ProxyBroker is an asynchronous finder working proxies with requested parameters (type, anonymity, country). Supports HTTP(S) and SOCKS proxies!
 
 .. contents::
    :depth: 3
@@ -48,8 +48,6 @@ Requirements
 * `maxminddb <https://pypi.python.org/pypi/maxminddb>`_
 
 
-.. Usage
-.. -----
 Examples
 --------
 
