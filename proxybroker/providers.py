@@ -109,10 +109,10 @@ class ProxyProvider:
                     if resp.status == 200:
                         page = await resp.text()
                     else:
-                        _page = await resp.text()
+                        error_page = await resp.text()
                         log.debug('Url: %s\nErr.Headers: %s\nErr.Cookies: '
                                   '%s\nErr.Page:\n%s' % (
-                                  url, resp.headers, resp.cookies, _page))
+                                  url, resp.headers, resp.cookies, error_page))
                         raise BadStatusError('Status: %s' % resp.status)
         except (UnicodeDecodeError, BadStatusError, asyncio.TimeoutError,
                 aiohttp.ClientOSError, aiohttp.ClientResponseError,
@@ -127,11 +127,6 @@ class ProxyProvider:
         proxies = self._pattern.findall(page)
         return proxies
 
-class Hitsozler_com(ProxyProvider):
-    domain = 'hitsozler.com'
-    _timeout = 60
-    async def _pipe(self):
-        await self._find_on_page('http://hitsozler.com/')
 
 class Freeproxylists_com(ProxyProvider):
     domain = 'freeproxylists.com'
@@ -147,6 +142,7 @@ class Freeproxylists_com(ProxyProvider):
         urls = [tpl.format(t, uts) for t, uts in params]
         await self._find_on_pages(urls)
 
+
 class Any_blogspot_com(ProxyProvider):
     domain = 'blogspot.com'
     _cookies = {'NCR': 1}
@@ -155,7 +151,8 @@ class Any_blogspot_com(ProxyProvider):
         domains = ['proxyserverlist-24.blogspot.com', 'newfreshproxies24.blogspot.com',
                    'irc-proxies24.blogspot.com', 'googleproxies24.blogspot.com',
                    'elitesocksproxy.blogspot.com', 'www.proxyocean.com',
-                   'www.socks24.org']
+                   'www.socks24.org', 'freeschoolproxy.blogspot.com',
+                   'getdailyfreshproxy.blogspot.com']
         pages = await asyncio.gather(*[
                         self.get('http://%s/' % d) for d in domains])
         urls = re.findall(exp, ''.join(pages))
@@ -281,12 +278,13 @@ class Gatherproxy_com(ProxyProvider):
         r'''(?=.*?(?:(?:(?:(?:25[0-5]|2[0-4]\d|[01]?\d\d?)\.){3}(?:25[0-5]|2[0-4]\d|[01]?\d\d?))|'(?P<port>[\d\w]+)'))''',
         flags=re.DOTALL)
     def find_proxies(self, page):
-        if 'gp.dep' in page:
-            proxies = self._pattern_h.findall(page)  # for http(s)
-            proxies = [(host, str(int(port, 16))) for host, port in proxies if port]
-        else:
-            proxies = self._find_proxies(page)  # for socks
-        return proxies
+        # if 'gp.dep' in page:
+        #     proxies = self._pattern_h.findall(page)  # for http(s)
+        #     proxies = [(host, str(int(port, 16))) for host, port in proxies if port]
+        # else:
+        #     proxies = self._find_proxies(page)  # for socks
+        return [(host, str(int(port, 16)))
+                for host, port in self._pattern_h.findall(page) if port]
 
     async def _pipe(self):
         url = 'http://www.gatherproxy.com/proxylist/anonymity/'
@@ -302,14 +300,22 @@ class Gatherproxy_com(ProxyProvider):
             lastPageId = max([int(n) for n in re.findall(expNumPages, page)])
             urls = [{'url': url, 'data': {'Type': t, 'PageIdx': pid},
                      'method': method} for pid in range(1, lastPageId+1)]
-        urls.append({'url': 'http://www.gatherproxy.com/sockslist/',
-                     'method': method})
+        # urls.append({'url': 'http://www.gatherproxy.com/sockslist/',
+        #              'method': method})
         await self._find_on_pages(urls)
 
 
-class Tools_rosinstrument_com(ProxyProvider):
-    # more
-    # http://tools.rosinstrument.com/cgi-bin/sps.pl?pattern=month-1&max=50&nskip=0&file=proxlog.csv
+class Gatherproxy_com_socks(ProxyProvider):
+    domain = 'gatherproxy.com^socks'
+    async def _pipe(self):
+        urls = [{'url': 'http://www.gatherproxy.com/sockslist/',
+                 'method': 'POST'}]
+        await self._find_on_pages(urls)
+
+
+class Tools_rosinstrument_com_base(ProxyProvider):
+    # more: http://tools.rosinstrument.com/cgi-bin/
+    #       sps.pl?pattern=month-1&max=50&nskip=0&file=proxlog.csv
     domain = 'tools.rosinstrument.com'
     sqrtPattern = re.compile(r'''sqrt\((\d+)\)''')
     bodyPattern = re.compile(r'''hideTxt\(\n*'(.*)'\);''')
@@ -328,15 +334,27 @@ class Tools_rosinstrument_com(ProxyProvider):
         x = round(sqrt(float(x[0])))
         hiddenBody = self.bodyPattern.findall(page)[0]
         hiddenBody = unquote(hiddenBody)
-        toCharCodes = [ord(char)^(x if i%2 else 0)
+        toCharCodes = [ord(char)^(x if i % 2 else 0)
                        for i, char in enumerate(hiddenBody)]
         fromCharCodes = ''.join([chr(n) for n in toCharCodes])
         page = unescape(fromCharCodes)
         return self._find_proxies(page)
 
+
+class Tools_rosinstrument_com(Tools_rosinstrument_com_base):
+    domain = 'tools.rosinstrument.com'
     async def _pipe(self):
         tpl = 'http://tools.rosinstrument.com/raw_free_db.htm?%d&t=%d'
-        urls = [tpl % (pid, t) for pid in range(51) for t in range(1, 4)]
+        urls = [tpl % (pid, t) for pid in range(51) for t in range(1, 3)]
+        await self._find_on_pages(urls)
+
+
+class Tools_rosinstrument_com_socks(Tools_rosinstrument_com_base):
+    domain = 'tools.rosinstrument.com^socks'
+    async def _pipe(self):
+        tpl = 'http://tools.rosinstrument.com/raw_free_db.htm?%d&t=3'
+        urls = [tpl % pid for pid in range(51)]
+        print('urls:', urls)
         await self._find_on_pages(urls)
 
 
@@ -393,7 +411,8 @@ class Proxynova_com(ProxyProvider):
         expCountries = r'"([a-z]{2})"'
         page = await self.get('http://www.proxynova.com/proxy-server-list/')
         tpl = 'http://www.proxynova.com/proxy-server-list/country-%s/'
-        urls = [tpl % isoCode for isoCode in re.findall(expCountries, page)]
+        urls = [tpl % isoCode for isoCode in re.findall(expCountries, page)
+                if isoCode != 'en']
         await self._find_on_pages(urls)
 
 
@@ -523,29 +542,40 @@ class Proxyb_net(ProxyProvider):
         await self._find_on_pages(urls)
 
 
+class Proxylistplus_com(ProxyProvider):
+    domain = 'list.proxylistplus.com'
+    async def _pipe(self):
+        urls = ['http://list.proxylistplus.com/Fresh-HTTP-Proxy-List-%d' % n
+                for n in range(1, 7)]
+        await self._find_on_pages(urls)
+
+
+
 extProviders = [
-    Proxy_list_org(proto=('HTTP', 'HTTPS')),                  # 140/87 HTTP(S)
-    Xseo_in(proto=('HTTP', 'HTTPS')),                         # 252/113 HTTP(S)
-    Spys_ru(proto=('HTTP', 'HTTPS')),                         # 693/238 HTTP(S)
-    Aliveproxy_com(),                                         # 210/63 SOCKS(~10)/HTTP(S)
-    Proxyb_net(),                                             # 4309/4113 SOCKS(~11)
-    # Hitsozler_com(proto=('HTTP', 'HTTPS')),                   # 13546/6463
-    Freeproxylists_com(),                                     # 6094/4203 SOCKS/HTTP(S)
+    Proxy_list_org(proto=('HTTP', 'HTTPS')),                  # 140/87
+    Xseo_in(proto=('HTTP', 'HTTPS')),                         # 252/113
+    Spys_ru(proto=('HTTP', 'HTTPS')),                         # 693/238
+    Proxylistplus_com(proto=('HTTP', 'HTTPS')),               # 300/229
+    Aliveproxy_com(),                                         # 210/63 SOCKS(~5)
+    Proxyb_net(proto=('HTTP', 'HTTPS')),                      # 4309/4113
+    Freeproxylists_com(),                                     # 6094/4203 SOCKS(~94)
     Any_blogspot_com(),                                       # 4471/2178 ... 8234/
-    Webanetlabs_net(),                                        # 2737/700
-    Checkerproxy_net(),                                       # 8382/1279 SOCKS(~30)/HTTP(S)
-    Proxz_com(proto=('HTTP', 'HTTPS'), max_conn=2),           # 3800/3486 HTTP(S)
-    Maxiproxies_com(),                                        # 626/169 SOCKS(~15)/HTTP(S)
-    _50kproxies_com(),                                        # 934/218 SOCKS(~38)/HTTP(S)
+    Webanetlabs_net(),                                        # 2737/700 SOCKS(~325)
+    Proxz_com(proto=('HTTP', 'HTTPS'), max_conn=2),           # 3800/3486
     Proxymore_com(proto=('HTTP', 'HTTPS')),                   # 1356/780
     Proxylist_me(proto=('HTTP', 'HTTPS')),                    # 1078/587
-    Foxtools_ru(proto=('HTTP', 'HTTPS'), max_conn=1),         # 500/187 HTTP(S)
-    Gatherproxy_com(),                                        # 2524/1264 SOCKS/HTTP(S)
-    Tools_rosinstrument_com(),                                # 7142/2367 SOCKS(~30)/HTTP(S)
-    Nntime_com(proto=('HTTP', 'HTTPS')),                      # 1050/582 HTTP(S)
-    Proxynova_com(proto=('HTTP', 'HTTPS')),                   # 1229/878 HTTP(S)
-    My_proxy_com(max_conn=2),                                 # 894/408 SOCKS(~10)/HTTP(S)
-    Free_proxy_cz(),                                          # 330/195 SOCKS(~2)
+    Foxtools_ru(proto=('HTTP', 'HTTPS'), max_conn=1),         # 500/187
+    Gatherproxy_com(proto=('HTTP', 'HTTPS')),                 # 4800/1283
+    Gatherproxy_com_socks(proto=('SOCKS4', 'SOCKS5')),        # 30/26
+    Tools_rosinstrument_com(proto=('HTTP', 'HTTPS')),         # 4980/2367
+    Tools_rosinstrument_com_socks(proto=('SOCKS4', 'SOCKS5')),# 2550/457
+    Nntime_com(proto=('HTTP', 'HTTPS')),                      # 1050/582
+    Proxynova_com(proto=('HTTP', 'HTTPS')),                   # 1229/878
+    My_proxy_com(max_conn=2),                                 # 894/408 SOCKS(~10)
+    Free_proxy_cz(),                                          # 420/195 SOCKS(~8)
+    Checkerproxy_net(),                                       # 8382/1279 SOCKS(~30)
+    # Maxiproxies_com(),                                        # 626/169 SOCKS(~15)
+    # _50kproxies_com(),                                        # 934/218 SOCKS(~38)
 ]
 
 
