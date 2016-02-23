@@ -14,7 +14,7 @@ ProxyBroker
     :target: https://pypi.python.org/pypi/proxybroker/
 
 
-ProxyBroker is an asynchronous finder working proxies with requested parameters (type, anonymity, country). Supports HTTP(S) and SOCKS proxies!
+ProxyBroker is an asynchronous finder public proxies on multiple sources and concurrently checks them (wtype, anonymity, country). Supports HTTP(S) and SOCKS!
 
 .. image:: https://raw.githubusercontent.com/constverum/ProxyBroker/master/proxybroker/data/example.gif
 
@@ -24,7 +24,7 @@ ProxyBroker is an asynchronous finder working proxies with requested parameters 
 Features
 --------
 
-* Search and collecting proxies from 50 sources (~7k working proxies).
+* Finds proxies on 50+ sources (~7k working proxies)
 * Identifies proxy in raw input data
 * Checks proxies on working with protocols: HTTP, HTTPS, SOCKS4, SOCKS5
 * Checks the level of anonymity proxy
@@ -99,11 +99,11 @@ Advanced example
 
     async def find_advanced_example(pQueue, loop):
         broker = Broker(queue=pQueue,
-                        timeout=6,
-                        attempts_conn=4,
-                        max_concurrent_conn=100,
+                        timeout=8,
+                        attempts_conn=3,
+                        max_concurrent_conn=200,
                         judges=['https://httpheader.net/', 'http://httpheader.net/'],
-                        providers=['http://www.proxylists.net/', 'http://fineproxy.org/freshproxy/'],
+                        providers=['http://www.proxylists.net/', 'http://fineproxy.org/eng/'],
                         verify_ssl=False,
                         loop=loop)
 
