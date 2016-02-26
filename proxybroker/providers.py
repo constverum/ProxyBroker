@@ -1,4 +1,5 @@
 import re
+import socket
 import asyncio
 from math import sqrt
 from html import unescape
@@ -9,8 +10,8 @@ from urllib.parse import unquote, urlparse
 import aiohttp
 
 from .errors import *
-from .utils import log, get_path_to_def_providers,\
-                   get_headers, IPPattern, IPPortPatternGlobal
+from .utils import log, get_path_to_def_providers, get_headers,\
+                   IPPattern, IPPortPatternGlobal, resolve_host
 
 
 class ProxyProvider:
@@ -31,14 +32,19 @@ class ProxyProvider:
         if url:
             self.domain = urlparse(url).netloc
         self.url = url
+        self.host = False
+        self.port = 80
+        self.addrInfo = {}
         self._proxies = set()
         if isinstance(proto, str):
             proto = tuple(proto.split(','))
         self.proto = proto
         # 4 concurrent connections on provider
         self._sem_provider = asyncio.Semaphore(max_conn)
+        self._connector = aiohttp.TCPConnector(use_dns_cache=True, loop=self._loop)
         self._session = aiohttp.ClientSession(
-            headers=self._headers, cookies=self._cookies, loop=self._loop)
+            connector=self._connector, headers=self._headers,
+            cookies=self._cookies, loop=self._loop)
 
     def __del__(self):
         self._session.close()
@@ -53,11 +59,30 @@ class ProxyProvider:
         self._proxies.update(new)
 
     async def get_proxies(self):
+        await self._resolve_host()
+        if not self.host:
+            return []
         await self._pipe()
         log.info('%d proxies received from %s' % (
                  len(self.proxies), self.domain))
         self._session.close()
         return self.proxies
+
+    async def _resolve_host(self):
+        domain = self.domain.split('^')[0]
+        with (await self._sem):
+            self.host = await resolve_host(domain, 3, self._loop)
+
+        if not self.host:
+            log.warning('%s: Could not resolve host' % domain)
+            return
+        log.debug('%s: Host resolved' % domain)
+        addrInfo = {
+            'hostname': domain, 'host': self.host, 'port': self.port,
+            'family': socket.AF_INET, 'proto': socket.IPPROTO_TCP,
+            'flags': socket.AI_NUMERICHOST}
+        # This dirty hack. I know.
+        self._connector._cached_hosts[(domain, self.port)] = [addrInfo]
 
     async def _pipe(self):
         await self._find_on_page(self.url)
@@ -552,30 +577,30 @@ class Proxylistplus_com(ProxyProvider):
 
 
 extProviders = [
-    Proxy_list_org(proto=('HTTP', 'HTTPS')),                  # 140/87
-    Xseo_in(proto=('HTTP', 'HTTPS')),                         # 252/113
-    Spys_ru(proto=('HTTP', 'HTTPS')),                         # 693/238
-    Proxylistplus_com(proto=('HTTP', 'HTTPS')),               # 300/229
-    Aliveproxy_com(),                                         # 210/63 SOCKS(~5)
-    Proxyb_net(proto=('HTTP', 'HTTPS')),                      # 4309/4113
-    Freeproxylists_com(),                                     # 6094/4203 SOCKS(~94)
-    Any_blogspot_com(),                                       # 4471/2178 ... 8234/
-    Webanetlabs_net(),                                        # 2737/700 SOCKS(~325)
-    Proxz_com(proto=('HTTP', 'HTTPS'), max_conn=2),           # 3800/3486
-    Proxymore_com(proto=('HTTP', 'HTTPS')),                   # 1356/780
-    Proxylist_me(proto=('HTTP', 'HTTPS')),                    # 1078/587
-    Foxtools_ru(proto=('HTTP', 'HTTPS'), max_conn=1),         # 500/187
-    Gatherproxy_com(proto=('HTTP', 'HTTPS')),                 # 4800/1283
-    Gatherproxy_com_socks(proto=('SOCKS4', 'SOCKS5')),        # 30/26
-    Tools_rosinstrument_com(proto=('HTTP', 'HTTPS')),         # 4980/2367
-    Tools_rosinstrument_com_socks(proto=('SOCKS4', 'SOCKS5')),# 2550/457
-    Nntime_com(proto=('HTTP', 'HTTPS')),                      # 1050/582
-    Proxynova_com(proto=('HTTP', 'HTTPS')),                   # 1229/878
-    My_proxy_com(max_conn=2),                                 # 894/408 SOCKS(~10)
-    Free_proxy_cz(),                                          # 420/195 SOCKS(~8)
-    Checkerproxy_net(),                                       # 8382/1279 SOCKS(~30)
-    # Maxiproxies_com(),                                        # 626/169 SOCKS(~15)
-    # _50kproxies_com(),                                        # 934/218 SOCKS(~38)
+    # Proxy_list_org(proto=('HTTP', 'HTTPS')),                  # 140/87
+    # Xseo_in(proto=('HTTP', 'HTTPS')),                         # 252/113
+    # Spys_ru(proto=('HTTP', 'HTTPS')),                         # 693/238
+    # Proxylistplus_com(proto=('HTTP', 'HTTPS')),               # 300/229
+    # Aliveproxy_com(),                                         # 210/63 SOCKS(~5)
+    # Proxyb_net(proto=('HTTP', 'HTTPS')),                      # 4309/4113
+    # Freeproxylists_com(),                                     # 6094/4203 SOCKS(~94)
+    # Any_blogspot_com(),                                       # 4471/2178 ... 8234/
+    # Webanetlabs_net(),                                        # 2737/700 SOCKS(~325)
+    # Proxz_com(proto=('HTTP', 'HTTPS'), max_conn=2),           # 3800/3486
+    # Proxymore_com(proto=('HTTP', 'HTTPS')),                   # 1356/780
+    # Proxylist_me(proto=('HTTP', 'HTTPS')),                    # 1078/587
+    # Foxtools_ru(proto=('HTTP', 'HTTPS'), max_conn=1),         # 500/187
+    # Gatherproxy_com(proto=('HTTP', 'HTTPS')),                 # 4800/1283
+    # Gatherproxy_com_socks(proto=('SOCKS4', 'SOCKS5')),        # 30/26
+    # Tools_rosinstrument_com(proto=('HTTP', 'HTTPS')),         # 4980/2367
+    # Tools_rosinstrument_com_socks(proto=('SOCKS4', 'SOCKS5')),# 2550/457
+    # Nntime_com(proto=('HTTP', 'HTTPS')),                      # 1050/582
+    # Proxynova_com(proto=('HTTP', 'HTTPS')),                   # 1229/878
+    # My_proxy_com(max_conn=2),                                 # 894/408 SOCKS(~10)
+    # Free_proxy_cz(),                                          # 420/195 SOCKS(~8)
+    # Checkerproxy_net(),                                       # 8382/1279 SOCKS(~30)
+    # # Maxiproxies_com(),                                        # 626/169 SOCKS(~15)
+    # # _50kproxies_com(),                                        # 934/218 SOCKS(~38)
 ]
 
 
@@ -592,3 +617,5 @@ def get_providers(path=None):
         providers.extend(extProviders)
         log.debug('providers: %s' % providers)
     return providers
+
+# /usr/local/lib/python3.5/site-packages/proxybroker/providers.py
