@@ -1,5 +1,5 @@
 include LICENSE
 include README.rst
 include requirements.txt
-include proxybroker/data/*.txt
 include proxybroker/data/*.mmdb
+include proxybroker/data/*.gif

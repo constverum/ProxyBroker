@@ -51,11 +51,11 @@ async def resolve_host(host, timeout, loop):
 def get_base_dir():
     return BASE_DIR
 
-def get_path_to_def_judges():
-    return os.path.join(BASE_DIR, 'data', 'judges.txt')
+# def get_path_to_def_judges():
+#     return os.path.join(BASE_DIR, 'data', 'judges.txt')
 
-def get_path_to_def_providers():
-    return os.path.join(BASE_DIR, 'data', 'providers.txt')
+# def get_path_to_def_providers():
+#     return os.path.join(BASE_DIR, 'data', 'providers.txt')
 
 def get_headers(rv=False):
     _rv = str(random.randint(1000, 9999))

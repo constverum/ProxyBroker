@@ -5,8 +5,7 @@ from urllib.parse import urlparse
 
 import aiohttp
 
-from .utils import log, get_path_to_def_judges, get_my_ip,\
-                   get_headers, resolve_host
+from .utils import log, get_my_ip, get_headers, resolve_host
 
 
 class Judge:
@@ -94,14 +93,27 @@ class Judge:
             self.isWorking = False
             log.warning('%s: Could not resolve host' % self.host)
 
+judgesList = [
+    Judge('https://httpheader.net/'),
+    Judge('https://www.proxy-listen.de/azenv.php'),
+    Judge('http://httpheader.net/'),
+    Judge('http://azenv.net/'),
+    Judge('http://ip.spys.ru/'),
+    Judge('http://proxyjudge.us/azenv.php'),
+    Judge('http://www.proxyfire.net/fastenv'),
+    Judge('http://www.ingosander.net/azenv.php'),
+    Judge('http://www.proxy-listen.de/azenv.php'),
+    ]
 
-def get_judges(path=None):
-    path = path or get_path_to_def_judges()
-    judges = []
-    with open(path) as f:
-        for url in f.readlines():
-            url = url.strip()
-            if not url or url.startswith('#'):
-                continue
-            judges.append(Judge(url))
-    return judges
+
+
+# def get_judges(path=None):
+#     path = path or get_path_to_def_judges()
+#     judges = []
+#     with open(path) as f:
+#         for url in f.readlines():
+#             url = url.strip()
+#             if not url or url.startswith('#'):
+#                 continue
+#             judges.append(Judge(url))
+#     return judges

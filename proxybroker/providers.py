@@ -10,8 +10,8 @@ from urllib.parse import unquote, urlparse
 import aiohttp
 
 from .errors import *
-from .utils import log, get_path_to_def_providers, get_headers,\
-                   IPPattern, IPPortPatternGlobal, resolve_host
+from .utils import log, get_headers, resolve_host,\
+                   IPPattern, IPPortPatternGlobal
 
 
 class ProxyProvider:
@@ -168,20 +168,27 @@ class Freeproxylists_com(ProxyProvider):
         await self._find_on_pages(urls)
 
 
-class Any_blogspot_com(ProxyProvider):
-    domain = 'blogspot.com'
+class Blogspot_com_base(ProxyProvider):
     _cookies = {'NCR': 1}
     async def _pipe(self):
         exp = r'''<a href\s*=\s*['"]([^'"]*\.\w+/\d{4}/\d{2}/[^'"#]*)['"]>'''
-        domains = ['proxyserverlist-24.blogspot.com', 'newfreshproxies24.blogspot.com',
-                   'irc-proxies24.blogspot.com', 'googleproxies24.blogspot.com',
-                   'elitesocksproxy.blogspot.com', 'www.proxyocean.com',
-                   'www.socks24.org', 'freeschoolproxy.blogspot.com',
-                   'getdailyfreshproxy.blogspot.com']
         pages = await asyncio.gather(*[
-                        self.get('http://%s/' % d) for d in domains])
+                        self.get('http://%s/' % d) for d in self.domains])
         urls = re.findall(exp, ''.join(pages))
         await self._find_on_pages(urls)
+
+
+class Blogspot_com(Blogspot_com_base):
+    domain = 'blogspot.com'
+    domains = ['sslproxies24.blogspot.com', 'proxyserverlist-24.blogspot.com',
+               'newfreshproxies24.blogspot.com', 'irc-proxies24.blogspot.com',
+               'freeschoolproxy.blogspot.com', 'getdailyfreshproxy.blogspot.com',
+               'googleproxies24.blogspot.com']
+
+
+class Blogspot_com_socks(Blogspot_com_base):
+    domain = 'blogspot.com^socks'
+    domains = ['www.proxyocean.com', 'www.socks24.org']
 
 
 class Webanetlabs_net(ProxyProvider):
@@ -576,46 +583,74 @@ class Proxylistplus_com(ProxyProvider):
 
 
 
-extProviders = [
-    # Proxy_list_org(proto=('HTTP', 'HTTPS')),                  # 140/87
-    # Xseo_in(proto=('HTTP', 'HTTPS')),                         # 252/113
-    # Spys_ru(proto=('HTTP', 'HTTPS')),                         # 693/238
-    # Proxylistplus_com(proto=('HTTP', 'HTTPS')),               # 300/229
-    # Aliveproxy_com(),                                         # 210/63 SOCKS(~5)
-    # Proxyb_net(proto=('HTTP', 'HTTPS')),                      # 4309/4113
-    # Freeproxylists_com(),                                     # 6094/4203 SOCKS(~94)
-    # Any_blogspot_com(),                                       # 4471/2178 ... 8234/
-    # Webanetlabs_net(),                                        # 2737/700 SOCKS(~325)
-    # Proxz_com(proto=('HTTP', 'HTTPS'), max_conn=2),           # 3800/3486
-    # Proxymore_com(proto=('HTTP', 'HTTPS')),                   # 1356/780
-    # Proxylist_me(proto=('HTTP', 'HTTPS')),                    # 1078/587
-    # Foxtools_ru(proto=('HTTP', 'HTTPS'), max_conn=1),         # 500/187
-    # Gatherproxy_com(proto=('HTTP', 'HTTPS')),                 # 4800/1283
-    # Gatherproxy_com_socks(proto=('SOCKS4', 'SOCKS5')),        # 30/26
-    # Tools_rosinstrument_com(proto=('HTTP', 'HTTPS')),         # 4980/2367
-    # Tools_rosinstrument_com_socks(proto=('SOCKS4', 'SOCKS5')),# 2550/457
-    # Nntime_com(proto=('HTTP', 'HTTPS')),                      # 1050/582
-    # Proxynova_com(proto=('HTTP', 'HTTPS')),                   # 1229/878
-    # My_proxy_com(max_conn=2),                                 # 894/408 SOCKS(~10)
-    # Free_proxy_cz(),                                          # 420/195 SOCKS(~8)
-    # Checkerproxy_net(),                                       # 8382/1279 SOCKS(~30)
-    # # Maxiproxies_com(),                                        # 626/169 SOCKS(~15)
-    # # _50kproxies_com(),                                        # 934/218 SOCKS(~38)
+providersList = [
+    ProxyProvider(url='https://getproxy.net/en/', proto=('HTTP', 'HTTPS')),                    # 25/14
+    ProxyProvider(url='http://www.proxylists.net/', proto=('HTTP', 'HTTPS')),                  # 46/26
+    ProxyProvider(url='http://ipaddress.com/proxy-list/', proto=('HTTP', 'HTTPS')),            # 53/35
+    ProxyProvider(url='http://www.ip-adress.com/proxy_list/?k=time', proto=('HTTP', 'HTTPS')), # 57/40
+    ProxyProvider(url='http://codediaries.com/list.php', proto=('HTTP', 'HTTPS')),             # 75/22
+    ProxyProvider(url='http://httptunnel.ge/ProxyListForFree.aspx', proto=('HTTP', 'HTTPS')),  # 100/48
+    ProxyProvider(url='http://www.sslproxies.org/', proto=('HTTP', 'HTTPS')),                  # 100/82
+    ProxyProvider(url='http://2-proxy.com/proxylist?sort=last'
+                      '&order=DESC&maxtime=30000&perpage=1000', proto=('HTTP', 'HTTPS')),      # 109/46
+    ProxyProvider(url='http://marcosbl.com/lab/proxies/', proto=('HTTP', 'HTTPS')),            # 152/99
+    ProxyProvider(url='https://freshfreeproxylist.wordpress.com/', proto=('HTTP', 'HTTPS')),   # 178/119
+    ProxyProvider(url='http://proxytime.ru/http', proto=('HTTP', 'HTTPS')),                    # 281/202
+    ProxyProvider(url='http://txt.proxyspy.net/proxy.txt', proto=('HTTP', 'HTTPS')),           # 300/176
+    ProxyProvider(url='http://free-proxy-list.net/', proto=('HTTP', 'HTTPS')),                 # 300/220
+    ProxyProvider(url='http://www.proxyservers.eu/', proto=('HTTP', 'HTTPS')),                 # 1785/627
+    ProxyProvider(url='http://www.cybersyndrome.net/pla.html', proto=('HTTP', 'HTTPS')),       # 2966/262
+    ProxyProvider(url='http://socks24.ru/proxy/httpProxies.txt', proto=('HTTP', 'HTTPS')),     # 3456/505
+    ProxyProvider(url='http://fineproxy.org/eng/?p=6', proto=('HTTP', 'HTTPS')),               # 3647/661
+    ProxyProvider(url='http://www.socks-proxy.net/', proto=('SOCKS4', 'SOCKS5')),              # 80/53
+    Proxy_list_org(proto=('HTTP', 'HTTPS')),                  # 140/87
+    Xseo_in(proto=('HTTP', 'HTTPS')),                         # 252/113
+    Spys_ru(proto=('HTTP', 'HTTPS')),                         # 693/238
+    Proxylistplus_com(proto=('HTTP', 'HTTPS')),               # 300/229
+    Proxyb_net(proto=('HTTP', 'HTTPS')),                      # 4309/4113
+    Proxz_com(proto=('HTTP', 'HTTPS'), max_conn=2),           # 3800/3486
+    Proxymore_com(proto=('HTTP', 'HTTPS')),                   # 1356/780
+    Proxylist_me(proto=('HTTP', 'HTTPS')),                    # 1078/587
+    Foxtools_ru(proto=('HTTP', 'HTTPS'), max_conn=1),         # 500/187
+    Gatherproxy_com(proto=('HTTP', 'HTTPS')),                 # 4800/1283
+    Tools_rosinstrument_com(proto=('HTTP', 'HTTPS')),         # 4980/2367
+    Nntime_com(proto=('HTTP', 'HTTPS')),                      # 1050/582
+    Proxynova_com(proto=('HTTP', 'HTTPS')),                   # 1229/878
+    Blogspot_com(proto=('HTTP', 'HTTPS')),                    # 13570/?
+    Gatherproxy_com_socks(proto=('SOCKS4', 'SOCKS5')),        # 30/26
+    Tools_rosinstrument_com_socks(proto=('SOCKS4', 'SOCKS5')),# 2550/457
+    Blogspot_com_socks(proto=('SOCKS4', 'SOCKS5')),           # 7921/548
+    ProxyProvider(url='http://myproxylists.com/free-proxy-list', proto=('HTTP', 'HTTPS')),     # 6/3
+    ProxyProvider(url='http://hugeproxies.com/home/', proto=('HTTP', 'HTTPS')),                # 118/16
+    ProxyProvider(url='http://proxy.rufey.ru/', proto=('HTTP', 'HTTPS')),                      # 153/16
+    ProxyProvider(url='http://go4free.xyz/Free-Proxy/', proto=('HTTP', 'HTTPS')),              # 196/10
+    ProxyProvider(url='http://mitituti.com/content/proxy.txt', proto=('HTTP', 'HTTPS')),       # 227/42
+    ProxyProvider(url='http://geekelectronics.org/my-servisy/proxy', proto=('HTTP', 'HTTPS')), # 395/7
+    ProxyProvider(url='http://www.get-proxy.net/proxy-archives'),                              # 519/188 SOCKS(~31)
+    ProxyProvider(url='http://blackstarsecurity.com/proxy-list.txt'),                          # 7014/427 SOCKS(~175)
+    My_proxy_com(max_conn=2),                                 # 894/408 SOCKS(~10)
+    Free_proxy_cz(),                                          # 420/195 SOCKS(~8)
+    Checkerproxy_net(),                                       # 8382/1279 SOCKS(~30)
+    Aliveproxy_com(),                                         # 210/63 SOCKS(~5)
+    Freeproxylists_com(),                                     # 6094/4203 SOCKS(~94)
+    Webanetlabs_net(),                                        # 2737/700 SOCKS(~325)
+    # Maxiproxies_com(),                                        # 626/169 SOCKS(~15)
+    # _50kproxies_com(),                                        # 934/218 SOCKS(~38)
 ]
 
 
-def get_providers(path=None):
-    _path = path or get_path_to_def_providers()
-    providers = []
-    with open(_path) as f:
-        for url in f.readlines():
-            url = url.strip()
-            if not url or url.startswith('#'):
-                continue
-            providers.append(ProxyProvider(url))
-    if not path:
-        providers.extend(extProviders)
-        log.debug('providers: %s' % providers)
-    return providers
+# def get_providers(path=None):
+#     _path = path or get_path_to_def_providers()
+#     providers = []
+#     with open(_path) as f:
+#         for url in f.readlines():
+#             url = url.strip()
+#             if not url or url.startswith('#'):
+#                 continue
+#             providers.append(ProxyProvider(url))
+#     if not path:
+#         providers.extend(extProviders)
+#         log.debug('providers: %s' % providers)
+#     return providers
 
 # /usr/local/lib/python3.5/site-packages/proxybroker/providers.py
