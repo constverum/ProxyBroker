@@ -1,14 +1,15 @@
+import signal
 import asyncio
 
 from pprint import pprint
 from collections import defaultdict, Counter
 
 from .proxy import Proxy
-from .judge import Judge, get_judges
+from .judge import Judge, judgesList
 from .checker import ProxyChecker
 from .negotiators import BaseNegotiator
 from .utils import log, set_my_ip, IPPortPatternLine
-from .providers import ProxyProvider, get_providers
+from .providers import ProxyProvider, providersList
 
 
 class Broker:
@@ -25,8 +26,8 @@ class Broker:
         self._allFoundProxies = []
         self._allFoundProxyPairs = set()
         self._providers = [ProxyProvider(pr) for pr in providers]\
-                          if providers else get_providers()
-        self._judges = [Judge(u) for u in judges] if judges else get_judges()
+                           if providers else providersList
+        self._judges = [Judge(u) for u in judges] if judges else judgesList
         self._loop = loop or asyncio.get_event_loop()
         self._limit = None
         self._countries= None
@@ -48,6 +49,8 @@ class Broker:
             sem = max_concurrent_conn
         else:
             sem = asyncio.Semaphore(max_concurrent_conn)
+
+        self._loop.add_signal_handler(signal.SIGINT, self._done)
 
         Judge.clear()
         Judge._sem = sem
@@ -189,12 +192,15 @@ class Broker:
         if self._isDone:
             return
         self._isDone = True
+        self._to_check.clear()
         for f in self._on_check:
             if not f.cancelled():
                 f.cancel()
         self._tasks.cancel()
         self.push_to_result(None)
-        log.debug('Done!')
+        log.info('Done!')
+        # self._loop.stop()
+        # self._loop.close()
 
 
     def show_stats(self, full=True):
