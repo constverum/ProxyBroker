@@ -34,7 +34,7 @@ class Broker:
         self._on_check = []
         self._to_check = []
         self._isDone = False
-        self._tasks = None
+        self._tasks = []
         self._all_checked = asyncio.Event(loop=self._loop)
         self._all_checked.set()
         self._checker = ProxyChecker(broker=self,
@@ -85,9 +85,10 @@ class Broker:
         await self._run(self._checker.check_judges(), action)
 
     async def _run(self, *args):
-        self._tasks = asyncio.gather(*args)
+        tasks = asyncio.gather(*args)
+        self._tasks.append(tasks)
         try:
-            await self._tasks
+            await tasks
         except asyncio.CancelledError:
             log.info('Cancelled')
         else:
@@ -111,7 +112,7 @@ class Broker:
         return _types
 
     async def _load(self, data, push):
-        log.debug('Start load proxies from input data')
+        log.debug('Load the proxies from the input data')
         if isinstance(data, str):
             data = IPPortPatternLine.findall(data)
         data = set(data)
@@ -120,13 +121,16 @@ class Broker:
 
     async def _grab(self, types, push):
         log.debug('Start grabbing proxies')
-        providers = [pr for pr in self._providers if not types or\
-                     not pr.proto or (pr.proto & types.keys())]
-        for pr in providers:
-            log.info('Try to get proxies from %s...' % pr.domain)
-            proxies = await pr.get_proxies()
-            log.info('Provider %s returned %d proxies: %s' % (pr.domain, len(proxies), proxies))
+        tasks = [asyncio.ensure_future(pr.get_proxies())
+                 for pr in self._providers
+                 if not types or not pr.proto or (pr.proto & types.keys())]
+        self._tasks.extend(tasks)
+
+        for task in asyncio.as_completed(tasks):
+            proxies = await task
             await self._pipe(proxies, push=push)
+            log.debug('On check: %d; To check: %d;' % (
+                len(self._on_check), len(self._to_check)))
 
     async def _pipe(self, proxies, push):
         with (await self._cycle_lock):
@@ -182,7 +186,6 @@ class Broker:
         self._update_limit()
 
     def _update_limit(self):
-        # log.debug('_update_limit:', self._limit)
         if self._limit is not None:
             self._limit -= 1
             if self._limit == 0:
@@ -196,12 +199,10 @@ class Broker:
         for f in self._on_check:
             if not f.cancelled():
                 f.cancel()
-        self._tasks.cancel()
+        for task in self._tasks:
+            task.cancel()
         self.push_to_result(None)
         log.info('Done!')
-        # self._loop.stop()
-        # self._loop.close()
-
 
     def show_stats(self, full=True):
         if not self._allFoundProxies:

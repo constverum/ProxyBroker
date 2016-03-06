@@ -21,6 +21,8 @@ class ProxyProvider:
     _cookies = {}
     _headers = get_headers()
     _pattern = IPPortPatternGlobal
+    # maximum of concurrent grab providers:
+    _sem_providers = asyncio.Semaphore(3)
     _attemptsConnect = 3
 
     def __init__(self, url=None, proto=(), max_conn=4):
@@ -59,20 +61,24 @@ class ProxyProvider:
         self._proxies.update(new)
 
     async def get_proxies(self):
-        await self._resolve_host()
-        if not self.host:
-            return []
-        await self._pipe()
-        log.info('%d proxies received from %s' % (
-                 len(self.proxies), self.domain))
-        self._session.close()
-        return self.proxies
+        with (await self._sem), (await self._sem_providers):
+            log.info('Try to get proxies from %s...' % self.domain)
+            await self._resolve_host()
+            if not self.host:
+                return []
+            await self._pipe()
+            log.info('%d proxies received from %s: %s' % (
+                     len(self.proxies), self.domain, self.proxies))
+            self._session.close()
+            return self.proxies
 
     async def _resolve_host(self):
         domain = self.domain.split('^')[0]
-        with (await self._sem):
-            self.host = await resolve_host(domain, 3, self._loop)
-
+        for _ in range(self._attemptsConnect):
+            with (await self._sem):
+                self.host = await resolve_host(domain, 5, self._loop)
+            if self.host:
+                break
         if not self.host:
             log.warning('%s: Could not resolve host' % domain)
             return
@@ -81,7 +87,7 @@ class ProxyProvider:
             'hostname': domain, 'host': self.host, 'port': self.port,
             'family': socket.AF_INET, 'proto': socket.IPPROTO_TCP,
             'flags': socket.AI_NUMERICHOST}
-        # This dirty hack. I know.
+        # This is a dirty hack. I know.
         self._connector._cached_hosts[(domain, self.port)] = [addrInfo]
 
     async def _pipe(self):
@@ -115,9 +121,7 @@ class ProxyProvider:
             added, len(received), url))
 
     async def get(self, url, data=None, headers=None, method='GET'):
-        attempt = 0
-        while attempt < self._attemptsConnect:
-            attempt += 1
+        for _ in range(self._attemptsConnect):
             page = await self._get(url, data=data, headers=headers, method=method)
             if page:
                 break
@@ -386,7 +390,6 @@ class Tools_rosinstrument_com_socks(Tools_rosinstrument_com_base):
     async def _pipe(self):
         tpl = 'http://tools.rosinstrument.com/raw_free_db.htm?%d&t=3'
         urls = [tpl % pid for pid in range(51)]
-        print('urls:', urls)
         await self._find_on_pages(urls)
 
 
@@ -587,22 +590,18 @@ providersList = [
     ProxyProvider(url='https://getproxy.net/en/', proto=('HTTP', 'HTTPS')),                    # 25/14
     ProxyProvider(url='http://www.proxylists.net/', proto=('HTTP', 'HTTPS')),                  # 46/26
     ProxyProvider(url='http://ipaddress.com/proxy-list/', proto=('HTTP', 'HTTPS')),            # 53/35
-    ProxyProvider(url='http://www.ip-adress.com/proxy_list/?k=time', proto=('HTTP', 'HTTPS')), # 57/40
-    ProxyProvider(url='http://codediaries.com/list.php', proto=('HTTP', 'HTTPS')),             # 75/22
-    ProxyProvider(url='http://httptunnel.ge/ProxyListForFree.aspx', proto=('HTTP', 'HTTPS')),  # 100/48
     ProxyProvider(url='http://www.sslproxies.org/', proto=('HTTP', 'HTTPS')),                  # 100/82
     ProxyProvider(url='http://2-proxy.com/proxylist?sort=last'
                       '&order=DESC&maxtime=30000&perpage=1000', proto=('HTTP', 'HTTPS')),      # 109/46
     ProxyProvider(url='http://marcosbl.com/lab/proxies/', proto=('HTTP', 'HTTPS')),            # 152/99
     ProxyProvider(url='https://freshfreeproxylist.wordpress.com/', proto=('HTTP', 'HTTPS')),   # 178/119
     ProxyProvider(url='http://proxytime.ru/http', proto=('HTTP', 'HTTPS')),                    # 281/202
-    ProxyProvider(url='http://txt.proxyspy.net/proxy.txt', proto=('HTTP', 'HTTPS')),           # 300/176
     ProxyProvider(url='http://free-proxy-list.net/', proto=('HTTP', 'HTTPS')),                 # 300/220
     ProxyProvider(url='http://www.proxyservers.eu/', proto=('HTTP', 'HTTPS')),                 # 1785/627
-    ProxyProvider(url='http://www.cybersyndrome.net/pla.html', proto=('HTTP', 'HTTPS')),       # 2966/262
     ProxyProvider(url='http://socks24.ru/proxy/httpProxies.txt', proto=('HTTP', 'HTTPS')),     # 3456/505
     ProxyProvider(url='http://fineproxy.org/eng/?p=6', proto=('HTTP', 'HTTPS')),               # 3647/661
     ProxyProvider(url='http://www.socks-proxy.net/', proto=('SOCKS4', 'SOCKS5')),              # 80/53
+    ProxyProvider(url='http://www.cybersyndrome.net/pla.html', proto=('HTTP', 'HTTPS')),       # 2966/262
     Proxy_list_org(proto=('HTTP', 'HTTPS')),                  # 140/87
     Xseo_in(proto=('HTTP', 'HTTPS')),                         # 252/113
     Spys_ru(proto=('HTTP', 'HTTPS')),                         # 693/238
@@ -613,19 +612,23 @@ providersList = [
     Proxylist_me(proto=('HTTP', 'HTTPS')),                    # 1078/587
     Foxtools_ru(proto=('HTTP', 'HTTPS'), max_conn=1),         # 500/187
     Gatherproxy_com(proto=('HTTP', 'HTTPS')),                 # 4800/1283
-    Tools_rosinstrument_com(proto=('HTTP', 'HTTPS')),         # 4980/2367
     Nntime_com(proto=('HTTP', 'HTTPS')),                      # 1050/582
     Proxynova_com(proto=('HTTP', 'HTTPS')),                   # 1229/878
     Blogspot_com(proto=('HTTP', 'HTTPS')),                    # 13570/?
     Gatherproxy_com_socks(proto=('SOCKS4', 'SOCKS5')),        # 30/26
-    Tools_rosinstrument_com_socks(proto=('SOCKS4', 'SOCKS5')),# 2550/457
     Blogspot_com_socks(proto=('SOCKS4', 'SOCKS5')),           # 7921/548
+    ProxyProvider(url='http://codediaries.com/list.php', proto=('HTTP', 'HTTPS')),             # 75/22
+    ProxyProvider(url='http://httptunnel.ge/ProxyListForFree.aspx', proto=('HTTP', 'HTTPS')),  # 100/48
+    ProxyProvider(url='http://txt.proxyspy.net/proxy.txt', proto=('HTTP', 'HTTPS')),           # 300/176
+    ProxyProvider(url='http://www.ip-adress.com/proxy_list/?k=time', proto=('HTTP', 'HTTPS')), # 57/40
     ProxyProvider(url='http://myproxylists.com/free-proxy-list', proto=('HTTP', 'HTTPS')),     # 6/3
     ProxyProvider(url='http://hugeproxies.com/home/', proto=('HTTP', 'HTTPS')),                # 118/16
     ProxyProvider(url='http://proxy.rufey.ru/', proto=('HTTP', 'HTTPS')),                      # 153/16
     ProxyProvider(url='http://go4free.xyz/Free-Proxy/', proto=('HTTP', 'HTTPS')),              # 196/10
     ProxyProvider(url='http://mitituti.com/content/proxy.txt', proto=('HTTP', 'HTTPS')),       # 227/42
     ProxyProvider(url='http://geekelectronics.org/my-servisy/proxy', proto=('HTTP', 'HTTPS')), # 395/7
+    Tools_rosinstrument_com(proto=('HTTP', 'HTTPS')),         # 4980/2367
+    Tools_rosinstrument_com_socks(proto=('SOCKS4', 'SOCKS5')),# 2550/457
     ProxyProvider(url='http://www.get-proxy.net/proxy-archives'),                              # 519/188 SOCKS(~31)
     ProxyProvider(url='http://blackstarsecurity.com/proxy-list.txt'),                          # 7014/427 SOCKS(~175)
     My_proxy_com(max_conn=2),                                 # 894/408 SOCKS(~10)
