@@ -9,7 +9,7 @@ from .judge import Judge, judgesList
 from .checker import ProxyChecker
 from .negotiators import BaseNegotiator
 from .utils import log, set_my_ip, IPPortPatternLine
-from .providers import ProxyProvider, providersList
+from .providers import Provider, providersList
 
 
 class Broker:
@@ -25,9 +25,27 @@ class Broker:
         self._qResult = queue
         self._allFoundProxies = []
         self._allFoundProxyPairs = set()
-        self._providers = [ProxyProvider(pr) for pr in providers]\
-                           if providers else providersList
-        self._judges = [Judge(u) for u in judges] if judges else judgesList
+
+        self._providers = []
+        if providers:
+            for p in providers:
+                if isinstance(p, Provider):
+                    self._providers.append(p)
+                else:
+                    self._providers.append(Provider(p))
+        else:
+            self._providers = providersList
+
+        self._judges = []
+        if judges:
+            for j in judges:
+                if isinstance(j, Judge):
+                    self._judges.append(j)
+                else:
+                    self._judges.append(Judge(j))
+        else:
+            self._judges = judgesList
+
         self._loop = loop or asyncio.get_event_loop()
         self._limit = None
         self._countries= None
@@ -61,8 +79,8 @@ class Broker:
         Proxy._loop = self._loop
         Proxy._timeout = timeout
         Proxy._verifySSL = verify_ssl
-        ProxyProvider._sem = sem
-        ProxyProvider._loop = self._loop
+        Provider._sem = sem
+        Provider._loop = self._loop
         BaseNegotiator._sem = sem
         BaseNegotiator._attemptsConnect = attempts_conn
 
