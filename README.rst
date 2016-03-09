@@ -1,5 +1,6 @@
 ProxyBroker
 ===========
+
 .. image:: https://img.shields.io/pypi/v/proxybroker.svg
     :target: https://pypi.python.org/pypi/proxybroker/
 .. image:: https://img.shields.io/pypi/pyversions/proxybroker.svg
@@ -14,7 +15,7 @@ ProxyBroker
     :target: https://pypi.python.org/pypi/proxybroker/
 
 
-ProxyBroker is an open source tool that asynchronously finds public proxies on multiple sources and concurrently checks them (type, anonymity level, country). Supports HTTP(S) and SOCKS.
+ProxyBroker is an open source tool that asynchronously finds public proxies from multiple sources and concurrently checks them (type, level of anonymity, country). Supports HTTP(S) and SOCKS.
 
 .. image:: https://raw.githubusercontent.com/constverum/ProxyBroker/master/proxybroker/data/example.gif
 
@@ -24,11 +25,15 @@ ProxyBroker is an open source tool that asynchronously finds public proxies on m
 Features
 --------
 
-* Finds proxies on 50+ sources (~7k working proxies)
-* Identifies proxy in raw input data
-* Checks proxies on working with protocols: HTTP, HTTPS, SOCKS4, SOCKS5
-* Checks the level of anonymity proxy
-* Removes duplicates
+* Find and gather proxies from 50+ sources (the websites that publish free public proxy lists daily).
+  It is about ~7000 HTTP(S) and ~500 SOCKS working proxies. And much more: you can add custom sources
+* Work with proxies passed directly. Detects and recognize proxies in the text you pass (no matter how dirty the data)
+* All protocols support. Proxies can be checked for work by HTTP, HTTPS (via CONNECT), SOCKS4 and SOCSK5 protocols
+* Filter proxies by country. Determines location (country) of the proxy and checks only the specified
+* Check the level of anonymity: Transparent, Anonymous, High. You can add your own judges
+* Is asynchronous. That helps increase checking speed & decrease waiting time. It's realy fast: 
+  just in a minute, it will give you ~250 working HTTP proxies.
+* Automatically removes duplicate proxies.
 
 
 Requirements
@@ -103,7 +108,10 @@ Advanced example
             proxy = await proxies.get()
             if proxy is None:
                 break
-            print('Found proxy: %s' % proxy)
+            elif 'SOCKS5' in proxy.types:  # filter by type
+                print('Found SOCKS5 proxy: %s' % proxy)
+            else:
+                print('Found proxy: %s' % proxy)
 
     async def find_advanced_example(proxies, loop):
         broker = Broker(queue=proxies,
@@ -128,39 +136,46 @@ Advanced example
         tasks = asyncio.gather(find_advanced_example(proxies, loop), use_example(proxies))
         loop.run_until_complete(tasks)
 
-In this example we explicitly specify the parameters that directly affect on the speed of gathering and checking proxy (see `Broker parameters`_). In most cases it's redundant.
+In this example we explicitly specify the parameters that directly affect on the speed of gathering and checking proxies (see `Broker parameters`_). In most cases it's redundant.
 
 Usually we want to find:
 
-* certain number of specific types proxy
+* certain number of specific type of proxies
 * with a high level of anonymity
 * and from specific countries. 
 
 To do this, we pass parameters ``types``, ``countries`` and ``limit`` to the ``find`` method (see `Broker methods`_).
 
-Note: We gather proxies from providers, check and send them to separate function, that can begin to work with proxies immediately without waiting for end of the search. You can start to use the proxies in a couple of seconds after the start of the search. And until the search is not stopped you will have more and more proxies.
+Note: We gather proxies from the providers, check and send them to separate function, which can use the checked proxies without waiting for end of the search. You can start to use the proxies in a couple of seconds after the start of the search. Search and check of new proxies will continue until the `limit` is reached or until we not visit all the providers and check all the proxies received from them.
 
 
-Example #3: check proxies from your source
-""""""""""""""""""""""""""""""""""""""""""
+Example #3: find and check proxies from raw data
+"""""""""""""""""""""""""""""""""""""""""""""""""
 
 .. code-block:: python
     
+    # raw_data.txt
+    10.0.0.1:80
+    OK 10.0.0.2:   80 HTTP 200 OK 1.214
+    10.0.0.3;80;SOCKS5 check date 21-01-02
+    >>>10.0.0.4@80 HTTP HTTPS status OK
+    
+    # example.py
     # ...
-    data = '''10.0.0.1:80
-              OK 10.0.0.2:   80 HTTP 200 OK 1.214
-              10.0.0.3;80;SOCKS5 check date 21-01-02
-              >>>10.0.0.4@80 HTTP HTTPS status OK
-              ...'''
+    broker = Broker(proxies, loop=loop)
+
+    with open('raw_data.txt', 'r') as f:
+        data = f.read()
 
     await broker.find(data=data)
     # ...
 
-You can have your source with proxies (it's usual .txt file). And all you want is to check all the proxies from it. To do this, simply pass it to the ``data`` argument.
-Note: At the moment, information about the type of proxies in the raw data is ignored.
+As a source of proxies, instead of the providers you can use your own source data (it's usual local .txt file). Simply pass your data to the ``data`` parameter.
+Note: At the moment, information about the type of proxy in the raw data is ignored.
 
-Example #4: only gather proxies (without check)
-""""""""""""""""""""""""""""""""""""""""""""""""
+
+Example #4: only gather proxies (without a check)
+"""""""""""""""""""""""""""""""""""""""""""""""""
 
 .. code-block:: python
 
@@ -168,7 +183,7 @@ Example #4: only gather proxies (without check)
     await broker.grab(countries=['US'], limit=100)
     # ...
 
-If you need just to gather proxies without check. Use the ``grab`` method for it.
+Use the ``grab`` method if you want only to gather the proxies without a check.
 Note: The number of found proxies can reach over 40k.
 
 
@@ -180,73 +195,76 @@ Proxy properties
 """"""""""""""""
 .. table::
 
-    +------------+------+-----------------------------------------+----------------------------------------------------------------------+
-    |Property    | Type | Example                                 | Description                                                          |
-    +============+======+=========================================+======================================================================+
-    |host        | str  | '8.8.8.8'                               | The IP address of the proxy                                          |
-    +------------+------+-----------------------------------------+----------------------------------------------------------------------+
-    |port        | int  | 80                                      | The port of the proxy                                                |
-    +------------+------+-----------------------------------------+----------------------------------------------------------------------+
-    |types       | dict | {'HTTP': 'Anonymous', 'HTTPS': None}    | The dict of supported protocols and their levels of anonymity        |
-    +------------+------+-----------------------------------------+----------------------------------------------------------------------+
-    |geo         | dict | {'code': 'US', 'name': 'United States'} | The dict of ISO code and the full name of the country proxy location |
-    +------------+------+-----------------------------------------+----------------------------------------------------------------------+
-    |avgRespTime | str  | '1.11'                                  | The string with the average response time of proxy                   |
-    +------------+------+-----------------------------------------+----------------------------------------------------------------------+
-
+    +-------------+------+-----------------------------------------+----------------------------------------------------------+
+    | Property    | Type | Example                                 | Description                                              |
+    +=============+======+=========================================+==========================================================+
+    | host        | str  | '8.8.8.8'                               | IP address of the proxy                                  |
+    +-------------+------+-----------------------------------------+----------------------------------------------------------+
+    | port        | int  | 80                                      | Port of the proxy                                        |
+    +-------------+------+-----------------------------------------+----------------------------------------------------------+
+    | types       | dict | {'HTTP': 'Anonymous', 'HTTPS': None}    | Supported protocols and their levels of anonymity        |
+    +-------------+------+-----------------------------------------+----------------------------------------------------------+
+    | geo         | dict | {'code': 'US', 'name': 'United States'} | ISO code and the full name of the country proxy location |
+    +-------------+------+-----------------------------------------+----------------------------------------------------------+
+    | avgRespTime | str  | '1.11'                                  | Average response time of proxy                           |
+    +-------------+------+-----------------------------------------+----------------------------------------------------------+
+    
 
 Broker parameters
 """""""""""""""""
 .. table::
 
-    +--------------------+----------+----------------------------+-------------------+--------------------------------------------------------------------------------------------------------------+
-    | Parameter          | Required | Type                       | Default           | Description                                                                                                  |
-    +====================+==========+============================+===================+==============================================================================================================+
-    | queue              + Yes      | str                        |                   | Queue to which will be added proxies.                                                                        |
-    +--------------------+----------+----------------------------+-------------------+--------------------------------------------------------------------------------------------------------------+
-    | timeout            + No       | int                        | 8                 | Timeout is set to all the actions carried by the network. In seconds.                                        |
-    +--------------------+----------+----------------------------+-------------------+--------------------------------------------------------------------------------------------------------------+
-    | attempts_conn      | No       | int                        | 3                 | Limiting the maximum number of connection attempts.                                                          |
-    +--------------------+----------+----------------------------+-------------------+--------------------------------------------------------------------------------------------------------------+
-    |max_concurrent_conn | No       | int or asyncio.Semaphore() | 200               | Limiting the maximum number of concurrent connections (as a number, or have used in your program semaphore). |
-    +--------------------+----------+----------------------------+-------------------+--------------------------------------------------------------------------------------------------------------+
-    | providers          | No       | list of strings            | list of ~50 sites | The list of sites that distribute proxy lists (proxy providers).                                             |
-    +--------------------+----------+----------------------------+-------------------+--------------------------------------------------------------------------------------------------------------+
-    | judges             | No       | list of strings            | list of ~10 sites | The list of sites that show http-headers (proxy judges).                                                     |
-    +--------------------+----------+----------------------------+-------------------+--------------------------------------------------------------------------------------------------------------+
-    | verify_ssl         | No       | bool                       | False             | Check ssl certifications.                                                                                    |
-    +--------------------+----------+----------------------------+-------------------+--------------------------------------------------------------------------------------------------------------+
-    | loop               | No       | asyncio event loop         | None              | Event loop                                                                                                   |
-    +--------------------+----------+----------------------------+-------------------+--------------------------------------------------------------------------------------------------------------+
+    +---------------------+----------------------------------+--------------------------------------------------------------------------+
+    | Parameter           | Type [Default value]             | Description                                                              |
+    +=====================+==================================+==========================================================================+
+    | queue               | asyncio.Queue                    | Queue stores the checked proxies. **Required**                           |
+    +---------------------+----------------------------------+--------------------------------------------------------------------------+
+    | timeout             | int [8]                          | Timeout is set for almost all actions carried by the network. In seconds |
+    +---------------------+----------------------------------+--------------------------------------------------------------------------+
+    | attempts_conn       | int [3]                          | Limiting the maximum number of connection attempts                       |
+    +---------------------+----------------------------------+--------------------------------------------------------------------------+
+    | max_concurrent_conn | int or asyncio.Semaphore() [200] | Limiting the maximum number of concurrent connections                    |
+    +---------------------+----------------------------------+--------------------------------------------------------------------------+
+    | providers           | list of strings or ``Provider``  | List of the websites that publish free public proxy lists daily          |
+    |                     | objects [~50 websites]           |                                                                          |
+    +---------------------+----------------------------------+--------------------------------------------------------------------------+
+    | judges              | list of strings or``Judge``      | List of the websites that show HTTP headers and IP address               |                       
+    |                     | objects [~10 websites]           |                                                                          |
+    +---------------------+----------------------------------+--------------------------------------------------------------------------+
+    | verify_ssl          | bool [False]                     | Check ssl certifications                                                 |
+    +---------------------+----------------------------------+--------------------------------------------------------------------------+
+    | loop                | asyncio event loop               | Event loop                                                               |
+    +---------------------+----------------------------------+--------------------------------------------------------------------------+
+
 
 
 Broker methods
 """"""""""""""
 .. table::
 
-    +-----------------+---------------------------------------------------------------------------------------------------+--------------------------------------------------------------------------+
-    | Method          | Optional parameters                                                                               | Description                                                              |
-    |                 +-------------+-------------------------------------------------------------------------------------+                                                                          |
-    |                 | Parameter   | Description                                                                         |                                                                          |
-    +=================+=============+=====================================================================================+==========================================================================+
-    | find            | data        | As a source of proxies can be specified raw data. In this case,                     | Searching and checking proxies with requested parameters.                |
-    |                 |             | search on the sites with a proxy does not happen. By default is empy.               |                                                                          |
-    |                 +-------------+-------------------------------------------------------------------------------------+                                                                          |
-    |                 | types       | The list of types (protocols) which must be checked.                                |                                                                          |
-    |                 |             | Use a tuple if you want to specify the levels of anonymity: (Type, AnonLvl).        |                                                                          |
-    |                 |             | By default, checks are enabled for all types at all levels of anonymity.            |                                                                          |
-    |                 +-------------+-------------------------------------------------------------------------------------+                                                                          |
-    |                 | countries   | List of ISO country codes, which must be located proxies.                           |                                                                          |
-    |                 +-------------+-------------------------------------------------------------------------------------+                                                                          |
-    |                 | limit       | Limit the search to a definite number of working proxies.                           |                                                                          |
-    +-----------------+-------------+-------------------------------------------------------------------------------------+--------------------------------------------------------------------------+
-    | grab            | countries   | List of ISO country codes, which must be located proxies.                           |  Only searching the proxies without checking their working.              |
-    |                 +-------------+-------------------------------------------------------------------------------------+                                                                          |
-    |                 | limit       | Limit the search to a definite number of working proxies.                           |                                                                          |
-    +-----------------+-------------+-------------------------------------------------------------------------------------+--------------------------------------------------------------------------+
-    | show_stats      | full        | If is False (by default) - will show a short version of stats (without proxieslog), | Limiting the maximum number of connection attempts.                      |
-    |                 |             | if is True - show full version of stats (with proxies log).                         |                                                                          |
-    +-----------------+-------------+-------------------------------------------------------------------------------------+--------------------------------------------------------------------------+
+    +-----------------+------------------------------------------------------------------------------------------------------+---------------------------+
+    | Method          | Optional parameters                                                                                  | Description               |
+    |                 +-------------+----------------------------------------------------------------------------------------+                           |
+    |                 | Parameter   | Description                                                                            |                           |
+    +=================+=============+========================================================================================+===========================+
+    | find            | data        | As a source of proxies can be specified your own source data. Instead of the providers | Gather and check proxies  |
+    |                 +-------------+----------------------------------------------------------------------------------------+ with specified parameters |
+    |                 | types       | List of types (protocols) which must be checked.                                       |                           |
+    |                 |             | Use a tuple if you want to specify the levels of anonymity: (Type, AnonLvl).           |                           |
+    |                 |             | By default: all types with any level of anonymity                                      |                           |
+    |                 +-------------+----------------------------------------------------------------------------------------+                           |
+    |                 | countries   | List of ISO country codes where should be located proxies                              |                           |
+    |                 +-------------+----------------------------------------------------------------------------------------+                           |
+    |                 | limit       | Maximum number of working proxies                                                      |                           |
+    +-----------------+-------------+----------------------------------------------------------------------------------------+---------------------------+
+    | grab            | countries   | List of ISO country codes where should be located proxies                              | Gather proxies            |
+    |                 +-------------+----------------------------------------------------------------------------------------+ without a check           |
+    |                 | limit       | Maximum number of working proxies                                                      |                           |
+    +-----------------+-------------+----------------------------------------------------------------------------------------+---------------------------+
+    | show_stats      | full        | If is False (by default) - will show a short version of stats (without proxieslog),    | Show stats of work        |
+    |                 |             | if is True - will show full version of stats (with proxies log)                        |                           |
+    +-----------------+-------------+----------------------------------------------------------------------------------------+---------------------------+
+
 
 
 TODO
@@ -254,7 +272,7 @@ TODO
 
 * Check the ping, response time and speed of data transfer
 * Check on work with the Cookies/Referrer/POST
-* Check site access (Google, Twitter, etc)
+* Check site access (Google, Twitter, etc) and even your own custom URL's
 * Check proxy on spam. Search proxy ip in spam databases (DNSBL)
 * Information about uptime
 * Checksum of data returned
