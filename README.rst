@@ -31,7 +31,7 @@ Features
 * All protocols support. Proxies can be checked for work by HTTP, HTTPS (via CONNECT), SOCKS4 and SOCSK5 protocols
 * Filter proxies by country. Determines location (country) of the proxy and checks only the specified
 * Check the level of anonymity: Transparent, Anonymous, High. You can add your own judges
-* Is asynchronous. That helps increase checking speed & decrease waiting time. It's realy fast: 
+* Is asynchronous. That helps increase checking speed and decrease waiting time. It's really fast: 
   just in a minute, it will give you ~250 working HTTP proxies.
 * Automatically removes duplicate proxies.
 
@@ -86,7 +86,7 @@ Basic example
         if proxy is None: break
         print('Found proxy: %s' % proxy)
 
-As the final result we get the ``Proxy`` objects. And we can get all the information we need through `Proxy properties`_.
+As the final result, we get the ``Proxy`` objects. And we can get all the information we need through `Proxy properties`_.
 
 .. code-block:: bash
 
@@ -103,7 +103,7 @@ Advanced example
     import asyncio
     from proxybroker import Broker
 
-    async def use_example(proxies):
+    async def use(proxies):
         while True:
             proxy = await proxies.get()
             if proxy is None:
@@ -113,7 +113,7 @@ Advanced example
             else:
                 print('Found proxy: %s' % proxy)
 
-    async def find_advanced_example(proxies, loop):
+    async def find(proxies, loop):
         broker = Broker(queue=proxies,
                         timeout=8,
                         attempts_conn=3,
@@ -133,32 +133,39 @@ Advanced example
     if __name__ == '__main__':
         loop = asyncio.get_event_loop()
         proxies = asyncio.Queue(loop=loop)
-        tasks = asyncio.gather(find_advanced_example(proxies, loop), use_example(proxies))
+        tasks = asyncio.gather(find(proxies, loop), use(proxies))
         loop.run_until_complete(tasks)
 
-In this example we explicitly specify the parameters that directly affect on the speed of gathering and checking proxies (see `Broker parameters`_). In most cases it's redundant.
+In this example, we explicitly specify the parameters that directly affect on the speed of gathering and checking proxies (see `Broker parameters`_). In most cases it's redundant.
 
-Usually we want to find:
+Usually, we want to find:
 
-* certain number of specific type of proxies
+* a certain number of specific type of proxies
 * with a high level of anonymity
-* and from specific countries. 
+* and from specific countries
 
-To do this, we pass parameters ``types``, ``countries`` and ``limit`` to the ``find`` method (see `Broker methods`_).
+To do this, we pass the parameters ``types``, ``countries``, and ``limit`` to the ``find`` method (see `Broker methods`_).
 
-Note: We gather proxies from the providers, check and send them to separate function, which can use the checked proxies without waiting for end of the search. You can start to use the proxies in a couple of seconds after the start of the search. Search and check of new proxies will continue until the `limit` is reached or until we not visit all the providers and check all the proxies received from them.
+We use two asynchronous functions that execute in parallel:
+
+* ``find()`` - gather proxies from the providers, check and pass them to the async queue ``proxies``
+* ``use()`` - use the checked proxies from ``proxies`` without having to wait for the end of the gather
+
+Note: You can start to use the checked proxies for a couple of seconds after the start of the gather. Gather and check of new proxies will continue until the `limit` is reached or until we not visit all the providers and check all the proxies received from them.
 
 
 Example #3: find and check proxies from raw data
 """""""""""""""""""""""""""""""""""""""""""""""""
 
-.. code-block:: python
-    
+.. code-block::
+
     # raw_data.txt
     10.0.0.1:80
     OK 10.0.0.2:   80 HTTP 200 OK 1.214
     10.0.0.3;80;SOCKS5 check date 21-01-02
     >>>10.0.0.4@80 HTTP HTTPS status OK
+
+.. code-block:: python
     
     # example.py
     # ...
@@ -170,7 +177,7 @@ Example #3: find and check proxies from raw data
     await broker.find(data=data)
     # ...
 
-As a source of proxies, instead of the providers you can use your own source data (it's usual local .txt file). Simply pass your data to the ``data`` parameter.
+As a source of proxies, instead of the providers, you can use your own source data (it's usual local .txt file). Simply pass your data to the ``data`` parameter.
 Note: At the moment, information about the type of proxy in the raw data is ignored.
 
 
@@ -183,7 +190,7 @@ Example #4: only gather proxies (without a check)
     await broker.grab(countries=['US'], limit=100)
     # ...
 
-Use the ``grab`` method if you want only to gather the proxies without a check.
+Use the ``grab`` method if you want only to gather proxies without a check.
 Note: The number of found proxies can reach over 40k.
 
 
@@ -228,7 +235,7 @@ Broker parameters
     | providers           | list of strings or ``Provider``  | List of the websites that publish free public proxy lists daily          |
     |                     | objects [~50 websites]           |                                                                          |
     +---------------------+----------------------------------+--------------------------------------------------------------------------+
-    | judges              | list of strings or``Judge``      | List of the websites that show HTTP headers and IP address               |                       
+    | judges              | list of strings or ``Judge``     | List of the websites that show HTTP headers and IP address               |                       
     |                     | objects [~10 websites]           |                                                                          |
     +---------------------+----------------------------------+--------------------------------------------------------------------------+
     | verify_ssl          | bool [False]                     | Check ssl certifications                                                 |
