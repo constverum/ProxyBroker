@@ -25,15 +25,20 @@ ProxyBroker is an open source tool that asynchronously finds public proxies from
 Features
 --------
 
-* Find and gather proxies from 50+ sources (the websites that publish free public proxy lists daily).
-  It is about ~7000 HTTP(S) and ~500 SOCKS working proxies. And much more: you can add custom sources
-* Work with proxies passed directly. Detects and recognize proxies in the text you pass (no matter how dirty the data)
-* All protocols support. Proxies can be checked for work by HTTP, HTTPS (via CONNECT), SOCKS4 and SOCSK5 protocols
-* Filter proxies by country. Determines location (country) of the proxy and checks only the specified
-* Check the level of anonymity: Transparent, Anonymous, High. You can add your own judges
-* Is asynchronous. That helps increase checking speed and decrease waiting time. It's really fast: 
-  just in a minute, it will give you ~250 working HTTP proxies.
-* Automatically removes duplicate proxies.
+* Gathers proxies from 50+ sources, finds ~7000 HTTP(S) and ~500 SOCKS working proxies
+    Sources are the websites that publish free public proxy lists daily.
+    And much more: you can add custom sources - websites or a raw data.
+    Detects and recognize proxies in the text (no matter how dirty the data).
+* All protocols support
+    Proxies can be check for work by HTTP, HTTPS (via CONNECT), SOCKS4 and SOCSK5 protocols.
+* Checks proxies on the level of anonymity
+    Supports levels: Transparent, Anonymous, High. You can add your own judges.
+* Filter proxies by country
+    Determines location (country) of the proxy and checks only the specified.
+* Is asynchronous
+    That helps increase checking speed and decrease waiting time.
+    It's really fast: just in a minute, it will give you ~250 working HTTP proxies.
+* **Automatically removes duplicate proxies.**
 
 
 Requirements

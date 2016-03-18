@@ -1,7 +1,7 @@
 Change Log
 ==========
 
-`0.1.3`_ (2016-03-XX)
+`0.1.3`_ (Unreleased)
 ---------------------
 
 * ``ProxyProvider`` renamed to ``Provider``.
@@ -72,4 +72,4 @@ Change Log
 .. _0.1b4: https://github.com/constverum/ProxyBroker/compare/8f69ebd...v0.1b4
 .. _0.1: https://github.com/constverum/ProxyBroker/compare/v0.1b4...v0.1
 .. _0.1.2: https://github.com/constverum/ProxyBroker/compare/v0.1...v0.1.2
-.. _0.1.3: https://github.com/constverum/ProxyBroker/compare/v0.1.2...v0.1.3
+.. _0.1.3: https://github.com/constverum/ProxyBroker/compare/v0.1.2...HEAD

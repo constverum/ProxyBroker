@@ -35,7 +35,7 @@ IPPortPatternGlobal = re.compile(
 mmdbReader = maxminddb.open_database(
                 os.path.join(BASE_DIR, 'data', 'GeoLite2-Country.mmdb'))
 
-async def resolve_host(host, timeout, loop):
+async def resolve_host(host, timeout=3, loop=None):
     global RESOLVER
     if not RESOLVER:
         RESOLVER = aiodns.DNSResolver(loop=loop)
@@ -51,12 +51,6 @@ async def resolve_host(host, timeout, loop):
 def get_base_dir():
     return BASE_DIR
 
-# def get_path_to_def_judges():
-#     return os.path.join(BASE_DIR, 'data', 'judges.txt')
-
-# def get_path_to_def_providers():
-#     return os.path.join(BASE_DIR, 'data', 'providers.txt')
-
 def get_headers(rv=False):
     _rv = str(random.randint(1000, 9999))
     headers = {
@@ -68,7 +62,6 @@ def get_headers(rv=False):
         'Cache-control': 'no-cache'
         }
     return headers if not rv else (headers, _rv)
-
 
 def get_ip_info(ip):
     try:

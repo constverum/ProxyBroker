@@ -21,7 +21,7 @@ class Proxy:
     async def create(cls, host, port, *args):
         self = cls(host, port, *args)
         await self._resolve_host()
-        if self.host is False:
+        if self.host is False or self.port > 65535:
             return False
         else:
             return self
@@ -40,7 +40,7 @@ class Proxy:
         else:
             self.types = {}
             self.errors = Counter()
-            self.sem = asyncio.Semaphore(4)
+            self.sem = asyncio.Semaphore(4)  # Concurrent requests to the proxy
             self._log = []
             self._runtimes = []
             self._descendants = []
@@ -61,17 +61,13 @@ class Proxy:
         self.__writer = {'conn': None, 'ssl': None}
 
     def __repr__(self):
-        # tpinfo = '-' if not self.types else\
-        #          ', '.join(['{tp}: {anonLvl}'.format(tp=k, anonLvl=v)
-        #                    for k, v in self.types.items()])
-        # <Proxy US [HTTP: Anonymous, HTTPS: High] 10.0.0.1:8080>
+        # <Proxy US 1.12 [HTTP: Anonymous, HTTPS] 10.0.0.1:8080>
         tpinfo = []
         for tp, lvl in sorted(self.types.items()):
             s = '{tp}: {lvl}' if lvl else '{tp}'
             s = s.format(tp=tp, lvl=lvl)
             tpinfo.append(s)
         tpinfo = ', '.join(tpinfo)
-        # <Proxy US [HTTP: Anonymous, HTTPS] 10.0.0.1:8080>
         return '<Proxy {code} {avg} [{types}] {host}:{port}>'.format(
                code=self.geo['code'], types=tpinfo, host=self.host,
                port=self.port, avg=self.avgRespTime)
@@ -115,7 +111,7 @@ class Proxy:
 
     def _get_descendant(self, ngtr):
         judge = Judge.get_random('HTTPS' if ngtr.name == 'HTTPS' else 'HTTP')
-        self.log('                      Selected judge: %s' % judge)
+        self.log('{:>36}: {}'.format('Selected judge', judge))
         descendant = Proxy(ancestor=self, ngtr=ngtr.name, judge=judge)
         self._descendants.append(descendant)
         return descendant
