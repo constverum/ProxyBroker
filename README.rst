@@ -59,7 +59,16 @@ To install last stable release from pypi:
 
     $ pip install proxybroker
 
-Or install development version:
+If you use Mac OSX (without XCode) or Microsoft Windows (without Visual Studio or Windows SDK)
+there may be a problem with the compiling dependencies (pycares). Use this way:
+
+.. code-block:: bash
+
+    $ git clone https://github.com/constverum/ProxyBroker.git
+    $ cd ProxyBroker
+    $ pip install -r requirements.txt proxybroker -f proxybroker/data/wheels
+
+And you can install development version:
 
 .. code-block:: bash
 
