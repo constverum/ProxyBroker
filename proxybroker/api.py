@@ -68,7 +68,12 @@ class Broker:
         else:
             sem = asyncio.Semaphore(max_concurrent_conn)
 
-        self._loop.add_signal_handler(signal.SIGINT, self._done)
+        try:
+            self._loop.add_signal_handler(signal.SIGINT, self._done)
+        except NotImplementedError:
+            # add_signal_handler() is not implemented on Win
+            # https://docs.python.org/3.5/library/asyncio-eventloops.html#windows
+            pass
 
         Judge.clear()
         Judge._sem = sem
