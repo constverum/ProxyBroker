@@ -111,7 +111,7 @@ class Proxy:
 
     def _get_descendant(self, ngtr):
         judge = Judge.get_random('HTTPS' if ngtr.name == 'HTTPS' else 'HTTP')
-        self.log('{:>36}: {}'.format('Selected judge', judge))
+        self.log('{}: {}'.format('Selected judge', judge))
         descendant = Proxy(ancestor=self, ngtr=ngtr.name, judge=judge)
         self._descendants.append(descendant)
         return descendant
@@ -131,7 +131,9 @@ class Proxy:
             log.debug('{host}: {ngtr}: {msg}; Runtime: {rt:.4f}'.format(
                 host=self.host, ngtr=self._ngtr, msg=msg, rt=runtime))
             msg = '{ngtr}: {msg:.58s}{trunc}'.format(
-                ngtr=self._ngtr, msg=msg, trunc='...' if len(msg) > 58 else '')
+                ngtr=self._ngtr or 'Info', 
+                msg=msg, 
+                trunc='...' if len(msg) > 58 else '')
             self._log.append((msg, runtime))
             self._check_on_errors(msg)
             if runtime and 'timeout' not in msg:
