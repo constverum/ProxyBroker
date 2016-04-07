@@ -16,7 +16,7 @@ limitations under the License.
 
 __title__ = 'ProxyBroker'
 __package__ = 'proxybroker'
-__version__ = '0.1.3'
+__version__ = '0.1.4'
 __short_description__ = '[Finder/Grabber/Checker] Finds public proxies on multiple sources and concurrently checks them (type, anonymity, country). HTTP(S) & SOCKS'
 __author__ = 'Constverum'
 __author_email__ = 'constverum@gmail.com'

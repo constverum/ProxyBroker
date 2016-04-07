@@ -10,8 +10,8 @@ from urllib.parse import unquote, urlparse
 import aiohttp
 
 from .errors import *
-from .utils import log, get_headers, resolve_host,\
-                   IPPattern, IPPortPatternGlobal
+from .utils import (log, get_headers, resolve_host,
+                    IPPattern, IPPortPatternGlobal)
 
 
 warnings.simplefilter('always', DeprecationWarning)
@@ -27,6 +27,7 @@ class Provider:
     # maximum of concurrent grab providers:
     _sem_providers = asyncio.Semaphore(3)
     _attemptsConnect = 3
+    _cached_hosts = {}
 
     def __init__(self, url=None, proto=(), max_conn=4):
         if not proto:
@@ -46,13 +47,6 @@ class Provider:
         self.proto = proto
         # 4 concurrent connections on provider
         self._sem_provider = asyncio.Semaphore(max_conn)
-        self._connector = aiohttp.TCPConnector(use_dns_cache=True, loop=self._loop)
-        self._session = aiohttp.ClientSession(
-            connector=self._connector, headers=self._headers,
-            cookies=self._cookies, loop=self._loop)
-
-    def __del__(self):
-        self._session.close()
 
     @property
     def proxies(self):
@@ -66,14 +60,25 @@ class Provider:
     async def get_proxies(self):
         with (await self._sem), (await self._sem_providers):
             log.info('Try to get proxies from %s...' % self.domain)
-            await self._resolve_host()
-            if not self.host:
-                return []
-            await self._pipe()
+            try:
+                self._start_new_session()
+                await self._resolve_host()
+                if not self.host:
+                    return []
+                await self._pipe()
+            finally:
+                self._session.close()
             log.info('%d proxies received from %s: %s' % (
                      len(self.proxies), self.domain, self.proxies))
-            self._session.close()
             return self.proxies
+
+    def _start_new_session(self):
+        connector = aiohttp.TCPConnector(use_dns_cache=True, loop=self._loop)
+        # This is a dirty hack. I know.
+        connector._cached_hosts = self._cached_hosts
+        self._session = aiohttp.ClientSession(
+            connector=connector, headers=self._headers,
+            cookies=self._cookies, loop=self._loop)
 
     async def _resolve_host(self):
         domain = self.domain.split('^')[0]
@@ -90,8 +95,7 @@ class Provider:
             'hostname': domain, 'host': self.host, 'port': self.port,
             'family': socket.AF_INET, 'proto': socket.IPPROTO_TCP,
             'flags': socket.AI_NUMERICHOST}
-        # This is a dirty hack. I know.
-        self._connector._cached_hosts[(domain, self.port)] = [addrInfo]
+        self._cached_hosts[(domain, self.port)] = [addrInfo]
 
     async def _pipe(self):
         await self._find_on_page(self.url)
@@ -638,14 +642,14 @@ providersList = [
     Provider(url='http://geekelectronics.org/my-servisy/proxy', proto=('HTTP', 'HTTPS')), # 395/7
     Tools_rosinstrument_com(proto=('HTTP', 'HTTPS')),         # 4980/2367
     Tools_rosinstrument_com_socks(proto=('SOCKS4', 'SOCKS5')),# 2550/457
-    Provider(url='http://www.get-proxy.net/proxy-archives'),                              # 519/188 SOCKS(~31)
     Provider(url='http://blackstarsecurity.com/proxy-list.txt'),                          # 7014/427 SOCKS(~175)
     My_proxy_com(max_conn=2),                                 # 894/408 SOCKS(~10)
-    Free_proxy_cz(),                                          # 420/195 SOCKS(~8)
     Checkerproxy_net(),                                       # 8382/1279 SOCKS(~30)
     Aliveproxy_com(),                                         # 210/63 SOCKS(~5)
     Freeproxylists_com(),                                     # 6094/4203 SOCKS(~94)
     Webanetlabs_net(),                                        # 2737/700 SOCKS(~325)
+    # Free_proxy_cz(),                                          # 420/195 SOCKS(~8)
+    # Provider(url='http://www.get-proxy.net/proxy-archives'),  # 519/188 SOCKS(~31)
     # Maxiproxies_com(),                                        # 626/169 SOCKS(~15)
     # _50kproxies_com(),                                        # 934/218 SOCKS(~38)
 ]

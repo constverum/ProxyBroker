@@ -26,8 +26,6 @@ class Judge:
         self.bip = None
         self.isWorking = None
         self.marks = {'via': 0, 'proxy': 0}
-        self.connector = aiohttp.TCPConnector(
-            loop=self._loop, verify_ssl=self._verifySSL, force_close=True)
 
     def __repr__(self):
         return '<Judge [%s] %s>' % (self.scheme, self.host)
@@ -52,10 +50,12 @@ class Judge:
         self.isWorking = False
         page = False
         headers, rv = get_headers(rv=True)
+        connector = aiohttp.TCPConnector(
+            loop=self._loop, verify_ssl=self._verifySSL, force_close=True)
         try:
             with (await self._sem),\
                  aiohttp.Timeout(self._timeout, loop=self._loop),\
-                 aiohttp.ClientSession(connector=self.connector,
+                 aiohttp.ClientSession(connector=connector,
                                        loop=self._loop) as session:
                 async with session.get(url=self.url, headers=headers,
                                        allow_redirects=False) as resp:
@@ -77,10 +77,10 @@ class Judge:
             log.debug('%s is verified' % self)
         else:
             log.error(('{j} is failed. HTTP status code: {code}; '
-                         'Real IP on page: {ip}; Version: {word}; '
-                         'Response: {page}').format(
-                        j=self, code=resp.status, page=page[0],
-                        ip=(get_my_ip() in page), word=(rv in page)))
+                       'Real IP on page: {ip}; Version: {word}; '
+                       'Response: {page}').format(
+                      j=self, code=resp.status, page=page[0],
+                      ip=(get_my_ip() in page), word=(rv in page)))
 
     async def _resolve_host(self):
         with (await self._sem):
