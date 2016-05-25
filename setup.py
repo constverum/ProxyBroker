@@ -27,6 +27,11 @@ setup(
     packages=PACKAGES,
     package_data=PACKAGE_DATA,
     platforms='any',
+    entry_points={
+        'console_scripts': [
+            'proxybroker = proxybroker.cli:cli',
+        ],
+    },
     classifiers=[
         'Development Status :: 5 - Production/Stable',
         'Environment :: Console',

@@ -16,7 +16,7 @@ limitations under the License.
 
 __title__ = 'ProxyBroker'
 __package__ = 'proxybroker'
-__version__ = '0.1.4'
+__version__ = '0.2.0a1'
 __short_description__ = '[Finder/Grabber/Checker] Finds public proxies on multiple sources and concurrently checks them (type, anonymity, country). HTTP(S) & SOCKS'
 __author__ = 'Constverum'
 __author_email__ = 'constverum@gmail.com'
@@ -27,6 +27,7 @@ __copyright__ = 'Copyright 2015-2016 Constverum'
 
 from .proxy import Proxy
 from .judge import Judge
-from .checker import ProxyChecker
+from .checker import Checker
+from .server import Server
 from .api import Broker
 

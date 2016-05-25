@@ -1,45 +1,45 @@
+"""Errors."""
+
+
 class ProxyError(Exception):
     pass
 
 
-class ProxyConnError(ProxyError):
+class NoProxyError(Exception):
     pass
+
+
+class ProxyConnError(ProxyError):
+    errmsg = 'connection_failed'
 
 
 class ProxyRecvError(ProxyError):
-    pass
+    errmsg = 'connection_is_reset'
+
+
+class ProxySendError(ProxyError):
+    errmsg = 'connection_is_reset'
 
 
 class ProxyTimeoutError(ProxyError):
-    pass
+    errmsg = 'connection_timeout'
 
 
 class ProxyEmptyRecvError(ProxyError):
-    pass
+    errmsg = 'empty_response'
 
 
-class ProxyTypeError(ValueError):
-    def __init__(self):
-        self.msg = ('Proxy <types> var can be a string '
-                    '(ex: "HTTP" or "HTTP,HTTPS") or any '
-                    'iterable type (ex: ["HTTP", "HTTPS"])')
-        self.args = (self.msg,)
+class BadStatusError(Exception):  # BadStatusLine
+    errmsg = 'bad_status'
 
 
-class BadStatusError(Exception):
-    pass
+class BadResponseError(Exception):
+    errmsg = 'bad_response'
 
 
+class BadStatusLine(Exception):
+    errmsg = 'bad_status_line'
 
-# class ProxyAnonLvlError(ValueError):
-#     def __init__(self):
-#         self.msg = 'Proxy anonymity levels can be a string '
-#                    '(ex: "Transparent" or "Transparent,Anonymous") '
-#                    'or any iterable type (ex: ["Anonymous", "High"])'
-#         self.args = (self.msg,)
 
-# class ProxyISOCountryError(ValueError):
-#     def __init__(self):
-#         self.msg = 'ISO country can be a string (ex: "US" or "US,GB,DE") '
-#                    'or any iterable type (ex: ["US", "GB", "DE"])'
-#         self.args = (self.msg,)
+class ErrorOnStream(Exception):
+    errmsg = 'error_on_stream'

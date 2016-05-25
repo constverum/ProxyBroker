@@ -1,62 +1,73 @@
 import random
 import asyncio
-from socket import inet_aton
 from urllib.parse import urlparse
 
 import aiohttp
 
-from .utils import log, get_my_ip, get_headers, resolve_host
+from .utils import log, get_headers
+from .resolver import Resolver
 
 
 class Judge:
-    _sem = None
-    _loop = None
-    _timeout = None
-    _verifySSL = False
-    allJudges = {'HTTP': [], 'HTTPS': []}
-    ev = {'HTTP': asyncio.Event(loop=_loop),
-          'HTTPS': asyncio.Event(loop=_loop)}
+    """Proxy Judge."""
 
-    def __init__(self, url):
+    available = {'HTTP': [], 'HTTPS': [], 'SMTP': []}
+    ev = {'HTTP': asyncio.Event(), 'HTTPS': asyncio.Event(),
+          'SMTP': asyncio.Event()}
+
+    def __init__(self, url, timeout=8, verify_ssl=False, loop=None):
         self.url = url
         self.scheme = urlparse(url).scheme.upper()
         self.host = urlparse(url).netloc
         self.path = url.split(self.host)[-1]
         self.ip = None
-        self.bip = None
-        self.isWorking = None
+        self.is_working = False
         self.marks = {'via': 0, 'proxy': 0}
+        self.timeout = timeout
+        self.verify_ssl = verify_ssl
+        self._loop = loop or asyncio.get_event_loop()
+        self._resolver = Resolver(loop=self._loop)
 
     def __repr__(self):
         return '<Judge [%s] %s>' % (self.scheme, self.host)
 
     @classmethod
-    def get_random(cls, scheme):
-        # log.debug('SCHEME: %s::: %s' % (scheme, cls.allJudges[scheme]))
-        return random.choice(cls.allJudges[scheme])
+    def get_random(cls, proto):
+        if proto == 'HTTPS':
+            scheme = 'HTTPS'
+        elif proto == 'CONNECT:25':
+            scheme = 'SMTP'
+        else:
+            scheme = 'HTTP'
+        return random.choice(cls.available[scheme])
 
     @classmethod
     def clear(cls):
-        cls.allJudges['HTTP'].clear()
-        cls.allJudges['HTTPS'].clear()
+        cls.available['HTTP'].clear()
+        cls.available['HTTPS'].clear()
+        cls.available['SMTP'].clear()
         cls.ev['HTTP'].clear()
         cls.ev['HTTPS'].clear()
+        cls.ev['SMTP'].clear()
 
-    async def check(self):
-        await self._resolve_host()
-        if self.isWorking is False:
+    async def check(self, real_ext_ip):
+        # TODO: need refactoring
+        self.ip = await self._resolver.resolve(self.host)
+        if not self.ip:
             return
-        # log.debug('%s: check_response;' % self.host)
-        self.isWorking = False
+        if self.scheme == 'SMTP':
+            self.is_working = True
+            self.available[self.scheme].append(self)
+            self.ev[self.scheme].set()
+            return
+
         page = False
         headers, rv = get_headers(rv=True)
         connector = aiohttp.TCPConnector(
-            loop=self._loop, verify_ssl=self._verifySSL, force_close=True)
+            loop=self._loop, verify_ssl=self.verify_ssl, force_close=True)
         try:
-            with (await self._sem),\
-                 aiohttp.Timeout(self._timeout, loop=self._loop),\
-                 aiohttp.ClientSession(connector=connector,
-                                       loop=self._loop) as session:
+            with aiohttp.Timeout(self.timeout, loop=self._loop),\
+                 aiohttp.ClientSession(connector=connector, loop=self._loop) as session:
                 async with session.get(url=self.url, headers=headers,
                                        allow_redirects=False) as resp:
                     page = await resp.text()
@@ -67,53 +78,33 @@ class Judge:
 
         page = page.lower()
 
-        if (resp.status == 200 and get_my_ip() in page and rv in page):
+        if (resp.status == 200 and real_ext_ip in page and rv in page):
             self.marks['via'] = page.count('via')
             self.marks['proxy'] = page.count('proxy')
-            self.isWorking = True
-            self.allJudges[self.scheme].append(self)
+            self.is_working = True
+            self.available[self.scheme].append(self)
             self.ev[self.scheme].set()
-            # log.debug('%s is set' % self.scheme)
             log.debug('%s is verified' % self)
         else:
             log.error(('{j} is failed. HTTP status code: {code}; '
                        'Real IP on page: {ip}; Version: {word}; '
                        'Response: {page}').format(
-                      j=self, code=resp.status, page=page[0],
-                      ip=(get_my_ip() in page), word=(rv in page)))
-
-    async def _resolve_host(self):
-        with (await self._sem):
-            host = await resolve_host(self.host, self._timeout, self._loop)
-        if host:
-            self.ip = host
-            self.bip = inet_aton(self.ip)
-            log.debug('%s: Host resolved' % self.host)
-        else:
-            self.isWorking = False
-            log.warning('%s: Could not resolve host' % self.host)
-
-judgesList = [
-    Judge('https://httpheader.net/'),
-    Judge('https://www.proxy-listen.de/azenv.php'),
-    Judge('http://httpheader.net/'),
-    Judge('http://azenv.net/'),
-    Judge('http://ip.spys.ru/'),
-    Judge('http://proxyjudge.us/azenv.php'),
-    Judge('http://www.proxyfire.net/fastenv'),
-    Judge('http://www.ingosander.net/azenv.php'),
-    Judge('http://www.proxy-listen.de/azenv.php'),
-    ]
+                      j=self, code=resp.status, page=page,
+                      ip=(real_ext_ip in page), word=(rv in page)))
 
 
-
-# def get_judges(path=None):
-#     path = path or get_path_to_def_judges()
-#     judges = []
-#     with open(path) as f:
-#         for url in f.readlines():
-#             url = url.strip()
-#             if not url or url.startswith('#'):
-#                 continue
-#             judges.append(Judge(url))
-#     return judges
+def get_judges(judges=None, timeout=8, verify_ssl=False):
+    judges = judges or [
+        'http://httpbin.org/get?show_env', 'https://httpbin.org/get?show_env',
+        'smtp://smtp.gmail.com', 'smtp://aspmx.l.google.com',
+        'http://azenv.net/', 'https://www.proxy-listen.de/azenv.php',
+        'http://www.proxyfire.net/fastenv', 'http://proxyjudge.us/azenv.php',
+        'http://ip.spys.ru/', 'http://www.ingosander.net/azenv.php',
+        'http://www.proxy-listen.de/azenv.php']
+    _judges = []
+    for j in judges:
+        j = j if isinstance(j, Judge) else Judge(j)
+        j.timeout = timeout
+        j.verify_ssl = verify_ssl
+        _judges.append(j)
+    return _judges
