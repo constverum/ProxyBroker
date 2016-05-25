@@ -1,4 +1,5 @@
-"""Find 10 working HTTP(S) proxies and save them to a file."""
+"""Find 10 working proxies supporting CONNECT method
+   to 25 port (SMTP) and save them to a file."""
 
 import asyncio
 from proxybroker import Broker
