@@ -14,36 +14,59 @@ from .utils import log, get_headers, IPPattern, IPPortPatternGlobal
 from .resolver import Resolver
 
 
-warnings.simplefilter('always', DeprecationWarning)
-
-
 MAX_CONCURRENT_PROVIDERS = 10
 
 
 class Provider:
-    """Proxy provider."""
+    """Proxy provider.
+
+    Provider - a website that publish free public proxy lists.
+
+    :param str url: Url of page where to find proxies
+    :param tuple proto:
+        (optional) List of the types (protocols) that may be supported
+        by proxies returned by the provider. Then used as :attr:`Proxy.types`
+    :param int max_conn:
+        (optional) The maximum number of concurrent connections on the provider
+    :param int max_tries:
+        (optional) The maximum number of attempts to receive response
+    :param int timeout:
+        (optional) Timeout of a request in seconds
+    """
 
     _pattern = IPPortPatternGlobal
+    # The maximum number of providers that are parsed concurrently
     _sem_providers = asyncio.Semaphore(MAX_CONCURRENT_PROVIDERS)
 
-    def __init__(self, url=None, proto=None, max_conn=4,
-                 max_tries=3, timeout=8, loop=None):
+    def __init__(self, url=None, proto=(), max_conn=4,
+                 max_tries=3, timeout=20, loop=None):
         if url:
             self.domain = urlparse(url).netloc
         self.url = url
-        self.proto = proto or ()
-        self.timeout = timeout
-        self.max_tries = max_tries
+        self.proto = proto
+        self._max_tries = max_tries
+        self._timeout = timeout
         self._session = None
         self._cookies = {}
         self._proxies = set()
-        # concurrent connections on the provider
+        # concurrent connections on the current provider
         self._sem_provider = asyncio.Semaphore(max_conn)
         self._loop = loop or asyncio.get_event_loop()
         self._resolver = Resolver(loop=self._loop)
 
     @property
     def proxies(self):
+        """Return all found proxies.
+
+        :return:
+            Set of tuples with proxy hosts, ports and types (protocols)
+            that may be supported (from :attr:`.proto`).
+
+            For example:
+                {('192.168.0.1', '80', ('HTTP', 'HTTPS'), ...)}
+
+        :rtype: set
+        """
         return self._proxies
 
     @proxies.setter
@@ -52,8 +75,12 @@ class Provider:
         self._proxies.update(new)
 
     async def get_proxies(self):
+        """Receive proxies from the provider and return them.
+
+        :return: :attr:`.proxies`
+        """
         with (await self._sem_providers):
-            log.debug('Try to get proxies from %s...' % self.domain)
+            log.debug('Try to get proxies from %s' % self.domain)
 
             await self._start_new_session()
             if not self._session:
@@ -73,8 +100,9 @@ class Provider:
         # connector = aiohttp.TCPConnector(
         #     use_dns_cache=True, resolver=self._resolver, loop=self._loop)
         host = self.domain.split('^')[0]
-        host_info = await self._resolver.resolve(host=host, family=socket.AF_INET)
-        if not host_info:
+        try:
+            host_info = await self._resolver.resolve(host=host, family=socket.AF_INET)
+        except ResolveError:
             return
         connector = aiohttp.TCPConnector(use_dns_cache=True, loop=self._loop)
         # This is a dirty hack. I know.
@@ -114,7 +142,7 @@ class Provider:
             added, len(received), url))
 
     async def get(self, url, data=None, headers=None, method='GET'):
-        for _ in range(self.max_tries):
+        for _ in range(self._max_tries):
             page = await self._get(url, data=data, headers=headers, method=method)
             if page:
                 break
@@ -124,7 +152,7 @@ class Provider:
         page = ''
         try:
             with (await self._sem_provider),\
-                 aiohttp.Timeout(self.timeout, loop=self._loop):
+                 aiohttp.Timeout(self._timeout, loop=self._loop):
                 async with self._session.request(method, url, data=data,
                                                  headers=headers) as resp:
                     if resp.status == 200:
@@ -179,8 +207,8 @@ class Blogspot_com(Blogspot_com_base):
     domain = 'blogspot.com'
     domains = ['sslproxies24.blogspot.com', 'proxyserverlist-24.blogspot.com',
                'newfreshproxies24.blogspot.com', 'irc-proxies24.blogspot.com',
-               'freeschoolproxy.blogspot.com', 'getdailyfreshproxy.blogspot.com',
-               'googleproxies24.blogspot.com']
+               'freeschoolproxy.blogspot.com', 'googleproxies24.blogspot.com',
+               'getdailyfreshproxy.blogspot.com']
 
 
 class Blogspot_com_socks(Blogspot_com_base):
@@ -338,7 +366,7 @@ class Gatherproxy_com(Provider):
                 continue
             lastPageId = max([int(n) for n in re.findall(expNumPages, page)])
             urls = [{'url': url, 'data': {'Type': t, 'PageIdx': pid},
-                     'method': method} for pid in range(1, lastPageId+1)]
+                     'method': method} for pid in range(1, lastPageId + 1)]
         # urls.append({'url': 'http://www.gatherproxy.com/sockslist/',
         #              'method': method})
         await self._find_on_pages(urls)
@@ -560,6 +588,7 @@ class Free_proxy_cz(Provider):
         #         _urls = []
         #     _urls.append(url)
 
+
 class Proxyb_net(Provider):
     domain = 'proxyb.net'
     _port_pattern_b64 = re.compile(r"stats\('([\w=]+)'\)")
@@ -606,7 +635,9 @@ class ProxyProvider(Provider):
         super().__init__(*args, **kwargs)
 
 
-providers_list = [
+PROVIDERS = [
+    Provider(url='https://getproxy.net/en/',
+             proto=('HTTP', 'CONNECT:80', 'HTTPS', 'CONNECT:25')),  # 25
     Provider(url='http://www.proxylists.net/',
              proto=('HTTP', 'CONNECT:80', 'HTTPS', 'CONNECT:25')),  # 44
     Provider(url='http://ipaddress.com/proxy-list/',
@@ -644,6 +675,8 @@ providers_list = [
              proto=('HTTP', 'CONNECT:80', 'HTTPS', 'CONNECT:25')),  # 57
     Provider(url='http://myproxylists.com/free-proxy-list',
              proto=('HTTP', 'CONNECT:80', 'HTTPS', 'CONNECT:25')),  # 9
+    Provider(url='http://cn-proxy.com/',
+             proto=('HTTP', 'CONNECT:80', 'HTTPS', 'CONNECT:25')),  # 48
     Provider(url='http://hugeproxies.com/home/',
              proto=('HTTP', 'CONNECT:80', 'HTTPS', 'CONNECT:25')),  # 569
     Provider(url='http://proxy.rufey.ru/',
@@ -676,21 +709,9 @@ providers_list = [
     Webanetlabs_net(),                                                             # 2615
     Maxiproxies_com(),                                                             # 543
     _50kproxies_com(),                                                             # 822
-    # Bad...
-    Provider(url='https://getproxy.net/en/', proto=('HTTP', 'CONNECT:80', 'HTTPS', 'CONNECT:25')),  # 25
-    Provider(url='http://go4free.xyz/Free-Proxy/', proto=('HTTP', 'CONNECT:80', 'HTTPS', 'CONNECT:25')),  # 196
-    Provider(url='http://blackstarsecurity.com/proxy-list.txt'),  # 7014
-    Free_proxy_cz(),  # 420/195 SOCKS(~8)
-    Provider(url='http://www.get-proxy.net/proxy-archives'),  # 519
+    # # Bad...
+    # Provider(url='http://go4free.xyz/Free-Proxy/', proto=('HTTP', 'CONNECT:80', 'HTTPS', 'CONNECT:25')),  # 196
+    # Provider(url='http://blackstarsecurity.com/proxy-list.txt'),  # 7014
+    # Provider(url='http://www.get-proxy.net/proxy-archives'),  # 519
+    # Free_proxy_cz(),  # 420
 ]
-
-
-def get_providers(providers=None, timeout=20, max_tries=3):
-    providers = providers or providers_list
-    _providers = []
-    for p in providers:
-        p = p if isinstance(p, Provider) else Provider(p)
-        p.timeout = timeout
-        p.max_tries = max_tries
-        _providers.append(p)
-    return _providers

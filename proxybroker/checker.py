@@ -13,10 +13,6 @@ from .resolver import Resolver
 from .negotiators import NGTRS
 
 
-warnings.simplefilter('always', UserWarning)
-warnings.simplefilter('always', DeprecationWarning)
-
-
 class Checker:
     """Proxy checker."""
 
@@ -93,29 +89,28 @@ class Checker:
             return True
         for proto, lvl in proxy.types.copy().items():
             req_levels = self._types.get(proto)
-            log.debug('proxy: %s; proto: %s; lvl: %s; req_levels: %s;' % (proxy, proto, lvl, req_levels))
+            # log.debug('proxy: %s; proto: %s; lvl: %s; req_levels: %s;' % (proxy, proto, lvl, req_levels))
             if not req_levels or (lvl in req_levels):
-                log.debug('TRUE!')
+                # log.debug('TRUE!')
                 if not self._strict:
                     return True
             else:
-                log.debug('FALSE!')
+                # log.debug('FALSE!')
                 if self._strict:
                     del proxy.types[proto]
         if self._strict and proxy.types:
             return True
-        proxy.log('Protocol or the level of anonymity differ from the requested')
+        proxy.log('Protocol or the level of anonymity differs from the requested')
         return False
 
     async def _in_DNSBL(self, host):
-        _host = '.'.join(reversed(host.split('.')))
+        _host = '.'.join(reversed(host.split('.')))  # reverse address
         tasks = []
         for domain in self._dnsbl:
             query = '.'.join([_host, domain])
             tasks.append(self._resolver.resolve(query, logging=False))
-            # tasks.append(self._resolver.resolve(query, qtype='TXT'))
-        responses = await asyncio.gather(*tasks)
-        if any(responses):
+        responses = await asyncio.gather(*tasks, return_exceptions=True)
+        if any([r for r in responses if not isinstance(r, ResolveError)]):
             return True
         return False
 

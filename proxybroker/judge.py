@@ -4,6 +4,7 @@ from urllib.parse import urlparse
 
 import aiohttp
 
+from .errors import *
 from .utils import log, get_headers
 from .resolver import Resolver
 
@@ -52,9 +53,11 @@ class Judge:
 
     async def check(self, real_ext_ip):
         # TODO: need refactoring
-        self.ip = await self._resolver.resolve(self.host)
-        if not self.ip:
+        try:
+            self.ip = await self._resolver.resolve(self.host)
+        except ResolveError:
             return
+
         if self.scheme == 'SMTP':
             self.is_working = True
             self.available[self.scheme].append(self)

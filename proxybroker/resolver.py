@@ -8,6 +8,7 @@ import aiodns
 import aiohttp
 import maxminddb
 
+from .errors import *
 from .utils import log, BASE_DIR
 
 
@@ -104,6 +105,6 @@ class Resolver:
             resp = await asyncio.wait_for(self._resolver.query(host, qtype),
                                           timeout=self._timeout)
         except (aiodns.error.DNSError, asyncio.TimeoutError):
-            return
+            raise ResolveError
         else:
             return resp

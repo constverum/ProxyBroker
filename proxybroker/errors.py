@@ -9,6 +9,10 @@ class NoProxyError(Exception):
     pass
 
 
+class ResolveError(Exception):
+    pass
+
+
 class ProxyConnError(ProxyError):
     errmsg = 'connection_failed'
 

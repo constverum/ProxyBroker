@@ -6,20 +6,45 @@ from pprint import pprint
 from functools import partial
 from collections import defaultdict, Counter
 
+from .errors import *
 from .proxy import Proxy
 from .server import Server
 from .checker import Checker
 from .utils import log, IPPortPatternLine
 from .resolver import Resolver
-from .providers import Provider, get_providers
+from .providers import Provider, PROVIDERS
 
 
-warnings.simplefilter('always', DeprecationWarning)
-GRAB_PAUSE = 180  # Pause between the cycles grabbing; in seconds
+GRAB_PAUSE = 180  # Pause between the cycles grabbing in seconds
 
 
 class Broker:
-    """Broker."""
+    """The Broker.
+
+    | One broker to rule them all, one broker to find them,
+    | One broker to bring them all and in the darkness bind them.
+
+    :param asyncio.Queue queue: (optional) Queue of found/checked proxies
+    :param int timeout: (optional) Timeout of a request in seconds
+    :param int max_conn:
+        (optional) The maximum number of concurrent checks of proxies
+    :param int max_tries:
+        (optional) The maximum number of attempts to check a proxy
+    :param list judges:
+        (optional) Urls of pages that show HTTP headers and IP address.
+        Or :class:`~proxybroker.judge.Judge` objects
+    :param list providers:
+        (optional) Urls of pages where to find proxies.
+        Or :class:`~proxybroker.providers.Provider` objects
+    :param bool verify_ssl:
+        (optional) Flag indicating whether to check the SSL certificates.
+        Set to True to check ssl certifications
+    :param loop: (optional) asyncio compatible event loop
+
+    .. deprecated:: 0.2.0
+        Use :attr:`max_conn` and :attr:`max_tries` instead of
+        :attr:`max_concurrent_conn` and :attr:`attempts_conn`.
+    """
 
     def __init__(self, queue=None, timeout=8, max_conn=200, max_tries=3,
                  judges=None, providers=None, verify_ssl=False, loop=None,
@@ -34,13 +59,14 @@ class Broker:
         self._all_tasks = []
         self._checker = None
         self._server = None
-        self._limit = 0
+        self._limit = 0  # not limited
         self._countries = None
 
         max_concurrent_conn = kwargs.get('max_concurrent_conn')
         if max_concurrent_conn:
-            warnings.warn('`max_concurrent_conn` is deprecated, use `max_conn` instead.',
-                          DeprecationWarning)
+            warnings.warn(
+                '`max_concurrent_conn` is deprecated, use `max_conn` instead',
+                DeprecationWarning)
             if isinstance(max_concurrent_conn, asyncio.Semaphore):
                 max_conn = max_concurrent_conn._value
             else:
@@ -48,15 +74,17 @@ class Broker:
 
         attempts_conn = kwargs.get('attempts_conn')
         if attempts_conn:
-            warnings.warn('`attempts_conn` is deprecated, use `max_tries` instead.',
-                          DeprecationWarning)
+            warnings.warn(
+                '`attempts_conn` is deprecated, use `max_tries` instead',
+                DeprecationWarning)
             max_tries = attempts_conn
 
-        # Limit the maximum number of concurrent checking proxies
+        # The maximum number of concurrent checking proxies
         self._on_check = asyncio.Queue(maxsize=max_conn, loop=self._loop)
         self._max_tries = max_tries
         self._judges = judges
-        self._providers = providers
+        self._providers = [p if isinstance(p, Provider) else Provider(p)
+                           for p in (providers or PROVIDERS)]
 
         try:
             self._loop.add_signal_handler(signal.SIGINT, self.stop)
@@ -66,7 +94,14 @@ class Broker:
             pass
 
     async def grab(self, *, countries=None, limit=0):
-        """Grab proxies from the providers."""
+        """Gather proxies from the providers without checking.
+
+        :param list countries: (optional) List of ISO country codes
+                               where should be located proxies
+        :param int limit: (optional) The maximum number of proxies
+
+        :ref:`Example of usage <proxybroker-examples-grab>`.
+        """
         self._countries = countries
         self._limit = limit
         task = asyncio.ensure_future(self._grab(check=False))
@@ -74,20 +109,50 @@ class Broker:
 
     async def find(self, *, types=None, data=None, countries=None,
                    post=False, strict=False, dnsbl=None, limit=0, **kwargs):
-        """Find and check proxies.
+        """Gather and check proxies from providers or from a passed data.
 
-        Grab proxies from the providers or a raw data and then check them on
-        geo location and working with specified types (protocols).
+        :ref:`Example of usage <proxybroker-examples-find>`.
+
+        :param list types:
+            Types (protocols) that need to be check on support by proxy.
+            Supported: HTTP, HTTPS, SOCKS4, SOCKS5, CONNECT:80, CONNECT:25
+            And levels of anonymity (HTTP only): Transparent, Anonymous, High
+        :param data:
+            (optional) String or list with proxies. Also can be a file-like
+            object supports `read()` method. Used instead of providers
+        :param list countries:
+            (optional) List of ISO country codes where should be located proxies
+        :param bool post:
+            (optional) Flag indicating use POST instead of GET for requests
+            when checking proxies
+        :param bool strict:
+            (optional) Flag indicating that anonymity levels of types
+            (protocols) supported by a proxy must be equal to the requested
+            types and levels of anonymity. By default, strict mode is off and
+            for a successful check is enough to satisfy any one of the
+            requested types
+        :param list dnsbl:
+            (optional) Spam databases for proxy checking.
+            `Wiki <https://en.wikipedia.org/wiki/DNSBL>`_
+        :param int limit: (optional) The maximum number of proxies
+
+        :raises ValueError:
+            If :attr:`types` not given.
+
+        .. versionchanged:: 0.2.0
+            Added: :attr:`post`, :attr:`strict`, :attr:`dnsbl`.
+            Changed: :attr:`types` is required.
         """
         ip = await self._resolver.get_real_ext_ip()
         types = _update_types(types)
 
         if not types:
-            raise ValueError('Types (protocols) are required.')
+            raise ValueError('`types` is required')
 
         self._checker = Checker(
-            judges=self._judges, timeout=self._timeout, verify_ssl=self._verify_ssl,
-            max_tries=self._max_tries, real_ext_ip=ip, types=types, post=post,
+            judges=self._judges, timeout=self._timeout,
+            verify_ssl=self._verify_ssl, max_tries=self._max_tries,
+            real_ext_ip=ip, types=types, post=post,
             strict=strict, dnsbl=dnsbl, loop=self._loop)
         self._countries = countries
         self._limit = limit
@@ -103,24 +168,90 @@ class Broker:
     def serve(self, host='127.0.0.1', port=8888, limit=100, **kwargs):
         """Start a local proxy server.
 
-        Server distributes incoming requests to a pool of found proxies.
+        The server distributes incoming requests to a pool of found proxies.
 
-        Controls the rate of error on proxy servers (``min_req_proxy`` &
-        ``max_error_rate``), when the rate is greater than the specified -
-        removes proxy from the pool of servers used.
+        When the server receives an incoming request, it chooses the optimal
+        proxy (based on the percentage of errors and average response time)
+        and passes to it the incoming request.
+
+        In addition to the parameters listed below are also accept all the
+        parameters of the :meth:`.find` method and passed it to gather proxies
+        to a pool.
+
+        :ref:`Example of usage <proxybroker-examples-server>`.
+
+        :param str host: (optional) Host of local proxy server
+        :param int port: (optional) Port of local proxy server
+        :param int limit:
+            (optional) When will be found a requested number of working
+            proxies, checking of new proxies will be lazily paused.
+            Checking will be resumed if all the found proxies will be discarded
+            in the process of working with them (see :attr:`max_error_rate`,
+            :attr:`max_resp_time`). And will continue until it finds one working
+            proxy and paused again. The default value is 100
+        :param int max_tries:
+            (optional) The maximum number of attempts to handle an incoming
+            request. If not specified, it will use the value specified during
+            the creation of the :class:`Broker` object. Attempts can be made
+            with different proxies. The default value is 3
+        :param int min_req_proxy:
+            (optional) The minimum number of processed requests to estimate the
+            quality of proxy (in accordance with :attr:`max_error_rate` and
+            :attr:`max_resp_time`). The default value is 5
+        :param int max_error_rate:
+            (optional) The maximum percentage of requests that ended with
+            an error. For example: 0.5 = 50%. If proxy.error_rate exceeds this
+            value, proxy will be removed from the pool.
+            The default value is 0.5
+        :param int max_resp_time:
+            (optional) The maximum response time in seconds.
+            If proxy.avg_resp_time exceeds this value, proxy will be removed
+            from the pool. The default value is 8
+        :param bool prefer_connect:
+            (optional) Flag that indicates whether to use the CONNECT method
+            if possible. For example: If is set to True and a proxy supports
+            HTTP proto (GET or POST requests) and CONNECT method, the server
+            will try to use CONNECT method and only after that send the
+            original request. The default value is False
+        :param list http_allowed_codes:
+            (optional) Acceptable HTTP codes returned by proxy on requests.
+            If a proxy return code, not included in this list, it will be
+            considered as a proxy error, not a wrong/unavailable address.
+            For example, if a proxy will return a ``404 Not Found`` response -
+            this will be considered as an error of a proxy.
+            Checks only for HTTP protocol, HTTPS not supported at the moment.
+            By default the list is empty and the response code is not verified
+        :param int backlog:
+            (optional) The maximum number of queued connections passed to
+            listen. The default value is 100
+
+        :raises ValueError:
+            If :attr:`limit` is less than or equal to zero.
+            Because a parsing of providers will be endless
+
+        .. versionadded:: 0.2.0
         """
+
+        if limit <= 0:
+            raise ValueError(
+                'In serve mode value of the limit cannot be less than or '
+                'equal to zero. Otherwise, a parsing of providers will be '
+                'endless')
+
         self._server = Server(
             host=host, port=port, proxies=self._proxies, timeout=self._timeout,
-            max_tries=self._max_tries, loop=self._loop, **kwargs)
+            max_tries=kwargs.pop('max_tries', self._max_tries),
+            loop=self._loop, **kwargs)
         self._server.start()
 
-        task = asyncio.ensure_future(self.find(limit=limit, **kwargs))
+        task = asyncio.ensure_future(self.find(data=data, limit=limit, **kwargs))
         self._all_tasks.append(task)
 
     async def _load(self, data, check=True):
-        """Transform data from raw string or list to set {(host, port), ...}.
+        """Looking for proxies in the passed data.
 
-        {('192.168.0.1', '80'), ('192.168.0.2', '8080'), ...}
+        Transform the passed data from [raw string | file-like object | list]
+        to set {(host, port), ...}: {('192.168.0.1', '80'), }
         """
         log.debug('Load proxies from the raw data')
         if isinstance(data, io.TextIOWrapper):
@@ -136,8 +267,7 @@ class Broker:
     async def _grab(self, types=None, check=False):
         # TODO: need refactoring
         log.debug('Start grabbing proxies')
-        providers = get_providers(self._providers)
-        providers = [pr for pr in providers
+        providers = [pr for pr in self._providers
                      if not types or not pr.proto or bool(pr.proto & types.keys())]
 
         if not check:
@@ -164,12 +294,14 @@ class Broker:
         self._done()
 
     async def _handle(self, proxy, check=False):
-        proxy = await Proxy.create(
-            *proxy, timeout=self._timeout, resolver=self._resolver,
-            verify_ssl=self._verify_ssl, loop=self._loop)
+        try:
+            proxy = await Proxy.create(
+                *proxy, timeout=self._timeout, resolver=self._resolver,
+                verify_ssl=self._verify_ssl, loop=self._loop)
+        except (ResolveError, ValueError):
+            return
 
-        if not proxy or (proxy and
-           not self._is_unique(proxy) or not self._geo_passed(proxy)):
+        if not self._is_unique(proxy) or not self._geo_passed(proxy):
             return
 
         if check:
@@ -225,6 +357,7 @@ class Broker:
             self._done()
 
     def stop(self):
+        """Stop all tasks, and the local proxy server if it's running."""
         self._done()
         if self._server:
             self._server.stop()
@@ -241,9 +374,18 @@ class Broker:
         log.info('Done! Total found proxies: %d' % len(self.unique_proxies))
 
     def show_stats(self, verbose=False, **kwargs):
+        """Show statistics on the found proxies.
+
+        Useful for debugging, but you can also use if you're interested.
+
+        :param verbose: Flag indicating whether to print verbose stats
+
+        .. deprecated:: 0.2.0
+            Use :attr:`verbose` instead of :attr:`full`.
+        """
         if kwargs:
             verbose = True
-            warnings.warn('argument `full` in `show_stats` is deprecated, '
+            warnings.warn('`full` in `show_stats` is deprecated, '
                           'use `verbose` instead.', DeprecationWarning)
 
         found_proxies = self.unique_proxies.values()

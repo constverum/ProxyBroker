@@ -13,7 +13,8 @@ CONNECTED = b'HTTP/1.1 200 Connection established\r\n\r\n'
 class ProxyPool:
     """Imports and gives proxies from queue on demand."""
 
-    def __init__(self, proxies, min_req_proxy, max_error_rate, max_resp_time):
+    def __init__(self, proxies, min_req_proxy=5,
+                 max_error_rate=0.5, max_resp_time=8):
         self._proxies = proxies
         self._pool = []
         self._min_req_proxy = min_req_proxy
@@ -139,7 +140,10 @@ class Server:
                 if proto in ('CONNECT:80', 'SOCKS4', 'SOCKS5'):
                     host = headers.get('Host')
                     port = headers.get('Port', 80)
-                    ip = await self._resolver.resolve(host)
+                    try:
+                        ip = await self._resolver.resolve(host)
+                    except ResolveError:
+                        return
                     proxy.ngtr = proto
                     await proxy.ngtr.negotiate(host=host, port=port, ip=ip)
                     if scheme == 'HTTPS' and proto in ('SOCKS4', 'SOCKS5'):

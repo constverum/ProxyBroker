@@ -10,28 +10,52 @@ from .resolver import Resolver
 from .negotiators import NGTRS
 
 
-warnings.simplefilter('once', DeprecationWarning)
-
-
 _HTTP_PROTOS = {'HTTP', 'CONNECT:80', 'SOCKS4', 'SOCKS5'}
 _HTTPS_PROTOS = {'HTTPS', 'SOCKS4', 'SOCKS5'}
 
 
 class Proxy:
-    """Proxy."""
+    """Proxy.
+
+    :param str host: IP address of the proxy
+    :param int port: Port of the proxy
+    :param tuple types:
+        (optional) List of types (protocols) which may be supported
+        by the proxy and which can be checked to work with the proxy
+    :param int timeout:
+        (optional) Timeout of a connection and receive a response in seconds
+    :param bool verify_ssl:
+        (optional) Flag indicating whether to check the SSL certificates.
+        Set to True to check ssl certifications
+
+    :raises ValueError: If the host not is IP address, or if the port > 65535
+    """
 
     @classmethod
     async def create(cls, host, *args, **kwargs):
+        """Asynchronously create a :class:`Proxy` object.
+
+        :param str host: A passed host can be a domain or IP address.
+                         If the host is a domain, try to resolve it
+        :param str \*args:
+            (optional) Positional arguments that :class:`Proxy` takes
+        :param str \*\*kwargs:
+            (optional) Keyword arguments that :class:`Proxy` takes
+
+        :return: :class:`Proxy` object
+        :rtype: proxybroker.Proxy
+
+        :raises ResolveError: If could not resolve the host
+        :raises ValueError: If the port > 65535
+        """
         loop = kwargs.pop('loop', None)
         resolver = kwargs.pop('resolver', Resolver(loop=loop))
-        _host = await resolver.resolve(host)
-        if not _host:
-            return
         try:
+            _host = await resolver.resolve(host)
             self = cls(_host, *args, **kwargs)
-        except ValueError as e:
-            log.error('%s:%s::: %s' % (host, args[0], e))
-            return
+        except (ResolveError, ValueError) as e:
+            log.error('%s:%s: Error at creating: %s' % (host, args[0], e))
+            raise
         return self
 
     def __init__(self, host=None, port=None, types=(),
@@ -48,10 +72,10 @@ class Proxy:
         self.expected_types = set(types) & {'HTTP', 'HTTPS', 'CONNECT:80',
                                             'CONNECT:25', 'SOCKS4', 'SOCKS5'}
         self._timeout = timeout
-        self._ssl_context = True if verify_ssl else _ssl._create_unverified_context()
-
-        self.types = {}
-        self.is_working = False
+        self._ssl_context = (True if verify_ssl else
+                             _ssl._create_unverified_context())
+        self._types = {}
+        self._is_working = False
         self.stat = {'requests': 0, 'errors': Counter()}
         self._ngtr = None
         self._geo = Resolver.get_ip_info(self.host)
@@ -76,6 +100,31 @@ class Proxy:
                port=self.port, avg=self.avg_resp_time)
 
     @property
+    def types(self):
+        """Types (protocols) supported by the proxy.
+
+        | Where key is type, value is level of anonymity
+          (only for HTTP, for other types level always is None).
+        | Available types: HTTP, HTTPS, SOCKS4, SOCKS5, CONNECT:80, CONNECT:25
+        | Available levels: Transparent, Anonymous, High.
+
+        :rtype: dict
+        """
+        return self._types
+
+    @property
+    def is_working(self):
+        """True if the proxy is working, False otherwise.
+
+        :rtype: bool
+        """
+        return self._is_working
+
+    @is_working.setter
+    def is_working(self, val):
+        self._is_working = val
+
+    @property
     def writer(self):
         return self._writer.get('ssl') or self._writer.get('conn')
 
@@ -91,7 +140,11 @@ class Proxy:
     def error_rate(self):
         """Error rate: from 0 to 1.
 
-        By example: 0.7 = 70% requests ends with error.
+        For example: 0.7 = 70% requests ends with error.
+
+        :rtype: float
+
+        .. versionadded:: 0.2.0
         """
         return sum(self.stat['errors'].values()) / self.stat['requests']
 
@@ -109,20 +162,38 @@ class Proxy:
 
     @property
     def avg_resp_time(self):
-        """Return the average connection/response time."""
+        """The average connection/response time.
+
+        :rtype: float
+        """
         if self._runtimes:
             return sum(self._runtimes) / len(self._runtimes)
         else:
-            return 0
+            return 0.0
 
     @property
     def avgRespTime(self):
+        """
+        .. deprecated:: 2.0
+            Use :attr:`avg_resp_time` instead.
+        """
         warnings.warn('`avgRespTime` property is deprecated, '
                       'use `avg_resp_time` instead.', DeprecationWarning)
         return self.avg_resp_time
 
     @property
     def geo(self):
+        """Geo information about IP address of the proxy.
+
+        :return:
+            Named tuple with fields:
+                * ``code`` - ISO country code
+                * ``name`` - Full name of country
+        :rtype: collections.namedtuple
+
+        .. versionchanged:: 0.2.0
+            In previous versions return a dictionary, now named tuple.
+        """
         return self._geo
 
     @property
@@ -147,6 +218,13 @@ class Proxy:
             self._runtimes.append(runtime)
 
     def get_log(self):
+        """Proxy log.
+
+        :return: The proxy log in format: (negotaitor, msg, runtime)
+        :rtype: tuple
+
+        .. versionadded:: 0.2.0
+        """
         return self._log
 
     async def connect(self, ssl=False):
@@ -184,11 +262,13 @@ class Proxy:
             self.log(msg, stime, err=err)
 
     def close(self):
-        if self._closed:
-            return
-        if self.writer:
-            self.writer.close()
         self._closed = True
+        if self.writer:
+            # try:
+            self.writer.close()
+            # except RuntimeError:
+            #     print('Try proxy.close() when loop is closed:',
+            #           asyncio.get_event_loop()._closed)
         self._reader = {'conn': None, 'ssl': None}
         self._writer = {'conn': None, 'ssl': None}
         self.log('Connection: closed')

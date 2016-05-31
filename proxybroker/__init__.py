@@ -16,7 +16,7 @@ limitations under the License.
 
 __title__ = 'ProxyBroker'
 __package__ = 'proxybroker'
-__version__ = '0.2.0a1'
+__version__ = '0.2.0b1'
 __short_description__ = '[Finder/Grabber/Checker] Finds public proxies on multiple sources and concurrently checks them (type, anonymity, country). HTTP(S) & SOCKS'
 __author__ = 'Constverum'
 __author_email__ = 'constverum@gmail.com'
@@ -27,7 +27,18 @@ __copyright__ = 'Copyright 2015-2016 Constverum'
 
 from .proxy import Proxy
 from .judge import Judge
+from .providers import Provider
 from .checker import Checker
-from .server import Server
+from .server import Server, ProxyPool
 from .api import Broker
 
+
+import logging
+import warnings
+
+
+logger = logging.getLogger('asyncio')
+logger.addFilter(logging.Filter('has no effect when using ssl'))
+
+warnings.simplefilter('always', UserWarning)
+warnings.simplefilter('once', DeprecationWarning)

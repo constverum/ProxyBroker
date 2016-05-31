@@ -1,4 +1,5 @@
-"""Find proxies without check and save them to a file."""
+"""Gather proxies from the providers without
+   checking and save them to a file."""
 
 import asyncio
 from proxybroker import Broker
