@@ -1,13 +1,14 @@
 import re
+import codecs
 from setuptools import setup
 
 
 # https://packaging.python.org/en/latest/distributing/
 
-with open('proxybroker/__init__.py', 'r') as f:
+with codecs.open('proxybroker/__init__.py', mode='r', encoding='utf-8') as f:
     INFO = dict(re.findall(r"__(\w+)__ = '([^']+)'", f.read(), re.MULTILINE))
 
-with open('README.rst', 'r') as f:
+with codecs.open('README.rst', mode='r', encoding='utf-8') as f:
     INFO['long_description'] = f.read()
 
 REQUIRES = ['aiodns', 'aiohttp', 'maxminddb']

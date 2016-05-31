@@ -16,6 +16,7 @@
 import sys
 import os
 import re
+import codecs
 
 import alabaster
 
@@ -28,9 +29,11 @@ sys.path.insert(0, os.path.abspath('.'))
 # -- General configuration ------------------------------------------------
 
 
-_docs_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-_path_to_init = os.path.abspath(os.path.join(_docs_path, '..', 'proxybroker', '__init__.py'))
-with open(_path_to_init, 'r') as f:
+_docs_path = os.path.abspath(
+    os.path.join(os.path.dirname(__file__), '..'))
+_path_to_init = os.path.abspath(
+    os.path.join(_docs_path, '..', 'proxybroker', '__init__.py'))
+with codecs.open(_path_to_init, mode='r', encoding='utf-8') as f:
     _INFO = dict(re.findall(r"__(\w+)__ = '([^']+)'", f.read(), re.MULTILINE))
 
 # If your documentation needs a minimal Sphinx version, state it here.
