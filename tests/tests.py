@@ -100,9 +100,11 @@ class TestProxy(AsyncTestCase):
 
     async def test_create_with_ip(self):
         self.assertIsInstance(await Proxy.create('127.0.0.1', '80'), Proxy)
-        self.assertFalse(await Proxy.create('127.0.0.1', '65536'))
-        self.assertFalse(await Proxy.create('256.0.0.1', '80'))
         self.assertTrue(Proxy('127.0.0.1', '80'))
+
+        with self.assertRaises(ValueError):
+            await Proxy.create('127.0.0.1', '65536')
+            await Proxy.create('256.0.0.1', '80')
         self.assertRaises(ValueError, Proxy, '256.0.0.1', '80')
         self.assertRaises(ValueError, Proxy, '127.0.0.1', '65536')
 
@@ -116,10 +118,11 @@ class TestProxy(AsyncTestCase):
     def test_repr(self):
         p = Proxy('8.8.8.8', '80')
         p._runtimes = [1, 3, 2]
-        p.types = {'HTTP': 'Anonymous', 'HTTPS': None}
+        p.types.update({'HTTP': 'Anonymous', 'HTTPS': None})
         self.assertEqual(repr(p), '<Proxy US 2.00s [HTTP: Anonymous, HTTPS] 8.8.8.8:80>')
 
-        p.types = {'SOCKS4': None, 'SOCKS5': None}
+        p.types.clear()
+        p.types.update({'SOCKS4': None, 'SOCKS5': None})
         self.assertEqual(repr(p), '<Proxy US 2.00s [SOCKS4, SOCKS5] 8.8.8.8:80>')
 
         p = Proxy('127.0.0.1', '80')
@@ -127,15 +130,16 @@ class TestProxy(AsyncTestCase):
 
     def test_schemes(self):
         p = Proxy('127.0.0.1', '80')
-        p.types = {'HTTP': 'Anonymous', 'HTTPS': None}
+        p.types.update({'HTTP': 'Anonymous', 'HTTPS': None})
+        # p.types['HTTP'], p.types['HTTPS'] = 'Anonymous', None
         self.assertEqual(p.schemes, ('HTTP', 'HTTPS'))
 
         p = Proxy('127.0.0.1', '80')
-        p.types = {'HTTPS': None}
+        p.types['HTTPS'] = None
         self.assertEqual(p.schemes, ('HTTPS',))
 
         p = Proxy('127.0.0.1', '80')
-        p.types = {'SOCKS4': None, 'SOCKS5': None}
+        p.types.update({'SOCKS4': None, 'SOCKS5': None})
         self.assertEqual(p.schemes, ('HTTP', 'HTTPS'))
 
     def test_avg_resp_time(self):
@@ -238,7 +242,9 @@ class TestResolver(AsyncTestCase):
     async def test_resolve(self):
         rs = Resolver(timeout=0.1)
         self.assertEqual(await rs.resolve('127.0.0.1'), '127.0.0.1')
-        self.assertFalse(await rs.resolve('256.0.0.1'))
+
+        with self.assertRaises(ResolveError):
+            await rs.resolve('256.0.0.1')
 
         with patch("aiodns.DNSResolver.query") as query:
             query.side_effect = future_iter([ResolveResult('127.0.0.1', 0)])
