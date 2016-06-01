@@ -244,7 +244,7 @@ class Broker:
             loop=self._loop, **kwargs)
         self._server.start()
 
-        task = asyncio.ensure_future(self.find(data=data, limit=limit, **kwargs))
+        task = asyncio.ensure_future(self.find(limit=limit, **kwargs))
         self._all_tasks.append(task)
 
     async def _load(self, data, check=True):

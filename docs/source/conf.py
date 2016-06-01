@@ -137,20 +137,12 @@ html_theme = 'alabaster'
 # documentation.
 html_theme_options = {
     'logo': 'anonymous-128-icon.png',
-    # 'logo_name': True,
     'description': 'Proxy: find>check>serve',
     'github_user': 'constverum',
     'github_repo': 'ProxyBroker',
     'github_button': True,
     'github_banner': True,
-    # 'travis_button': True,
-    # 'analytics_id': 'UA-'
-    # 'pre_bg': '#FFF6E5',
-    # 'note_bg': '#E5ECD1',
-    # 'note_border': '#BFCF8C',
-    # 'body_text': '#482C0A',
-    # 'sidebar_text': '#49443E',
-    # 'sidebar_header': '#4B4032',
+    'analytics_id': 'UA-78523784-1',
 }
 
 # Add any paths that contain custom themes here, relative to this directory.
