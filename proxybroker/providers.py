@@ -14,9 +14,6 @@ from .utils import log, get_headers, IPPattern, IPPortPatternGlobal
 from .resolver import Resolver
 
 
-MAX_CONCURRENT_PROVIDERS = 10
-
-
 class Provider:
     """Proxy provider.
 
@@ -35,8 +32,6 @@ class Provider:
     """
 
     _pattern = IPPortPatternGlobal
-    # The maximum number of providers that are parsed concurrently
-    _sem_providers = asyncio.Semaphore(MAX_CONCURRENT_PROVIDERS)
 
     def __init__(self, url=None, proto=(), max_conn=4,
                  max_tries=3, timeout=20, loop=None):
@@ -79,20 +74,19 @@ class Provider:
 
         :return: :attr:`.proxies`
         """
-        with (await self._sem_providers):
-            log.debug('Try to get proxies from %s' % self.domain)
+        log.debug('Try to get proxies from %s' % self.domain)
 
-            await self._start_new_session()
-            if not self._session:
-                return []
+        await self._start_new_session()
+        if not self._session:
+            return []
 
-            try:
-                await self._pipe()
-            finally:
-                self._session.close()
+        try:
+            await self._pipe()
+        finally:
+            self._session.close()
 
-            log.debug('%d proxies received from %s: %s' % (
-                      len(self.proxies), self.domain, self.proxies))
+        log.debug('%d proxies received from %s: %s' % (
+                  len(self.proxies), self.domain, self.proxies))
         return self.proxies
 
     async def _start_new_session(self):

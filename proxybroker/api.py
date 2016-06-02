@@ -14,8 +14,11 @@ from .utils import log, IPPortPatternLine
 from .resolver import Resolver
 from .providers import Provider, PROVIDERS
 
+# Pause between grabbing cycles; in seconds.
+GRAB_PAUSE = 180
 
-GRAB_PAUSE = 180  # Pause between the cycles grabbing in seconds
+# The maximum number of providers that are parsed concurrently
+MAX_CONCURRENT_PROVIDERS = 3
 
 
 class Broker:
@@ -265,32 +268,30 @@ class Broker:
         self._done()
 
     async def _grab(self, types=None, check=False):
-        # TODO: need refactoring
+        def _get_tasks(by=MAX_CONCURRENT_PROVIDERS):
+            providers = [pr for pr in self._providers if not types or
+                         not pr.proto or bool(pr.proto & types.keys())]
+            while providers:
+                tasks = [asyncio.ensure_future(pr.get_proxies())
+                         for pr in providers[:by]]
+                del providers[:by]
+                self._all_tasks.extend(tasks)
+                yield tasks
         log.debug('Start grabbing proxies')
-        providers = [pr for pr in self._providers
-                     if not types or not pr.proto or bool(pr.proto & types.keys())]
-
-        if not check:
-            tasks = [asyncio.ensure_future(pr.get_proxies()) for pr in providers]
-            self._all_tasks.extend(tasks)
-            for task in asyncio.as_completed(tasks):
-                proxies = await task
-                for proxy in proxies:
-                    await self._handle(proxy, check=check)
-        else:
-            while True:
-                for pr in providers:
-                    proxies = await pr.get_proxies()
+        while True:
+            for tasks in _get_tasks():
+                for task in asyncio.as_completed(tasks):
+                    proxies = await task
                     for proxy in proxies:
                         await self._handle(proxy, check=check)
-                log.debug('Grab cycle is complete')
-                if self._server:
-                    log.debug('sleeped')
-                    await asyncio.sleep(GRAB_PAUSE)
-                    log.debug('unsleeped')
-                else:
-                    break
-            await self._on_check.join()
+            log.debug('Grab cycle is complete')
+            if self._server:
+                log.debug('fall asleep for %d seconds' % GRAB_PAUSE)
+                await asyncio.sleep(GRAB_PAUSE)
+                log.debug('awaked')
+            else:
+                break
+        await self._on_check.join()
         self._done()
 
     async def _handle(self, proxy, check=False):

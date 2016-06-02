@@ -3,4 +3,3 @@ include README.rst
 include CHANGELOG.rst
 include requirements.txt
 include proxybroker/data/*.mmdb
-include proxybroker/data/*.gif

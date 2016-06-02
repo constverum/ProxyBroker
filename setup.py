@@ -13,7 +13,7 @@ with codecs.open('README.rst', mode='r', encoding='utf-8') as f:
 
 REQUIRES = ['aiodns', 'aiohttp', 'maxminddb']
 PACKAGES = ['proxybroker', 'proxybroker.data']
-PACKAGE_DATA = {'': ['LICENSE'], INFO['package']: ['data/*.gif', 'data/*.mmdb']}
+PACKAGE_DATA = {'': ['LICENSE'], INFO['package']: ['data/*.mmdb']}
 
 setup(
     name=INFO['package'],

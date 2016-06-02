@@ -5,7 +5,7 @@ import ssl as _ssl
 from collections import Counter
 
 from .errors import *
-from .utils import log
+from .utils import log, parse_headers
 from .resolver import Resolver
 from .negotiators import NGTRS
 
@@ -262,6 +262,8 @@ class Proxy:
             self.log(msg, stime, err=err)
 
     def close(self):
+        if self._closed:
+            return
         self._closed = True
         if self.writer:
             # try:
@@ -287,16 +289,12 @@ class Proxy:
         finally:
             self.log('Request: %s%s' % (req, msg), err=err)
 
-    async def recv(self, length=65536, one_chunk=False):
+    async def recv(self, length=0, status_only=False):
         resp, msg, err = b'', '', None
         stime = time.time()
         try:
-            while not self.reader.at_eof() and len(resp) < length:
-                data = await asyncio.wait_for(
-                    self.reader.read(length), timeout=self._timeout)
-                resp += data
-                if not data or one_chunk:
-                    break
+            resp = await asyncio.wait_for(
+                self._recv(length, status_only), timeout=self._timeout)
         except asyncio.TimeoutError:
             msg = 'Received: timeout'
             err = ProxyTimeoutError(msg)
@@ -314,4 +312,31 @@ class Proxy:
             if resp:
                 msg += ': %s' % resp[:12]
             self.log(msg, stime, err=err)
+        return resp
+
+    async def _recv(self, length=0, status_only=False):
+        resp = b''
+        if length:
+            try:
+                resp = await self.reader.readexactly(length)
+            except asyncio.IncompleteReadError as e:
+                resp = e.partial
+        else:
+            body_size, body_recv, chunked = 0, 0, None
+            while not self.reader.at_eof():
+                line = await self.reader.readline()
+                resp += line
+                if body_size:
+                    body_recv += len(line)
+                    if body_recv >= body_size:
+                        break
+                elif chunked and line == b'0\r\n':
+                    break
+                elif not body_size and line == b'\r\n':
+                    if status_only:
+                        break
+                    headers = parse_headers(resp)
+                    body_size = int(headers.get('Content-Length', 0))
+                    if not body_size:
+                        chunked = headers.get('Transfer-Encoding') == 'chunked'
         return resp

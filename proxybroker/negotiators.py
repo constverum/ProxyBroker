@@ -41,7 +41,7 @@ class Socks5Ngtr(BaseNegotiator):
 
     async def negotiate(self, **kwargs):
         await self._proxy.send(struct.pack('3B', 5, 1, 0))
-        resp = await self._proxy.recv(2, one_chunk=True)
+        resp = await self._proxy.recv(2)
 
         if resp[0] == 0x05 and resp[1] == 0xff:
             self._proxy.log('Failed (auth is required)', err=BadResponseError)
@@ -54,7 +54,7 @@ class Socks5Ngtr(BaseNegotiator):
         port = kwargs.get('port', 80)
 
         await self._proxy.send(struct.pack('>8BH', 5, 1, 0, 1, *bip, port))
-        resp = await self._proxy.recv(10, one_chunk=True)
+        resp = await self._proxy.recv(10)
 
         if resp[0] != 0x05 or resp[1] != 0x00:
             self._proxy.log('Failed (invalid data)', err=BadResponseError)
@@ -73,7 +73,7 @@ class Socks4Ngtr(BaseNegotiator):
         port = kwargs.get('port', 80)
 
         await self._proxy.send(struct.pack('>2BH5B', 4, 1, port, *bip, 0))
-        resp = await self._proxy.recv(8, one_chunk=True)
+        resp = await self._proxy.recv(8)
 
         if resp[0] != 0x00 or resp[1] != 0x5A:
             self._proxy.log('Failed (invalid data)', err=BadResponseError)
@@ -90,7 +90,7 @@ class Connect80Ngtr(BaseNegotiator):
 
     async def negotiate(self, **kwargs):
         await self._proxy.send(_CONNECT_request(kwargs.get('host'), 80))
-        resp = await self._proxy.recv(one_chunk=True)
+        resp = await self._proxy.recv(status_only=True)
         code = get_status_code(resp)
         if code != 200:
             self._proxy.log('Connect: failed. HTTP status: %s' % code,
@@ -105,7 +105,7 @@ class Connect25Ngtr(BaseNegotiator):
 
     async def negotiate(self, **kwargs):
         await self._proxy.send(_CONNECT_request(kwargs.get('host'), 25))
-        resp = await self._proxy.recv(one_chunk=True)
+        resp = await self._proxy.recv(status_only=True)
         code = get_status_code(resp)
         if code != 200:
             self._proxy.log('Connect: failed. HTTP status: %s' % code,
@@ -120,7 +120,7 @@ class HttpsNgtr(BaseNegotiator):
 
     async def negotiate(self, **kwargs):
         await self._proxy.send(_CONNECT_request(kwargs.get('host'), 443))
-        resp = await self._proxy.recv(one_chunk=True)
+        resp = await self._proxy.recv(status_only=True)
         code = get_status_code(resp)
         if code != 200:
             self._proxy.log('Connect: failed. HTTP status: %s' % code,
