@@ -22,10 +22,8 @@ Features
 
 * Finds more than 7000 working proxies from ~50 sources.
 * Support protocols: HTTP(S), SOCKS4/5. Also CONNECT method to ports 80 and 23 (SMTP).
-* Check proxies on the level of anonymity: Transparent, Anonymous, High.
-* Filter proxies by country.
-* Work as a proxy server that distributes incoming requests to an external proxies.
-* Can check and filter proxies, placed in a spam database (DNSBL).
+* Proxies may be filtered by type, anonymity level, response time, country and status in DNSBL.
+* Work as a proxy server that distributes incoming requests to external proxies. With automatic proxy rotation.
 * All proxies are checked to support Cookies and Referer (and POST requests if required).
 .. * Save found proxies to a file in custom format.
 * Automatically removes duplicate proxies.

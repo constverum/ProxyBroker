@@ -289,12 +289,12 @@ class Proxy:
         finally:
             self.log('Request: %s%s' % (req, msg), err=err)
 
-    async def recv(self, length=0, status_only=False):
+    async def recv(self, length=0, head_only=False):
         resp, msg, err = b'', '', None
         stime = time.time()
         try:
             resp = await asyncio.wait_for(
-                self._recv(length, status_only), timeout=self._timeout)
+                self._recv(length, head_only), timeout=self._timeout)
         except asyncio.TimeoutError:
             msg = 'Received: timeout'
             err = ProxyTimeoutError(msg)
@@ -314,7 +314,7 @@ class Proxy:
             self.log(msg, stime, err=err)
         return resp
 
-    async def _recv(self, length=0, status_only=False):
+    async def _recv(self, length=0, head_only=False):
         resp = b''
         if length:
             try:
@@ -333,7 +333,7 @@ class Proxy:
                 elif chunked and line == b'0\r\n':
                     break
                 elif not body_size and line == b'\r\n':
-                    if status_only:
+                    if head_only:
                         break
                     headers = parse_headers(resp)
                     body_size = int(headers.get('Content-Length', 0))

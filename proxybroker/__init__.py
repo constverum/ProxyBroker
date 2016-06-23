@@ -16,7 +16,7 @@ limitations under the License.
 
 __title__ = 'ProxyBroker'
 __package__ = 'proxybroker'
-__version__ = '0.2.0b2'
+__version__ = '0.2.0b3'
 __short_description__ = '[Finder/Checker/Server] Finds public proxies from multiple sources and concurrently checks them. Supports HTTP(S) and SOCKS4/5.'
 __author__ = 'Constverum'
 __author_email__ = 'constverum@gmail.com'
