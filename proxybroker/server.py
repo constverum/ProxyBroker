@@ -242,4 +242,4 @@ class Server:
             except BadStatusLine:
                 raise BadResponseError
             if header['Status'] not in self._http_allowed_codes:
-                raise BadStatusError
+                raise BadStatusError('%r not in %r' %(header['Status'], self._http_allowed_codes))
