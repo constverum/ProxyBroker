@@ -1,10 +1,8 @@
-import unittest
 from unittest.mock import Mock, patch
 
 from .utils import AsyncTestCase, ResolveResult, future_iter
 
 import socket
-from asyncio import Future
 from proxybroker.errors import ResolveError
 from proxybroker.resolver import Resolver
 
@@ -31,16 +29,12 @@ class TestResolver(AsyncTestCase):
     async def test_get_real_ext_ip(self):
         rs = Resolver(timeout=0.1)
 
-        def side_effect(*args, **kwargs):
-            def _side_effect(*args, **kwargs):
-                fut = Future()
-                fut.set_result({'origin': '127.0.0.1'})
-                return fut
+        async def side_effect(*args, **kwargs):
+            async def _side_effect(*args, **kwargs):
+                return {'origin': '127.0.0.1'}
             resp = Mock()
             resp.json.side_effect = resp.release.side_effect = _side_effect
-            fut = Future()
-            fut.set_result(resp)
-            return fut
+            return resp
 
         with patch("aiohttp.client.ClientSession._request") as resp:
             resp.side_effect = side_effect

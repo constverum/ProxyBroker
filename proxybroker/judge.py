@@ -69,19 +69,19 @@ class Judge:
         connector = aiohttp.TCPConnector(
             loop=self._loop, verify_ssl=self.verify_ssl, force_close=True)
         try:
-            with aiohttp.Timeout(self.timeout, loop=self._loop),\
-                 aiohttp.ClientSession(connector=connector, loop=self._loop) as session:
-                async with session.get(url=self.url, headers=headers,
-                                       allow_redirects=False) as resp:
+            with aiohttp.Timeout(self.timeout, loop=self._loop):
+                async with aiohttp.ClientSession(connector=connector, loop=self._loop) as session,\
+                        session.get(url=self.url, headers=headers,
+                                    allow_redirects=False) as resp:
                     page = await resp.text()
         except (asyncio.TimeoutError, aiohttp.ClientOSError,
                 aiohttp.ClientResponseError, aiohttp.ServerDisconnectedError) as e:
-            log.error('%s is failed. Error: %r;' % (self, e))
+            log.debug('%s is failed. Error: %r;' % (self, e))
             return
 
         page = page.lower()
 
-        if (resp.status == 200 and real_ext_ip in page and rv in page):
+        if resp.status == 200 and real_ext_ip in page and rv in page:
             self.marks['via'] = page.count('via')
             self.marks['proxy'] = page.count('proxy')
             self.is_working = True
@@ -89,7 +89,7 @@ class Judge:
             self.ev[self.scheme].set()
             log.debug('%s is verified' % self)
         else:
-            log.error(('{j} is failed. HTTP status code: {code}; '
+            log.debug(('{j} is failed. HTTP status code: {code}; '
                        'Real IP on page: {ip}; Version: {word}; '
                        'Response: {page}').format(
                       j=self, code=resp.status, page=page,
