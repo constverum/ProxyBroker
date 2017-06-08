@@ -99,8 +99,7 @@ class Provider:
         except ResolveError:
             return
         connector = aiohttp.TCPConnector(use_dns_cache=True, loop=self._loop)
-        # This is a dirty hack. I know.
-        connector._cached_hosts[(host, 80)] = host_info
+        connector._cached_hosts.add((host, 80), host_info)
         self._session = aiohttp.ClientSession(
             connector=connector, headers=get_headers(),
             cookies=self._cookies, loop=self._loop)
