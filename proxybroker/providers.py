@@ -99,8 +99,7 @@ class Provider:
         except ResolveError:
             return
         connector = aiohttp.TCPConnector(use_dns_cache=True, loop=self._loop)
-        # This is a dirty hack. I know.
-        connector._cached_hosts[(host, 80)] = host_info
+        connector._cached_hosts.add((host, 80), host_info)
         self._session = aiohttp.ClientSession(
             connector=connector, headers=get_headers(),
             cookies=self._cookies, loop=self._loop)
@@ -153,13 +152,13 @@ class Provider:
                         page = await resp.text()
                     else:
                         error_page = await resp.text()
-                        log.error('url: %s\nheaders: %s\ncookies: %s\npage:\n%s' % (
+                        log.debug('url: %s\nheaders: %s\ncookies: %s\npage:\n%s' % (
                                   url, resp.headers, resp.cookies, error_page))
                         raise BadStatusError('Status: %s' % resp.status)
         except (UnicodeDecodeError, BadStatusError, asyncio.TimeoutError,
                 aiohttp.ClientOSError, aiohttp.ClientResponseError,
                 aiohttp.ServerDisconnectedError) as e:
-            log.error('%s is failed. Error: %r;' % (url, e))
+            log.debug('%s is failed. Error: %r;' % (url, e))
         return page
 
     def find_proxies(self, page):
