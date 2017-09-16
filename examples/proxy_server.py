@@ -10,17 +10,17 @@ from proxybroker import Broker
 
 async def get_pages(urls, proxy_url):
     tasks = [
-        fetch_page(url, aiohttp.ProxyConnector(proxy_url)) for url in urls]
+        fetch_page(url, proxy_url) for url in urls]
     for task in asyncio.as_completed(tasks):
         url, content = await task
         print('url: %s; content: %.100s' % (url, content))
 
 
-async def fetch_page(url, conn):
+async def fetch_page(url, proxy_url):
     resp = None
     try:
-        with aiohttp.ClientSession(connector=conn) as session:
-            async with session.get(url) as response:
+        with aiohttp.ClientSession() as session:
+            async with session.get(url, proxy=proxy_url) as response:
                 logger.info('url: %s; status: %d' % (url, response.status))
                 resp = await response.read()
     except (aiohttp.errors.ClientOSError, aiohttp.errors.ClientResponseError,
