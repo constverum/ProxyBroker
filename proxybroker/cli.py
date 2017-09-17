@@ -122,6 +122,7 @@ def add_find_args(group):
     group.add_argument(
         '--types',
         nargs='+',
+        type=str.upper,
         required=True,
         choices=['HTTP', 'HTTPS', 'SOCKS4', 'SOCKS5',
                  'CONNECT:80', 'CONNECT:25'],
@@ -130,6 +131,7 @@ def add_find_args(group):
         '--lvl',
         dest='anon_lvl',
         nargs='+',
+        type=str.title,
         choices=['Transparent', 'Anonymous', 'High'],
         help='Level(s) of anonymity (for HTTP only). By default, any level')
     group.add_argument(
