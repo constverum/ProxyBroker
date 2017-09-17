@@ -2,30 +2,27 @@
    incoming requests to external proxies."""
 
 import asyncio
-import logging
 import aiohttp
 
 from proxybroker import Broker
 
 
 async def get_pages(urls, proxy_url):
-    tasks = [
-        fetch_page(url, proxy_url) for url in urls]
+    tasks = [fetch(url, proxy_url) for url in urls]
     for task in asyncio.as_completed(tasks):
         url, content = await task
-        print('url: %s; content: %.100s' % (url, content))
+        print('Done! url: %s; content: %.100s' % (url, content))
 
 
-async def fetch_page(url, proxy_url):
+async def fetch(url, proxy_url):
     resp = None
     try:
-        with aiohttp.ClientSession() as session:
+        async with aiohttp.ClientSession() as session:
             async with session.get(url, proxy=proxy_url) as response:
-                logger.info('url: %s; status: %d' % (url, response.status))
                 resp = await response.read()
     except (aiohttp.errors.ClientOSError, aiohttp.errors.ClientResponseError,
             aiohttp.errors.ServerDisconnectedError) as e:
-        logger.error('url: %s; error: %r' % (url, e))
+        print('Error. url: %s; error: %r' % (url, e))
     finally:
         return (url, resp)
 
@@ -56,7 +53,4 @@ def main():
 
 
 if __name__ == '__main__':
-    logging.basicConfig(level=logging.DEBUG)
-    logger = logging.getLogger('Parser')
-
     main()
