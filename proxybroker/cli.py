@@ -211,6 +211,7 @@ def add_serve_args(group):
     group.add_argument(
         '--http-allowed-codes',
         nargs='+',
+        type=int,
         dest='http_allowed_codes',
         help='Acceptable HTTP codes returned by proxy on requests')
     group.add_argument(
