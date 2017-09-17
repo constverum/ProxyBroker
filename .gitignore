@@ -3,5 +3,6 @@ __pycache__
 *.egg-info
 .idea
 .DS_Store
+.cache
 build
 dist

@@ -1,7 +1,7 @@
 language: python
 python:
   - 3.5
-  # - nightly
+  - 3.6
 os:
   - linux
 install:
@@ -12,6 +12,7 @@ deploy:
   user: constverum
   password:
     secure: HvvKX8puxOp7JCqbMWGk1GBpOWuN9ctCqYINQ6jUey6a2hNX+6gUlZSbCzHfKckPdN1SVPn6sskPNH1EgCGS1/nU109tDa7cxSxJC2fhP1g4vhwfas1c9huCqauG1I8vtLv/OVTz+2duxKeq3B0EblQ6vM/0z7b8drkCxZIG8my8oMJ94cNzyXGf0V8uvavgvRLB64TAReYAugePH/W9ZgdxRqHqbM+bp7EeMXckuMS1lM1d2Y44D4+E2OkNW0i10mlmf467MhIjmDA8nwjDNEexWfMcTxiOthSe4eZ+QcuNEdpfaLTxgssFa8sX6ExW8nC3e/EQlaIZrVmx/RlxQOFDrHPXCw5dR+KtDSyeLODWRnXJqgCOZ7HX8KA0DnC6+ejTlIyAiC/I1ZbjzTvv1lpVQ4sOYbvzGb/7i+LrAkhyjQy3yvS+mhSatf+dS2oWVhgS05fXeIRtea1r++af0BAzOolqAyN2Uyx1QVFTliECwPUsr2fvE/ZOfoLrMSrYMTI1inel2qN/56NCBEz/O60wnjFtXkBqPeP+J0eXMEcwOdQZ3q3fQTUNr5Vv9VlwLj5WgqjB8yQHAaoraSCvaXVmIkpLc5vTY0VjCWyctAN/AlqqhVl9kmWO1zqi3aXMwjNMLUT8zY30256TX4fMhLH5y0wtfYjI97CUcg0lkdQ=
+  server: https://testpypi.python.org/pypi
   distributions: sdist bdist_wheel
   on:
     tags: true

@@ -23,6 +23,7 @@ class ProxyPool:
         self._max_resp_time = max_resp_time
 
     async def get(self, scheme):
+        scheme = scheme.upper()
         for priority, proxy in self._pool:
             if scheme in proxy.schemes:
                 chosen = proxy

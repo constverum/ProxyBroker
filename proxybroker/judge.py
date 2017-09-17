@@ -102,8 +102,7 @@ def get_judges(judges=None, timeout=8, verify_ssl=False):
         'smtp://smtp.gmail.com', 'smtp://aspmx.l.google.com',
         'http://azenv.net/', 'https://www.proxy-listen.de/azenv.php',
         'http://www.proxyfire.net/fastenv', 'http://proxyjudge.us/azenv.php',
-        'http://ip.spys.ru/', 'http://www.ingosander.net/azenv.php',
-        'http://www.proxy-listen.de/azenv.php']
+        'http://ip.spys.ru/', 'http://www.proxy-listen.de/azenv.php']
     _judges = []
     for j in judges:
         j = j if isinstance(j, Judge) else Judge(j)
