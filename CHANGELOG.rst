@@ -3,7 +3,7 @@ Change Log
 ==========
 
 
-`0.2.0-dev`_ (Unreleased)
+`0.2.0`_ (2017-09-17)
 ---------------------
 
 * Added CLI interface
@@ -113,4 +113,4 @@ Change Log
 .. _0.1.2: https://github.com/constverum/ProxyBroker/compare/v0.1...v0.1.2
 .. _0.1.3: https://github.com/constverum/ProxyBroker/compare/v0.1.2...v0.1.3
 .. _0.1.4: https://github.com/constverum/ProxyBroker/compare/v0.1.3...v0.1.4
-.. _0.2.0-dev: https://github.com/constverum/ProxyBroker/compare/v0.1.4...HEAD
+.. _0.2.0: https://github.com/constverum/ProxyBroker/compare/v0.1.4...HEAD
