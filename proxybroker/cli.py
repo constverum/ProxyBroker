@@ -93,12 +93,14 @@ def add_broker_args(group):
         help='''Timeout of a request in seconds.
                 The default value is 8 seconds''')
     group.add_argument(
-        '--judges',
-        nargs='+',
+        '--judge',
+        action='append',
+        dest='judges',
         help='Urls of pages that show HTTP headers and IP address')
     group.add_argument(
-        '--providers',
-        nargs='+',
+        '--provider',
+        action='append',
+        dest='providers',
         help='Urls of pages where to find proxies')
     group.add_argument(
         '--verify-ssl', '-ssl',
