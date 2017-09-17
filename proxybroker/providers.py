@@ -11,7 +11,6 @@ import aiohttp
 
 from .errors import *
 from .utils import log, get_headers, IPPattern, IPPortPatternGlobal
-from .resolver import Resolver
 
 
 class Provider:
@@ -47,7 +46,6 @@ class Provider:
         # concurrent connections on the current provider
         self._sem_provider = asyncio.Semaphore(max_conn)
         self._loop = loop or asyncio.get_event_loop()
-        self._resolver = Resolver(loop=self._loop)
 
     @property
     def proxies(self):
@@ -76,33 +74,14 @@ class Provider:
         """
         log.debug('Try to get proxies from %s' % self.domain)
 
-        await self._start_new_session()
-        if not self._session:
-            return []
-
-        try:
+        async with aiohttp.ClientSession(headers=get_headers(),
+                                         cookies=self._cookies,
+                                         loop=self._loop) as self._session:
             await self._pipe()
-        finally:
-            self._session.close()
 
         log.debug('%d proxies received from %s: %s' % (
                   len(self.proxies), self.domain, self.proxies))
         return self.proxies
-
-    async def _start_new_session(self):
-        # TODO: waiting aiohttp ^0.22.0 with custom resolver:
-        # connector = aiohttp.TCPConnector(
-        #     use_dns_cache=True, resolver=self._resolver, loop=self._loop)
-        host = self.domain.split('^')[0]
-        try:
-            host_info = await self._resolver.resolve(host=host, family=socket.AF_INET)
-        except ResolveError:
-            return
-        connector = aiohttp.TCPConnector(use_dns_cache=True, loop=self._loop)
-        connector._cached_hosts.add((host, 80), host_info)
-        self._session = aiohttp.ClientSession(
-            connector=connector, headers=get_headers(),
-            cookies=self._cookies, loop=self._loop)
 
     async def _pipe(self):
         await self._find_on_page(self.url)
@@ -145,19 +124,19 @@ class Provider:
         page = ''
         try:
             with (await self._sem_provider),\
-                 aiohttp.Timeout(self._timeout, loop=self._loop):
-                async with self._session.request(method, url, data=data,
-                                                 headers=headers) as resp:
-                    if resp.status == 200:
-                        page = await resp.text()
-                    else:
-                        error_page = await resp.text()
-                        log.debug('url: %s\nheaders: %s\ncookies: %s\npage:\n%s' % (
-                                  url, resp.headers, resp.cookies, error_page))
+                    aiohttp.Timeout(self._timeout, loop=self._loop):
+                async with self._session.request(
+                        method, url, data=data, headers=headers) as resp:
+                    page = await resp.text()
+                    if resp.status != 200:
+                        log.debug(
+                            'url: %s\nheaders: %s\ncookies: %s\npage:\n%s' % (
+                                url, resp.headers, resp.cookies, page))
                         raise BadStatusError('Status: %s' % resp.status)
         except (UnicodeDecodeError, BadStatusError, asyncio.TimeoutError,
                 aiohttp.ClientOSError, aiohttp.ClientResponseError,
                 aiohttp.ServerDisconnectedError) as e:
+            page = ''
             log.debug('%s is failed. Error: %r;' % (url, e))
         return page
 
@@ -199,14 +178,12 @@ class Blogspot_com_base(Provider):
 class Blogspot_com(Blogspot_com_base):
     domain = 'blogspot.com'
     domains = ['sslproxies24.blogspot.com', 'proxyserverlist-24.blogspot.com',
-               'newfreshproxies24.blogspot.com', 'irc-proxies24.blogspot.com',
-               'freeschoolproxy.blogspot.com', 'googleproxies24.blogspot.com',
-               'getdailyfreshproxy.blogspot.com']
+               'freeschoolproxy.blogspot.com', 'googleproxies24.blogspot.com']
 
 
 class Blogspot_com_socks(Blogspot_com_base):
     domain = 'blogspot.com^socks'
-    domains = ['www.proxyocean.com', 'www.socks24.org']
+    domains = ['www.socks24.org', ]
 
 
 class Webanetlabs_net(Provider):
@@ -214,8 +191,8 @@ class Webanetlabs_net(Provider):
 
     async def _pipe(self):
         exp = r'''href\s*=\s*['"]([^'"]*proxylist_at_[^'"]*)['"]'''
-        page = await self.get('http://webanetlabs.net/publ/24')
-        urls = ['http://webanetlabs.net%s' % path
+        page = await self.get('https://webanetlabs.net/publ/24')
+        urls = ['https://webanetlabs.net%s' % path
                 for path in re.findall(exp, page)]
         await self._find_on_pages(urls)
 
@@ -224,9 +201,9 @@ class Checkerproxy_net(Provider):
     domain = 'checkerproxy.net'
 
     async def _pipe(self):
-        exp = r'''href\s*=\s*['"]([^'"]?\d{2}-\d{2}-\d{4}[^'"]*)['"]'''
-        page = await self.get('http://checkerproxy.net/')
-        urls = ['http://checkerproxy.net%s' % path
+        exp = r'''href\s*=\s*['"](/archive/\d{4}-\d{2}-\d{2})['"]'''
+        page = await self.get('https://checkerproxy.net/')
+        urls = ['https://checkerproxy.net/api%s' % path
                 for path in re.findall(exp, page)]
         await self._find_on_pages(urls)
 
@@ -280,6 +257,7 @@ class Aliveproxy_com(Provider):
         await self._find_on_pages(urls)
 
 
+# редиректит хуй поми кудаъ
 class Maxiproxies_com(Provider):
     domain = 'maxiproxies.com'
 
@@ -300,24 +278,14 @@ class _50kproxies_com(Provider):
         await self._find_on_pages(urls)
 
 
-class Proxymore_com(Provider):
-    domain = 'proxymore.com'
-
-    async def _pipe(self):
-        urls = ['http://www.proxymore.com/proxy-list-%d.html' % n
-                for n in range(1, 56)]
-        await self._find_on_pages(urls)
-
-
 class Proxylist_me(Provider):
     domain = 'proxylist.me'
 
     async def _pipe(self):
-        exp = r'''href\s*=\s*['"][^'"]*/proxys/index/(\d+)['"]'''
-        page = await self.get('http://proxylist.me/')
+        exp = r'''href\s*=\s*['"][^'"]*/?page=(\d+)['"]'''
+        page = await self.get('https://proxylist.me/')
         lastId = max([int(n) for n in re.findall(exp, page)])
-        urls = ['http://proxylist.me/proxys/index/%d' %
-                n for n in range(lastId, -20, -20)]
+        urls = ['https://proxylist.me/?page=%d' % n for n in range(lastId)]
         await self._find_on_pages(urls)
 
 
@@ -474,8 +442,8 @@ class Proxynova_com(Provider):
 
     async def _pipe(self):
         expCountries = r'"([a-z]{2})"'
-        page = await self.get('http://www.proxynova.com/proxy-server-list/')
-        tpl = 'http://www.proxynova.com/proxy-server-list/country-%s/'
+        page = await self.get('https://www.proxynova.com/proxy-server-list/')
+        tpl = 'https://www.proxynova.com/proxy-server-list/country-%s/'
         urls = [tpl % isoCode for isoCode in re.findall(expCountries, page)
                 if isoCode != 'en']
         await self._find_on_pages(urls)
@@ -513,7 +481,7 @@ class Spys_ru(Provider):
 
     async def _pipe(self):
         expSession = r"'([a-z0-9]{32})'"
-        url = 'http://spys.ru/proxies/'
+        url = 'http://spys.one/proxies/'
         page = await self.get(url)
         sessionId = re.findall(expSession, page)[0]
         data = {'xf0': sessionId,  # session id
@@ -535,9 +503,9 @@ class My_proxy_com(Provider):
 
     async def _pipe(self):
         exp = r'''href\s*=\s*['"]([^'"]?free-[^'"]*)['"]'''
-        url = 'http://www.my-proxy.com/free-proxy-list.html'
+        url = 'https://www.my-proxy.com/free-proxy-list.html'
         page = await self.get(url)
-        urls = ['http://www.my-proxy.com/%s' % path
+        urls = ['https://www.my-proxy.com/%s' % path
                 for path in re.findall(exp, page)]
         urls.append(url)
         await self._find_on_pages(urls)
@@ -582,6 +550,7 @@ class Free_proxy_cz(Provider):
         #     _urls.append(url)
 
 
+# под вопросом
 class Proxyb_net(Provider):
     domain = 'proxyb.net'
     _port_pattern_b64 = re.compile(r"stats\('([\w=]+)'\)")
@@ -616,8 +585,9 @@ class Proxylistplus_com(Provider):
     domain = 'list.proxylistplus.com'
 
     async def _pipe(self):
-        urls = ['http://list.proxylistplus.com/Fresh-HTTP-Proxy-List-%d' % n
-                for n in range(1, 7)]
+        names = ['Fresh-HTTP-Proxy', 'SSL', 'Socks']
+        urls = ['http://list.proxylistplus.com/%s-List-%d' % (i, n)
+                for i in names for n in range(1, 7)]
         await self._find_on_pages(urls)
 
 
@@ -629,82 +599,69 @@ class ProxyProvider(Provider):
 
 
 PROVIDERS = [
-    Provider(url='https://getproxy.net/en/',
-             proto=('HTTP', 'CONNECT:80', 'HTTPS', 'CONNECT:25')),  # 25
     Provider(url='http://www.proxylists.net/',
-             proto=('HTTP', 'CONNECT:80', 'HTTPS', 'CONNECT:25')),  # 44
+             proto=('HTTP', 'CONNECT:80', 'HTTPS', 'CONNECT:25')),  # 49
     Provider(url='http://ipaddress.com/proxy-list/',
              proto=('HTTP', 'CONNECT:80', 'HTTPS', 'CONNECT:25')),  # 53
-    Provider(url='http://www.sslproxies.org/',
+    Provider(url='https://www.sslproxies.org/',
              proto=('HTTP', 'CONNECT:80', 'HTTPS', 'CONNECT:25')),  # 100
-    Provider(url='http://2-proxy.com/proxylist?sort=last'
-                 '&order=DESC&maxtime=30000&perpage=1000',
-             proto=('HTTP', 'CONNECT:80', 'HTTPS', 'CONNECT:25')),  # 109
-    Provider(url='http://marcosbl.com/lab/proxies/',
-             proto=('HTTP', 'CONNECT:80', 'HTTPS', 'CONNECT:25')),  # 89
     Provider(url='https://freshfreeproxylist.wordpress.com/',
-             proto=('HTTP', 'CONNECT:80', 'HTTPS', 'CONNECT:25')),  # 178
+             proto=('HTTP', 'CONNECT:80', 'HTTPS', 'CONNECT:25')),  # 50
     Provider(url='http://proxytime.ru/http',
-             proto=('HTTP', 'CONNECT:80', 'HTTPS', 'CONNECT:25')),  # 547
-    Provider(url='http://free-proxy-list.net/',
+             proto=('HTTP', 'CONNECT:80', 'HTTPS', 'CONNECT:25')),  # 1400
+    Provider(url='https://free-proxy-list.net/',
              proto=('HTTP', 'CONNECT:80', 'HTTPS', 'CONNECT:25')),  # 300
-    Provider(url='http://www.proxyservers.eu/',
-             proto=('HTTP', 'CONNECT:80', 'HTTPS', 'CONNECT:25')),  # 1875
-    Provider(url='http://socks24.ru/proxy/httpProxies.txt',
-             proto=('HTTP', 'CONNECT:80', 'HTTPS', 'CONNECT:25')),  # 1601
-    Provider(url='http://fineproxy.org/eng/?p=6',
-             proto=('HTTP', 'CONNECT:80', 'HTTPS', 'CONNECT:25')),  # 1819
-    Provider(url='http://www.socks-proxy.net/',
+    Provider(url='https://us-proxy.org/',
+             proto=('HTTP', 'CONNECT:80', 'HTTPS', 'CONNECT:25')),  # 200
+    Provider(url='http://fineproxy.org/eng/fresh-proxies/',
+             proto=('HTTP', 'CONNECT:80', 'HTTPS', 'CONNECT:25')),  # 5500
+    Provider(url='https://socks-proxy.net/',
              proto=('SOCKS4', 'SOCKS5')),                           # 80
-    Provider(url='http://www.cybersyndrome.net/pla.html',
-             proto=('HTTP', 'CONNECT:80', 'HTTPS', 'CONNECT:25')),  # 1100
-    Provider(url='http://codediaries.com/list.php',
-             proto=('HTTP', 'CONNECT:80', 'HTTPS', 'CONNECT:25')),  # 75
-    Provider(url='http://httptunnel.ge/ProxyListForFree.aspx',
-             proto=('HTTP', 'CONNECT:80', 'HTTPS', 'CONNECT:25')),  # 100
-    Provider(url='http://txt.proxyspy.net/proxy.txt',
-             proto=('HTTP', 'CONNECT:80', 'HTTPS', 'CONNECT:25')),  # 300
-    Provider(url='http://www.ip-adress.com/proxy_list/?k=time',
-             proto=('HTTP', 'CONNECT:80', 'HTTPS', 'CONNECT:25')),  # 57
-    Provider(url='http://myproxylists.com/free-proxy-list',
-             proto=('HTTP', 'CONNECT:80', 'HTTPS', 'CONNECT:25')),  # 9
+    Provider(url='http://www.httptunnel.ge/ProxyListForFree.aspx',
+             proto=('HTTP', 'CONNECT:80', 'HTTPS', 'CONNECT:25')),  # 200
     Provider(url='http://cn-proxy.com/',
-             proto=('HTTP', 'CONNECT:80', 'HTTPS', 'CONNECT:25')),  # 48
-    Provider(url='http://hugeproxies.com/home/',
-             proto=('HTTP', 'CONNECT:80', 'HTTPS', 'CONNECT:25')),  # 569
+             proto=('HTTP', 'CONNECT:80', 'HTTPS', 'CONNECT:25')),  # 70
+    Provider(url='https://hugeproxies.com/home/',
+             proto=('HTTP', 'CONNECT:80', 'HTTPS', 'CONNECT:25')),  # 800
     Provider(url='http://proxy.rufey.ru/',
              proto=('HTTP', 'CONNECT:80', 'HTTPS', 'CONNECT:25')),  # 153
-    Provider(url='http://mitituti.com/content/proxy.txt',
-             proto=('HTTP', 'CONNECT:80', 'HTTPS', 'CONNECT:25')),  # 227
-    Provider(url='http://geekelectronics.org/my-servisy/proxy',
-             proto=('HTTP', 'CONNECT:80', 'HTTPS', 'CONNECT:25')),  # 395
-    Proxy_list_org(proto=('HTTP', 'CONNECT:80', 'HTTPS', 'CONNECT:25')),  # 140
-    Xseo_in(proto=('HTTP', 'CONNECT:80', 'HTTPS', 'CONNECT:25')),                  # 252
-    Spys_ru(proto=('HTTP', 'CONNECT:80', 'HTTPS', 'CONNECT:25')),                  # 674
-    Proxylistplus_com(proto=('HTTP', 'CONNECT:80', 'HTTPS', 'CONNECT:25')),        # 301
-    Proxyb_net(proto=('HTTP', 'CONNECT:80', 'HTTPS', 'CONNECT:25')),               # 857
-    Proxz_com(proto=('HTTP', 'CONNECT:80', 'HTTPS', 'CONNECT:25'), max_conn=2),    # 443
-    Proxymore_com(proto=('HTTP', 'CONNECT:80', 'HTTPS', 'CONNECT:25')),            # 1375
+    Provider(url='https://geekelectronics.org/my-servisy/proxy',
+             proto=('HTTP', 'CONNECT:80', 'HTTPS', 'CONNECT:25')),  # 400
+    Proxy_list_org(proto=('HTTP', 'CONNECT:80', 'HTTPS', 'CONNECT:25')),           # 140
+    Xseo_in(proto=('HTTP', 'CONNECT:80', 'HTTPS', 'CONNECT:25')),                  # 240
+    Spys_ru(proto=('HTTP', 'CONNECT:80', 'HTTPS', 'CONNECT:25')),                  # 660
+    Proxylistplus_com(proto=('HTTP', 'CONNECT:80', 'HTTPS', 'CONNECT:25')),        # 450
     Proxylist_me(proto=('HTTP', 'CONNECT:80', 'HTTPS', 'CONNECT:25')),             # 2872
     Foxtools_ru(proto=('HTTP', 'CONNECT:80', 'HTTPS', 'CONNECT:25'), max_conn=1),  # 500
     Gatherproxy_com(proto=('HTTP', 'CONNECT:80', 'HTTPS', 'CONNECT:25')),          # 3212
     Nntime_com(proto=('HTTP', 'CONNECT:80', 'HTTPS', 'CONNECT:25')),               # 1050
-    Proxynova_com(proto=('HTTP', 'CONNECT:80', 'HTTPS', 'CONNECT:25')),            # 818
     Blogspot_com(proto=('HTTP', 'CONNECT:80', 'HTTPS', 'CONNECT:25')),             # 24800
     Gatherproxy_com_socks(proto=('SOCKS4', 'SOCKS5')),                             # 30
     Blogspot_com_socks(proto=('SOCKS4', 'SOCKS5')),                                # 1486
-    Tools_rosinstrument_com(proto=('HTTP', 'CONNECT:80', 'HTTPS', 'CONNECT:25')),  # 4347
-    Tools_rosinstrument_com_socks(proto=('SOCKS4', 'SOCKS5')),                     # 1362
-    My_proxy_com(max_conn=2),                                                      # 891
-    Checkerproxy_net(),                                                            # 15803
+    Tools_rosinstrument_com(proto=('HTTP', 'CONNECT:80', 'HTTPS', 'CONNECT:25')),  # 4000
+    Tools_rosinstrument_com_socks(proto=('SOCKS4', 'SOCKS5')),                     # 1800
+    My_proxy_com(max_conn=2),                                                      # 1000
+    Checkerproxy_net(),                                                            # 60000
     Aliveproxy_com(),                                                              # 210
     Freeproxylists_com(),                                                          # 1338
-    Webanetlabs_net(),                                                             # 2615
-    Maxiproxies_com(),                                                             # 543
-    _50kproxies_com(),                                                             # 822
+    Webanetlabs_net(),                                                             # 5000
+    Maxiproxies_com(),                                                             # 430
     # # Bad...
+    # http://www.proxylist.ro/
+    # Provider(url='http://proxydb.net/',
+    #          proto=('HTTP', 'CONNECT:80', 'HTTPS', 'CONNECT:25', 'SOCKS4', 'SOCKS5')),
+    # Provider(url='http://www.cybersyndrome.net/pla6.html',
+    #          proto=('HTTP', 'CONNECT:80', 'HTTPS', 'CONNECT:25')),  # 1100
+    # Provider(url='https://www.ip-adress.com/proxy-list',
+    #          proto=('HTTP', 'CONNECT:80', 'HTTPS', 'CONNECT:25')),  # 57
+    # Provider(url='https://www.marcosbl.com/lab/proxies/',
+    #          proto=('HTTP', 'CONNECT:80', 'HTTPS', 'CONNECT:25')),  # 89
     # Provider(url='http://go4free.xyz/Free-Proxy/', proto=('HTTP', 'CONNECT:80', 'HTTPS', 'CONNECT:25')),  # 196
     # Provider(url='http://blackstarsecurity.com/proxy-list.txt'),  # 7014
     # Provider(url='http://www.get-proxy.net/proxy-archives'),  # 519
+    # Proxyb_net(proto=('HTTP', 'CONNECT:80', 'HTTPS', 'CONNECT:25')),               # 857
+    # Proxz_com(proto=('HTTP', 'CONNECT:80', 'HTTPS', 'CONNECT:25'), max_conn=2),    # 443
+    # Proxynova_com(proto=('HTTP', 'CONNECT:80', 'HTTPS', 'CONNECT:25')),            # 818
+    # _50kproxies_com(),                                                             # 822
     # Free_proxy_cz(),  # 420
 ]
