@@ -237,7 +237,7 @@ def add_limit_arg(group, _def=0,
 def add_outfile_arg(group):
     group.add_argument(
         '--outfile', '-o',
-        type=argparse.FileType('w'),
+        type=argparse.FileType('w', 1),
         default=sys.stdout,
         help='Save found proxies to file. By default, output to console')
 
