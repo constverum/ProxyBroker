@@ -1,9 +1,11 @@
 """CLI."""
 
-import sys
-import asyncio
-import logging
 import argparse
+import asyncio
+import json
+import logging
+import sys
+from contextlib import contextmanager
 
 from . import __version__ as version
 from .api import Broker
@@ -37,6 +39,7 @@ def create_parser():
     add_grab_args(fparser_group)
     add_limit_arg(fparser_group)
     add_outfile_arg(fparser_group)
+    add_format_arg(fparser_group)
     add_show_stats_arg(fparser_group)
     add_help_arg(fparser_group)
 
@@ -49,6 +52,7 @@ def create_parser():
     add_grab_args(gparser_group)
     add_limit_arg(gparser_group)
     add_outfile_arg(gparser_group)
+    add_format_arg(gparser_group)
     add_show_stats_arg(gparser_group)
     add_help_arg(gparser_group)
 
@@ -242,6 +246,15 @@ def add_outfile_arg(group):
         help='Save found proxies to file. By default, output to console')
 
 
+def add_format_arg(group):
+    group.add_argument(
+        '--format', '-f',
+        nargs='?',
+        type=str.lower,
+        help='''Flag indicating in what format the results will be presented.
+                Available formats: default and json''')
+
+
 def add_show_stats_arg(group):
     group.add_argument(
         '--show-stats',
@@ -257,13 +270,36 @@ def add_help_arg(group):
         help='Show this help message and exit')
 
 
-async def handle(proxies, outfile):
-    # TODO: add custom format
-    while True:
-        proxy = await proxies.get()
-        if proxy is None:
-            break
-        outfile.write('%r\n' % proxy)
+@contextmanager
+def outformat(outfile, format):
+    is_json = format == 'json'
+    if is_json:
+        outfile.write('[\n')
+    try:
+        yield
+    finally:
+        if is_json:
+            outfile.write('\n]')
+
+
+async def handle(proxies, outfile, format):
+    with outformat(outfile, format):
+        is_json = format == 'json'
+        is_first = True
+        while True:
+            proxy = await proxies.get()
+            if proxy is None:
+                break
+
+            if is_json:
+                line = '%s' % json.dumps(proxy.as_json())
+            else:
+                line = '%r\n' % proxy
+
+            if is_json and not is_first:
+                outfile.write(',\n')
+            outfile.write(line)
+            is_first = False
 
 
 def cli(args=sys.argv[1:]):
@@ -290,7 +326,7 @@ def cli(args=sys.argv[1:]):
         verify_ssl=ns.verify_ssl, loop=loop)
 
     if ns.command in ('find', 'grab'):
-        tasks = [handle(proxies, outfile=ns.outfile)]
+        tasks = [handle(proxies, outfile=ns.outfile, format=ns.format)]
     else:
         tasks = []
 

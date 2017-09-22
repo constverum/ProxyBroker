@@ -146,6 +146,8 @@ class Proxy:
 
         .. versionadded:: 0.2.0
         """
+        if not self.stat['requests']:
+            return 0
         return sum(self.stat['errors'].values()) / self.stat['requests']
 
     @property
@@ -203,6 +205,32 @@ class Proxy:
     @ngtr.setter
     def ngtr(self, proto):
         self._ngtr = NGTRS[proto](self)
+
+    def as_json(self):
+        """Return the proxy's properties in JSON format.
+
+        :rtype: dict
+        """
+        info = {
+            'host': self.host,
+            'port': self.port,
+            'geo': {
+                'country': {
+                    'code': self._geo.code,
+                    'name': self._geo.name,
+                },
+            },
+            'types': [],
+            'avg_resp_time': 0,
+            'error_rate': 0,
+        }
+
+        order = lambda tp_lvl: (len(tp_lvl[0]), tp_lvl[0][-1])
+        for tp, lvl in sorted(self.types.items(), key=order):
+            info['types'].append({'type': tp, 'level': lvl or ''})
+        info['avg_resp_time'] = round(self.avg_resp_time, 2)
+        info['error_rate'] = round(self.error_rate, 2)
+        return info
 
     def log(self, msg, stime=0, err=None):
         ngtr = self.ngtr.name if self.ngtr else 'INFO'

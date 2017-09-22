@@ -51,6 +51,50 @@ class TestProxy(AsyncTestCase):
         p = Proxy('127.0.0.1', '80')
         self.assertEqual(repr(p), '<Proxy -- 0.00s [] 127.0.0.1:80>')
 
+    def test_as_json(self):
+        p = Proxy('8.8.8.8', '3128')
+        p._runtimes = [1, 3, 3]
+        p.types.update({'HTTP': 'Anonymous', 'HTTPS': None})
+        json_tpl = {
+            'host': '8.8.8.8',
+            'port': 3128,
+            'geo': {
+                'country': {
+                    'code': 'US',
+                    'name': 'United States'
+                }
+            },
+            'types': [
+                {'type': 'HTTP', 'level': 'Anonymous'},
+                {'type': 'HTTPS', 'level': ''},
+            ],
+            'avg_resp_time': 2.33,
+            'error_rate': 0,
+        }
+        self.assertEqual(p.as_json(), json_tpl)
+
+        p = Proxy('127.0.0.1', '80')
+        msg = 'MSG'
+        stime = time.time()
+        err = ProxyConnError
+        p.log(msg, stime, err)
+        p.stat['requests'] += 4
+
+        json_tpl = {
+            'host': '127.0.0.1',
+            'port': 80,
+            'geo': {
+                'country': {
+                    'code': '--',
+                    'name': 'Unknown'
+                }
+            },
+            'types': [],
+            'avg_resp_time': 0,
+            'error_rate': 0.25,
+        }
+        self.assertEqual(p.as_json(), json_tpl)
+
     def test_schemes(self):
         p = Proxy('127.0.0.1', '80')
         p.types.update({'HTTP': 'Anonymous', 'HTTPS': None})
