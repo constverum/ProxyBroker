@@ -4,7 +4,9 @@ import warnings
 import ssl as _ssl
 from collections import Counter
 
-from .errors import *
+from .errors import (
+    ProxyEmptyRecvError, ProxyConnError, ProxyRecvError,
+    ProxySendError, ProxyTimeoutError, ResolveError)
 from .utils import log, parse_headers
 from .resolver import Resolver
 from .negotiators import NGTRS
@@ -148,7 +150,8 @@ class Proxy:
         """
         if not self.stat['requests']:
             return 0
-        return sum(self.stat['errors'].values()) / self.stat['requests']
+        return round(
+            sum(self.stat['errors'].values()) / self.stat['requests'], 2)
 
     @property
     def schemes(self):
@@ -168,10 +171,9 @@ class Proxy:
 
         :rtype: float
         """
-        if self._runtimes:
-            return sum(self._runtimes) / len(self._runtimes)
-        else:
-            return 0.0
+        if not self._runtimes:
+            return 0
+        return round(sum(self._runtimes) / len(self._runtimes), 2)
 
     @property
     def avgRespTime(self):
@@ -221,15 +223,13 @@ class Proxy:
                 },
             },
             'types': [],
-            'avg_resp_time': 0,
-            'error_rate': 0,
+            'avg_resp_time': self.avg_resp_time,
+            'error_rate': self.error_rate,
         }
 
         order = lambda tp_lvl: (len(tp_lvl[0]), tp_lvl[0][-1])
         for tp, lvl in sorted(self.types.items(), key=order):
             info['types'].append({'type': tp, 'level': lvl or ''})
-        info['avg_resp_time'] = round(self.avg_resp_time, 2)
-        info['error_rate'] = round(self.error_rate, 2)
         return info
 
     def log(self, msg, stime=0, err=None):
@@ -264,7 +264,8 @@ class Proxy:
             if ssl:
                 _type = 'ssl'
                 sock = self._writer['conn'].get_extra_info('socket')
-                params = {'ssl': self._ssl_context, 'sock': sock, 'server_hostname': self.host}
+                params = {'ssl': self._ssl_context, 'sock': sock,
+                          'server_hostname': self.host}
             else:
                 _type = 'conn'
                 params = {'host': self.host, 'port': self.port}

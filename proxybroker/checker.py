@@ -1,12 +1,11 @@
-import zlib
-import time
 import asyncio
+import time
+import zlib
 import warnings
 
-import aiohttp
-
-from .errors import *
-from .proxy import Proxy
+from .errors import (
+    BadStatusError, BadResponseError, ProxyEmptyRecvError, ProxyConnError,
+    ProxyTimeoutError, ProxyRecvError, ProxySendError, ResolveError)
 from .judge import Judge, get_judges
 from .utils import log, get_headers, get_all_ip, get_status_code, parse_headers
 from .resolver import Resolver
@@ -33,7 +32,7 @@ class Checker:
         self._req_http_proto = not types or bool(
             ('HTTP', 'CONNECT:80', 'SOCKS4', 'SOCKS5') & types.keys())
         self._req_https_proto = not types or bool(('HTTPS',) & types.keys())
-        self._req_smtp_proto = not types or bool(('CONNECT:25',) & types.keys())
+        self._req_smtp_proto = not types or bool(('CONNECT:25',) & types.keys())  # noqa
 
         self._ngtrs = {proto for proto in types or NGTRS}
 
@@ -53,7 +52,8 @@ class Checker:
 
         if len(Judge.available['HTTP']) == 0:
             nojudges.append('HTTP')
-            disable_protocols.extend(['HTTP', 'CONNECT:80', 'SOCKS4', 'SOCKS5'])
+            disable_protocols.extend(
+                ['HTTP', 'CONNECT:80', 'SOCKS4', 'SOCKS5'])
             self._req_http_proto = False
             # for coroutines, which is already waiting
             Judge.ev['HTTP'].set()
@@ -89,18 +89,16 @@ class Checker:
             return True
         for proto, lvl in proxy.types.copy().items():
             req_levels = self._types.get(proto)
-            # log.debug('proxy: %s; proto: %s; lvl: %s; req_levels: %s;' % (proxy, proto, lvl, req_levels))
             if not req_levels or (lvl in req_levels):
-                # log.debug('TRUE!')
                 if not self._strict:
                     return True
             else:
-                # log.debug('FALSE!')
                 if self._strict:
                     del proxy.types[proto]
         if self._strict and proxy.types:
             return True
-        proxy.log('Protocol or the level of anonymity differs from the requested')
+        proxy.log(
+            'Protocol or the level of anonymity differs from the requested')
         return False
 
     async def _in_DNSBL(self, host):
@@ -158,7 +156,7 @@ class Checker:
             except ProxyTimeoutError:
                 continue
             except (ProxyConnError, ProxyRecvError, ProxySendError,
-                    ProxyEmptyRecvError, BadStatusError, BadResponseError) as e:
+                    ProxyEmptyRecvError, BadStatusError, BadResponseError):
                 break
             else:
                 proxy.types[proxy.ngtr.name] = None
@@ -182,7 +180,7 @@ class Checker:
             except ProxyTimeoutError:
                 continue
             except (ProxyConnError, ProxyRecvError, ProxySendError,
-                    ProxyEmptyRecvError, BadStatusError, BadResponseError) as e:
+                    ProxyEmptyRecvError, BadStatusError, BadResponseError):
                 break
             else:
                 content = _decompress_content(headers, content)
@@ -211,7 +209,8 @@ def _request(method, host, path, fullpath=False, data=''):
           'path': 'http://%s%s' % (host, path) if fullpath else path,  # HTTP
           'headers': '\r\n'.join(('%s: %s' % (k, v) for k, v in hdrs.items())),
           'data': data}
-    req = ('{method} {path} HTTP/1.1\r\n{headers}\r\n\r\n{data}').format(**kw).encode()
+    req = (('{method} {path} HTTP/1.1\r\n{headers}\r\n\r\n{data}')
+           .format(**kw).encode())
     return req, rv
 
 
@@ -243,7 +242,9 @@ def _decompress_content(headers, content):
     is_compressed = headers.get('Content-Encoding') in ('gzip', 'deflate')
     is_chunked = headers.get('Transfer-Encoding') == 'chunked'
     if is_compressed:
-        # gzip: zlib.MAX_WBITS|16; deflate: -zlib.MAX_WBITS; auto: zlib.MAX_WBITS|32;
+        # gzip: zlib.MAX_WBITS|16;
+        # deflate: -zlib.MAX_WBITS;
+        # auto: zlib.MAX_WBITS|32;
         if is_chunked:
             # b'278\r\n\x1f\x8b...\x00\r\n0\r\n\r\n' => b'\x1f\x8b...\x00
             content = b''.join(content.split(b'\r\n')[1::2])
@@ -264,8 +265,9 @@ def _check_test_response(proxy, headers, content, rv):
         proxy.log('Response: correct')
         return True
     else:
-        proxy.log('Response: not correct; ip: %s, rv: %s, ref: %s, cookie: %s' % (
-            bool(foundIP), verIsCorrect, refSupported, cookieSupported))
+        proxy.log(
+            'Response: not correct; ip: %s, rv: %s, ref: %s, cookie: %s' % (
+                bool(foundIP), verIsCorrect, refSupported, cookieSupported))
         return False
 
 

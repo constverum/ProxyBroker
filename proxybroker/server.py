@@ -2,7 +2,10 @@ import time
 import heapq
 import asyncio
 
-from .errors import *
+from .errors import (
+    BadStatusError, BadStatusLine, BadResponseError, ErrorOnStream,
+    NoProxyError, ProxyConnError, ProxyEmptyRecvError, ProxyRecvError,
+    ProxySendError, ProxyTimeoutError, ResolveError)
 from .utils import log, parse_headers, parse_status_line
 from .resolver import Resolver
 
@@ -48,7 +51,8 @@ class ProxyPool:
         if (proxy.stat['requests'] >= self._min_req_proxy and
             ((proxy.error_rate > self._max_error_rate) or
              (proxy.avg_resp_time > self._max_resp_time))):
-            log.debug('%s:%d removed from proxy pool' % (proxy.host, proxy.port))
+            log.debug('%s:%d removed from proxy pool' % (
+                      proxy.host, proxy.port))
         else:
             heapq.heappush(self._pool, (proxy.priority, proxy))
         log.debug('%s:%d stat: %s' % (proxy.host, proxy.port, proxy.stat))
@@ -211,7 +215,8 @@ class Server:
             if self._prefer_connect and ('CONNECT:80' in proxy.types):
                 proto = 'CONNECT:80'
             else:
-                relevant = {'HTTP', 'CONNECT:80', 'SOCKS4', 'SOCKS5'} & proxy.types.keys()
+                relevant = ({'HTTP', 'CONNECT:80', 'SOCKS4', 'SOCKS5'} &
+                            proxy.types.keys())
                 proto = relevant.pop()
         else:  # HTTPS
             relevant = {'HTTPS', 'SOCKS4', 'SOCKS5'} & proxy.types.keys()
@@ -222,7 +227,8 @@ class Server:
         checked = False
         try:
             while not reader.at_eof():
-                data = await asyncio.wait_for(reader.read(length), self._timeout)
+                data = await asyncio.wait_for(
+                    reader.read(length), self._timeout)
                 if not data:
                     writer.close()
                     break
@@ -243,4 +249,5 @@ class Server:
             except BadStatusLine:
                 raise BadResponseError
             if header['Status'] not in self._http_allowed_codes:
-                raise BadStatusError('%r not in %r' %(header['Status'], self._http_allowed_codes))
+                raise BadStatusError('%r not in %r' % (
+                    header['Status'], self._http_allowed_codes))

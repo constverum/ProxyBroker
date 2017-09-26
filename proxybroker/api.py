@@ -6,7 +6,7 @@ from pprint import pprint
 from functools import partial
 from collections import defaultdict, Counter
 
-from .errors import *
+from .errors import ResolveError
 from .proxy import Proxy
 from .server import Server
 from .checker import Checker
@@ -124,7 +124,8 @@ class Broker:
             (optional) String or list with proxies. Also can be a file-like
             object supports `read()` method. Used instead of providers
         :param list countries:
-            (optional) List of ISO country codes where should be located proxies
+            (optional) List of ISO country codes where should be located
+            proxies
         :param bool post:
             (optional) Flag indicating use POST instead of GET for requests
             when checking proxies
@@ -190,8 +191,8 @@ class Broker:
             proxies, checking of new proxies will be lazily paused.
             Checking will be resumed if all the found proxies will be discarded
             in the process of working with them (see :attr:`max_error_rate`,
-            :attr:`max_resp_time`). And will continue until it finds one working
-            proxy and paused again. The default value is 100
+            :attr:`max_resp_time`). And will continue until it finds one
+            working proxy and paused again. The default value is 100
         :param int max_tries:
             (optional) The maximum number of attempts to handle an incoming
             request. If not specified, it will use the value specified during

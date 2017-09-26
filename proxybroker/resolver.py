@@ -8,7 +8,7 @@ import aiodns
 import aiohttp
 import maxminddb
 
-from .errors import *
+from .errors import ResolveError
 from .utils import log, BASE_DIR
 
 
@@ -73,7 +73,8 @@ class Resolver:
             log.debug('Real external IP: %s' % ip)
         return ip
 
-    async def resolve(self, host, port=80, family=None, qtype='A', logging=True):
+    async def resolve(self, host, port=80, family=None,
+                      qtype='A', logging=True):
         """Return resolving IP address(es) from host name."""
         if self.host_is_ip(host):
             return host

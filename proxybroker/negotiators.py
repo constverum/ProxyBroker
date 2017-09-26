@@ -2,7 +2,7 @@ import struct
 from socket import inet_aton
 from abc import ABC, abstractmethod
 
-from .errors import *
+from .errors import BadStatusError, BadResponseError
 from .utils import get_headers, get_status_code
 
 
@@ -63,7 +63,7 @@ class Socks5Ngtr(BaseNegotiator):
             self._proxy.log('Failed (invalid data)', err=BadResponseError)
             raise BadResponseError
         else:
-            self._proxy.log('Request granted')
+            self._proxy.log('Request is granted')
 
 
 class Socks4Ngtr(BaseNegotiator):
@@ -83,7 +83,7 @@ class Socks4Ngtr(BaseNegotiator):
             raise BadResponseError
         # resp = b'\x00Z\x00\x00\x00\x00\x00\x00' // ord('Z') == 90 == 0x5A
         else:
-            self._proxy.log('Request granted')
+            self._proxy.log('Request is granted')
 
 
 class Connect80Ngtr(BaseNegotiator):

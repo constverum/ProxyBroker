@@ -1,10 +1,10 @@
-import random
 import asyncio
+import random
 from urllib.parse import urlparse
 
 import aiohttp
 
-from .errors import *
+from .errors import ResolveError
 from .utils import log, get_headers
 from .resolver import Resolver
 
@@ -70,12 +70,14 @@ class Judge:
             loop=self._loop, verify_ssl=self.verify_ssl, force_close=True)
         try:
             with aiohttp.Timeout(self.timeout, loop=self._loop):
-                async with aiohttp.ClientSession(connector=connector, loop=self._loop) as session,\
+                async with aiohttp.ClientSession(connector=connector,
+                                                 loop=self._loop) as session,\
                         session.get(url=self.url, headers=headers,
                                     allow_redirects=False) as resp:
                     page = await resp.text()
         except (asyncio.TimeoutError, aiohttp.ClientOSError,
-                aiohttp.ClientResponseError, aiohttp.ServerDisconnectedError) as e:
+                aiohttp.ClientResponseError,
+                aiohttp.ServerDisconnectedError) as e:
             log.debug('%s is failed. Error: %r;' % (self, e))
             return
 

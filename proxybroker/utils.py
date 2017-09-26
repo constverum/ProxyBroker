@@ -4,7 +4,7 @@ import os.path
 import logging
 
 from . import __version__ as version
-from .errors import *
+from .errors import BadStatusLine
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 log = logging.getLogger(__package__)
@@ -13,12 +13,12 @@ IPPattern = re.compile(
     r'(?:(?:25[0-5]|2[0-4]\d|[01]?\d\d?)\.){3}(?:25[0-5]|2[0-4]\d|[01]?\d\d?)')
 
 IPPortPatternLine = re.compile(
-    r'^.*?(?P<ip>(?:(?:25[0-5]|2[0-4]\d|[01]?\d\d?)\.){3}(?:25[0-5]|2[0-4]\d|[01]?\d\d?)).*?(?P<port>\d{2,5}).*$',
+    r'^.*?(?P<ip>(?:(?:25[0-5]|2[0-4]\d|[01]?\d\d?)\.){3}(?:25[0-5]|2[0-4]\d|[01]?\d\d?)).*?(?P<port>\d{2,5}).*$',  # noqa
     flags=re.MULTILINE)
 
 IPPortPatternGlobal = re.compile(
-    r'(?P<ip>(?:(?:25[0-5]|2[0-4]\d|[01]?\d\d?)\.){3}(?:25[0-5]|2[0-4]\d|[01]?\d\d?))'
-    r'(?=.*?(?:(?:(?:(?:25[0-5]|2[0-4]\d|[01]?\d\d?)\.){3}(?:25[0-5]|2[0-4]\d|[01]?\d\d?))|(?P<port>\d{2,5})))',
+    r'(?P<ip>(?:(?:25[0-5]|2[0-4]\d|[01]?\d\d?)\.){3}(?:25[0-5]|2[0-4]\d|[01]?\d\d?))'  # noqa
+    r'(?=.*?(?:(?:(?:(?:25[0-5]|2[0-4]\d|[01]?\d\d?)\.){3}(?:25[0-5]|2[0-4]\d|[01]?\d\d?))|(?P<port>\d{2,5})))',  # noqa
     flags=re.DOTALL)
 
 # IsIpPattern = re.compile(
@@ -28,7 +28,7 @@ IPPortPatternGlobal = re.compile(
 def get_headers(rv=False):
     _rv = str(random.randint(1000, 9999)) if rv else ''
     headers = {
-        # 'User-Agent': 'Mozilla/5.0 (X11; U; Linux i386; ru-RU; rv:2.0) Gecko/20100625 Firefox/3.5.11',
+        # 'User-Agent': 'Mozilla/5.0 (X11; U; Linux i386; ru-RU; rv:2.0) Gecko/20100625 Firefox/3.5.11',  # noqa
         'User-Agent': 'PxBroker/%s/%s' % (version, _rv),
         'Accept': '*/*',
         'Accept-Encoding': 'gzip, deflate',

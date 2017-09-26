@@ -6,7 +6,8 @@ from proxybroker import Broker
 async def show(proxies):
     while True:
         proxy = await proxies.get()
-        if proxy is None: break
+        if proxy is None:
+            break
         print('Found proxy: %s' % proxy)
 
 proxies = asyncio.Queue()
