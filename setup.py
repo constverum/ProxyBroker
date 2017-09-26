@@ -15,7 +15,8 @@ with codecs.open('requirements.txt', mode='r', encoding='utf-8') as f:
     REQUIRES = f.read().split()
 
 SETUP_REQUIRES = ['pytest-runner']
-TEST_REQUIRES = ['pytest>=3.2.2']
+TEST_REQUIRES = ['pytest>=3.2.2', 'pytest-asyncio>=0.8', 'pytest-mock>=1.6.3',
+                 'pytest-pep8>=1.0.6', 'pytest-flakes>=2.0.0']
 PACKAGES = ['proxybroker', 'proxybroker.data']
 PACKAGE_DATA = {'': ['LICENSE'], INFO['package']: ['data/*.mmdb']}
 
@@ -53,7 +54,9 @@ setup(
         'Topic :: Internet :: Proxy Servers',
         'License :: OSI Approved :: Apache Software License',
     ],
-    keywords='proxy finder grabber scraper parser graber scrapper checker broker async asynchronous http https connect socks socks4 socks5',
+    keywords=(
+        'proxy finder grabber scraper parser graber scrapper checker '
+        'broker async asynchronous http https connect socks socks4 socks5'),
     zip_safe=False,
     test_suite='tests',
 )

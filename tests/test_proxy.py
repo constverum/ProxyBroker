@@ -1,251 +1,269 @@
-import unittest
-from unittest.mock import Mock, patch
-
-from .utils import AsyncTestCase, ResolveResult, future_iter
-
 import time
 from asyncio.streams import StreamReader
 
+import pytest
+
 from proxybroker import Proxy
-from proxybroker.utils import log
-from proxybroker.errors import ProxyConnError, ProxyTimeoutError
-from proxybroker.resolver import Resolver
+from proxybroker.utils import log as logger
+from proxybroker.errors import ProxyConnError, ProxyTimeoutError, ResolveError
 from proxybroker.negotiators import HttpsNgtr
 
+from .utils import ResolveResult, future_iter
 
-class TestProxy(AsyncTestCase):
-    def setUp(self):
-        self.proxy = Proxy('127.0.0.1', '80', timeout=0.1)
-        self.proxy._reader['conn'] = StreamReader()
 
-    def tearDown(self):
-        pass
+@pytest.fixture
+def proxy():
+    proxy = Proxy('127.0.0.1', '80', timeout=0.1)
+    proxy._reader['conn'] = StreamReader()
+    return proxy
 
-    async def test_create_with_ip(self):
-        self.assertIsInstance(await Proxy.create('127.0.0.1', '80'), Proxy)
-        self.assertTrue(Proxy('127.0.0.1', '80'))
 
-        with self.assertRaises(ValueError):
-            await Proxy.create('127.0.0.1', '65536')
-            await Proxy.create('256.0.0.1', '80')
-        self.assertRaises(ValueError, Proxy, '256.0.0.1', '80')
-        self.assertRaises(ValueError, Proxy, '127.0.0.1', '65536')
+@pytest.mark.asyncio
+async def test_create_by_ip():
+    assert isinstance(await Proxy.create('127.0.0.1', '80'), Proxy)
+    with pytest.raises(ValueError):
+        await Proxy.create('127.0.0.1', '65536')
+    with pytest.raises(ResolveError):
+        await Proxy.create('256.0.0.1', '80')
 
-    async def test_create_with_domain(self):
-        with patch("aiodns.DNSResolver.query") as query:
-            query.side_effect = future_iter([ResolveResult('127.0.0.1', 0)])
-            resolver = Resolver()
-            proxy = await Proxy.create('testhost.com', '80', resolver=resolver)
-            self.assertEqual(proxy.host, '127.0.0.1')
 
-    def test_repr(self):
-        p = Proxy('8.8.8.8', '80')
-        p._runtimes = [1, 3, 2]
-        p.types.update({'HTTP': 'Anonymous', 'HTTPS': None})
-        self.assertEqual(repr(p), '<Proxy US 2.00s [HTTP: Anonymous, HTTPS] 8.8.8.8:80>')
+@pytest.mark.asyncio
+async def test_create_by_domain(mocker):
+    f = future_iter([ResolveResult('127.0.0.1', 0)])
+    with mocker.patch('aiodns.DNSResolver.query', side_effect=f):
+        proxy = await Proxy.create('testhost.com', '80')
+        assert proxy.host == '127.0.0.1'
 
-        p.types.clear()
-        p.types.update({'SOCKS4': None, 'SOCKS5': None})
-        self.assertEqual(repr(p), '<Proxy US 2.00s [SOCKS4, SOCKS5] 8.8.8.8:80>')
 
-        p = Proxy('127.0.0.1', '80')
-        self.assertEqual(repr(p), '<Proxy -- 0.00s [] 127.0.0.1:80>')
+def test_repr():
+    p = Proxy('8.8.8.8', '80')
+    p._runtimes = [1, 3, 3]
+    p.types.update({'HTTP': 'Anonymous', 'HTTPS': None})
+    assert repr(p) == '<Proxy US 2.33s [HTTP: Anonymous, HTTPS] 8.8.8.8:80>'
 
-    def test_as_json(self):
-        p = Proxy('8.8.8.8', '3128')
-        p._runtimes = [1, 3, 3]
-        p.types.update({'HTTP': 'Anonymous', 'HTTPS': None})
-        json_tpl = {
-            'host': '8.8.8.8',
-            'port': 3128,
-            'geo': {
-                'country': {
-                    'code': 'US',
-                    'name': 'United States'
-                }
+    p = Proxy('4.4.4.4', '8080')
+    p.types.update({'SOCKS4': None, 'SOCKS5': None})
+    assert repr(p) == '<Proxy US 0.00s [SOCKS4, SOCKS5] 4.4.4.4:8080>'
+
+    p = Proxy('127.0.0.1', '3128')
+    assert repr(p) == '<Proxy -- 0.00s [] 127.0.0.1:3128>'
+
+
+def test_as_json_w_geo():
+    p = Proxy('8.8.8.8', '3128')
+    p._runtimes = [1, 3, 3]
+    p.types.update({'HTTP': 'Anonymous', 'HTTPS': None})
+
+    json_tpl = {
+        'host': '8.8.8.8',
+        'port': 3128,
+        'geo': {
+            'country': {
+                'code': 'US',
+                'name': 'United States',
             },
-            'types': [
-                {'type': 'HTTP', 'level': 'Anonymous'},
-                {'type': 'HTTPS', 'level': ''},
-            ],
-            'avg_resp_time': 2.33,
-            'error_rate': 0,
-        }
-        self.assertEqual(p.as_json(), json_tpl)
+        },
+        'types': [
+            {'type': 'HTTP', 'level': 'Anonymous'},
+            {'type': 'HTTPS', 'level': ''},
+        ],
+        'avg_resp_time': 2.33,
+        'error_rate': 0,
+    }
+    assert p.as_json() == json_tpl
 
-        p = Proxy('127.0.0.1', '80')
-        msg = 'MSG'
-        stime = time.time()
-        err = ProxyConnError
-        p.log(msg, stime, err)
-        p.stat['requests'] += 4
 
-        json_tpl = {
-            'host': '127.0.0.1',
-            'port': 80,
-            'geo': {
-                'country': {
-                    'code': '--',
-                    'name': 'Unknown'
-                }
+def test_as_json_wo_geo():
+    p = Proxy('127.0.0.1', '80')
+    p.log('MSG', time.time(), ProxyConnError)
+    p.stat['requests'] = 4
+
+    json_tpl = {
+        'host': '127.0.0.1',
+        'port': 80,
+        'geo': {
+            'country': {
+                'code': '--',
+                'name': 'Unknown',
             },
-            'types': [],
-            'avg_resp_time': 0,
-            'error_rate': 0.25,
-        }
-        self.assertEqual(p.as_json(), json_tpl)
+        },
+        'types': [],
+        'avg_resp_time': 0,
+        'error_rate': 0.25,
+    }
+    assert p.as_json() == json_tpl
 
-    def test_schemes(self):
-        p = Proxy('127.0.0.1', '80')
-        p.types.update({'HTTP': 'Anonymous', 'HTTPS': None})
-        self.assertEqual(p.schemes, ('HTTP', 'HTTPS'))
 
-        p = Proxy('127.0.0.1', '80')
-        p.types['HTTPS'] = None
-        self.assertEqual(p.schemes, ('HTTPS',))
+def test_schemes():
+    p = Proxy('127.0.0.1', '80')
+    p.types.update({'HTTP': 'Anonymous', 'HTTPS': None})
+    assert p.schemes == ('HTTP', 'HTTPS')
 
-        p = Proxy('127.0.0.1', '80')
-        p.types.update({'SOCKS4': None, 'SOCKS5': None})
-        self.assertEqual(p.schemes, ('HTTP', 'HTTPS'))
+    p = Proxy('127.0.0.1', '80')
+    p.types['HTTPS'] = None
+    assert p.schemes == ('HTTPS',)
 
-    def test_avg_resp_time(self):
-        p = Proxy('127.0.0.1', '80')
-        self.assertEqual(p.avg_resp_time, 0.0)
-        p._runtimes = [1, 3, 2]
-        self.assertEqual(p.avg_resp_time, 2.0)
+    p = Proxy('127.0.0.1', '80')
+    p.types.update({'SOCKS4': None, 'SOCKS5': None})
+    assert p.schemes == ('HTTP', 'HTTPS')
 
-    def test_geo(self):
-        p = Proxy('127.0.0.1', '80')
-        self.assertEqual(p.geo.code, '--')
-        self.assertEqual(p.geo.name, 'Unknown')
 
-        p = Proxy('8.8.8.8', '80')
-        self.assertEqual(p.geo.code, 'US')
-        self.assertEqual(p.geo.name, 'United States')
+def test_avg_resp_time():
+    p = Proxy('127.0.0.1', '80')
+    assert p.avg_resp_time == 0.0
+    p._runtimes = [1, 3, 4]
+    assert p.avg_resp_time == 2.67
 
-    def test_ngtr(self):
-        p = Proxy('127.0.0.1', '80')
-        p.ngtr = 'HTTPS'
-        self.assertIsInstance(p.ngtr, HttpsNgtr)
-        self.assertIs(p.ngtr._proxy, p)
 
-    def test_log(self):
-        p = Proxy('127.0.0.1', '80')
-        msg = 'MSG'
-        stime = time.time()
-        err = ProxyConnError
+def test_error_rate():
+    p = Proxy('127.0.0.1', '80')
+    p.log('Error', time.time(), ProxyConnError)
+    p.log('Error', time.time(), ProxyConnError)
+    p.stat['requests'] = 4
+    assert p.error_rate == 0.5
 
-        self.assertEqual(p.get_log(), [])
-        self.assertEqual(p._runtimes, [])
 
-        with self.assertLogs(log.name, level='DEBUG') as cm:
-            p.log(msg)
-            p.ngtr = 'HTTP'
-            p.log(msg)
-            self.assertIn(('INFO', msg, 0), p.get_log())
-            self.assertIn(('HTTP', msg, 0), p.get_log())
-            self.assertEqual(len(p.stat['errors']), 0)
-            self.assertEqual(p._runtimes, [])
-            self.assertEqual(
-                cm.output,
-                ['DEBUG:proxybroker:127.0.0.1:80 [INFO]: MSG; Runtime: 0.00',
-                 'DEBUG:proxybroker:127.0.0.1:80 [HTTP]: MSG; Runtime: 0.00'])
+def test_geo():
+    p = Proxy('127.0.0.1', '80')
+    assert p.geo.code == '--'
+    assert p.geo.name == 'Unknown'
 
-        p.log(msg, stime, err)
-        p.log(msg, stime, err)
-        self.assertEqual(len(p.stat['errors']), 1)
-        self.assertEqual(sum(p.stat['errors'].values()), 2)
-        self.assertEqual(p.stat['errors'][err.errmsg], 2)
-        self.assertAlmostEqual(p._runtimes[-1], 0.0, places=1)
+    p = Proxy('8.8.8.8', '80')
+    assert p.geo.code == 'US'
+    assert p.geo.name == 'United States'
 
-        len_runtimes = len(p._runtimes)
-        p.log(msg + 'timeout', stime)
-        self.assertEqual(len(p._runtimes), len_runtimes)
 
-        msg = 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do'
+def test_ngtr():
+    p = Proxy('127.0.0.1', '80')
+    p.ngtr = 'HTTPS'
+    assert isinstance(p.ngtr, HttpsNgtr)
+    assert p.ngtr._proxy is p
+
+
+def test_log(log):
+    p = Proxy('127.0.0.1', '80')
+    msg = 'MSG'
+    stime = time.time()
+    err = ProxyConnError
+
+    assert p.get_log() == []
+    assert p._runtimes == []
+
+    with log(logger.name, level='DEBUG') as cm:
         p.log(msg)
-        last_msg = p.get_log()[-1][1]
-        cropped = msg[:60] + '...'
-        self.assertEqual(last_msg, cropped)
+        p.ngtr = 'HTTP'
+        p.log(msg)
+        assert ('INFO', msg, 0) in p.get_log()
+        assert ('HTTP', msg, 0) in p.get_log()
+        assert len(p.stat['errors']) == 0
+        assert p._runtimes == []
+        assert cm.output == [
+            'DEBUG:proxybroker:127.0.0.1:80 [INFO]: MSG; Runtime: 0.00',
+            'DEBUG:proxybroker:127.0.0.1:80 [HTTP]: MSG; Runtime: 0.00']
 
-    async def test_recv(self):
-        resp = b'HTTP/1.1 200 OK\r\nContent-Length: 7\r\n\r\nabcdef\n'
-        self.proxy.reader.feed_data(resp)
-        self.assertEqual(await self.proxy.recv(), resp)
+    p.log(msg, stime, err)
+    p.log(msg, stime, err)
+    assert len(p.stat['errors']) == 1
+    assert sum(p.stat['errors'].values()) == 2
+    assert p.stat['errors'][err.errmsg] == 2
+    assert round(p._runtimes[-1], 2) == 0.0
 
-    async def test_recv_eof(self):
-        resp = b'HTTP/1.1 200 OK\r\n\r\nabcdef'
-        self.proxy.reader.feed_data(resp)
-        self.proxy.reader.feed_eof()
-        self.assertEqual(await self.proxy.recv(), resp)
+    len_runtimes = len(p._runtimes)
+    p.log(msg + 'timeout', stime)
+    assert len(p._runtimes) == len_runtimes
 
-    async def test_recv_length(self):
-        self.proxy.reader.feed_data(b'abc')
-        self.assertEqual(await self.proxy.recv(length=3), b'abc')
-        self.proxy.reader._buffer.clear()
+    msg = 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do'
+    p.log(msg)
+    last_msg = p.get_log()[-1][1]
+    cropped = msg[:60] + '...'
+    assert last_msg == cropped
 
-        self.proxy.reader.feed_data(b'abcdef')
-        self.assertEqual(await self.proxy.recv(length=3), b'abc')
-        self.proxy.reader._buffer.clear()
 
-        # FIXME: Without override `proxy` will be raised
-        # RuntimeError: Event loop is closed.
-        self.setUp()
-        self.proxy.reader.feed_data(b'ab')
-        with self.assertRaises(ProxyTimeoutError):
-            await self.proxy.recv(length=3)
+@pytest.mark.asyncio
+async def test_recv(proxy):
+    resp = b'HTTP/1.1 200 OK\r\nContent-Length: 7\r\n\r\nabcdef\n'
+    proxy.reader.feed_data(resp)
+    assert await proxy.recv() == resp
 
-    async def test_recv_head_only(self):
-        self.proxy.reader.feed_data(b'HTTP/1.1 200 Connection established\r\n\r\n')
-        self.assertEqual(await self.proxy.recv(head_only=True),
-                         b'HTTP/1.1 200 Connection established\r\n\r\n')
-        self.proxy.reader._buffer.clear()
 
-        self.proxy.reader.feed_data(b'HTTP/1.1 200 OK\r\nServer: 0\r\n\r\nabcd')
-        self.assertEqual(await self.proxy.recv(head_only=True),
-                         b'HTTP/1.1 200 OK\r\nServer: 0\r\n\r\n')
-        self.proxy.reader._buffer.clear()
+@pytest.mark.asyncio
+async def test_recv_eof(proxy):
+    resp = b'HTTP/1.1 200 OK\r\n\r\nabcdef'
+    proxy.reader.feed_data(resp)
+    proxy.reader.feed_eof()
+    assert await proxy.recv() == resp
 
-        # FIXME: Without override `proxy` will be raised
-        # RuntimeError: Event loop is closed.
-        self.setUp()
-        self.proxy.reader.feed_data(b'<html>abc</html>')
-        with self.assertRaises(ProxyTimeoutError):
-            await self.proxy.recv(head_only=True)
 
-    async def test_recv_content_length(self):
-        resp = b'HTTP/1.1 200 OK\r\nContent-Length: 4\r\n\r\n{a}\n'
-        self.proxy.reader.feed_data(resp)
-        self.assertEqual(await self.proxy.recv(), resp)
+@pytest.mark.asyncio
+async def test_recv_length(event_loop, proxy):
+    proxy.reader.feed_data(b'abc')
+    assert await proxy.recv(length=3) == b'abc'
+    proxy.reader._buffer.clear()
 
-    async def test_recv_content_encoding(self):
-        resp = (b'HTTP/1.1 200 OK\r\nContent-Encoding: gzip\r\n'
-                b'Content-Length: 7\r\n\r\n\x1f\x8b\x08\x00\n\x00\x00')
-        self.proxy.reader.feed_data(resp)
-        self.proxy.reader.feed_eof()
-        self.assertEqual(await self.proxy.recv(), resp)
+    proxy.reader.feed_data(b'abcdef')
+    assert await proxy.recv(length=3) == b'abc'
+    assert await proxy.recv(length=3) == b'def'
+    proxy.reader._buffer.clear()
 
-    async def test_recv_content_encoding_without_eof(self):
-        # FIXME: Without override `proxy` will be raised
-        # RuntimeError: Event loop is closed.
-        self.setUp()
-        resp = (b'HTTP/1.1 200 OK\r\n'
-                b'Content-Encoding: gzip\r\n'
-                b'Content-Length: 7\r\n\r\n'
-                b'\x1f\x8b\x08\x00\n\x00\x00')
-        self.proxy.reader.feed_data(resp)
-        with self.assertRaises(ProxyTimeoutError):
-            await self.proxy.recv()
+    proxy.reader.feed_data(b'ab')
+    with pytest.raises(ProxyTimeoutError):
+        await proxy.recv(length=3)
 
-    async def test_recv_content_encoding_chunked(self):
-        resp = (b'HTTP/1.1 200 OK\r\nContent-Encoding: gzip\r\n'
-                b'Transfer-Encoding: chunked\r\n\r\n3\x1f\x8b\x00\r\n0\r\n')
-        self.proxy.reader.feed_data(resp)
-        self.assertEqual(await self.proxy.recv(), resp)
-        self.proxy.reader._buffer.clear()
 
-        resp = (b'HTTP/1.1 200 OK\r\nContent-Encoding: gzip\r\n'
-                b'Transfer-Encoding: chunked\r\n\r\n'
-                b'5a' + b'\x1f' * 90 + b'\r\n\r\n0\r\n')
-        self.proxy.reader.feed_data(resp)
-        self.assertEqual(await self.proxy.recv(), resp)
+@pytest.mark.asyncio
+async def test_recv_head_only(event_loop, proxy):
+    data = b'HTTP/1.1 200 Connection established\r\n\r\n'
+    proxy.reader.feed_data(data)
+    assert await proxy.recv(head_only=True) == data
+    proxy.reader._buffer.clear()
+
+    data = b'HTTP/1.1 200 OK\r\nServer: 0\r\n\r\n'
+    proxy.reader.feed_data(data + b'abcd')
+    assert await proxy.recv(head_only=True) == data
+    proxy.reader._buffer.clear()
+
+    proxy.reader.feed_data(b'<html>abc</html>')
+    with pytest.raises(ProxyTimeoutError):
+        await proxy.recv(head_only=True)
+
+
+@pytest.mark.asyncio
+async def test_recv_content_length(proxy):
+    resp = b'HTTP/1.1 200 OK\r\nContent-Length: 4\r\n\r\n{a}\n'
+    proxy.reader.feed_data(resp)
+    assert await proxy.recv() == resp
+
+
+@pytest.mark.asyncio
+async def test_recv_content_encoding(proxy):
+    resp = (b'HTTP/1.1 200 OK\r\nContent-Encoding: gzip\r\n'
+            b'Content-Length: 7\r\n\r\n\x1f\x8b\x08\x00\n\x00\x00')
+    proxy.reader.feed_data(resp)
+    proxy.reader.feed_eof()
+    assert await proxy.recv() == resp
+
+
+@pytest.mark.asyncio
+async def test_recv_content_encoding_without_eof(event_loop, proxy):
+    resp = (b'HTTP/1.1 200 OK\r\n'
+            b'Content-Encoding: gzip\r\n'
+            b'Content-Length: 7\r\n\r\n'
+            b'\x1f\x8b\x08\x00\n\x00\x00')
+    proxy.reader.feed_data(resp)
+    with pytest.raises(ProxyTimeoutError):
+        await proxy.recv()
+
+
+@pytest.mark.asyncio
+async def test_recv_content_encoding_chunked(proxy):
+    resp = (b'HTTP/1.1 200 OK\r\nContent-Encoding: gzip\r\n'
+            b'Transfer-Encoding: chunked\r\n\r\n3\x1f\x8b\x00\r\n0\r\n')
+    proxy.reader.feed_data(resp)
+    assert await proxy.recv() == resp
+    proxy.reader._buffer.clear()
+
+    resp = (b'HTTP/1.1 200 OK\r\nContent-Encoding: gzip\r\n'
+            b'Transfer-Encoding: chunked\r\n\r\n'
+            b'5a' + b'\x1f' * 90 + b'\r\n\r\n0\r\n')
+    proxy.reader.feed_data(resp)
+    assert await proxy.recv() == resp

@@ -1,81 +1,87 @@
-from unittest.mock import Mock, patch
-
-from .utils import AsyncTestCase, ResolveResult, future_iter
-
 import socket
+
+import pytest
+
 from proxybroker.errors import ResolveError
 from proxybroker.resolver import Resolver
 
+from .utils import ResolveResult, future_iter
 
-class TestResolver(AsyncTestCase):
-    def setUp(self):
-        pass
 
-    def tearDown(self):
-        pass
+@pytest.fixture
+def resolver():
+    return Resolver(timeout=0.1)
 
-    def test_host_is_ip(self):
-        rs = Resolver(timeout=0.1)
-        self.assertTrue(rs.host_is_ip('127.0.0.1'))
-        self.assertFalse(rs.host_is_ip('256.0.0.1'))
-        self.assertFalse(rs.host_is_ip('test.com'))
 
-    def test_get_ip_info(self):
-        rs = Resolver(timeout=0.1)
-        self.assertEqual(rs.get_ip_info('test.com'), ('--', 'Unknown'))
-        self.assertEqual(rs.get_ip_info('127.0.0.1'), ('--', 'Unknown'))
-        self.assertEqual(rs.get_ip_info('8.8.8.8'), ('US', 'United States'))
+def test_host_is_ip(resolver):
+    assert resolver.host_is_ip('127.0.0.1') is True
+    assert resolver.host_is_ip('256.0.0.1') is False
+    assert resolver.host_is_ip('test.com') is False
 
-    async def test_get_real_ext_ip(self):
-        rs = Resolver(timeout=0.1)
 
+def test_get_ip_info(resolver):
+    assert resolver.get_ip_info('test.com') == ('--', 'Unknown')
+    assert resolver.get_ip_info('127.0.0.1') == ('--', 'Unknown')
+    assert resolver.get_ip_info('8.8.8.8') == ('US', 'United States')
+
+
+@pytest.mark.asyncio
+async def test_get_real_ext_ip(event_loop, mocker, resolver):
+    async def f(*args, **kwargs):
         async def side_effect(*args, **kwargs):
-            async def _side_effect(*args, **kwargs):
-                return {'origin': '127.0.0.1'}
-            resp = Mock()
-            resp.json.side_effect = resp.release.side_effect = _side_effect
-            return resp
+            return {'origin': '127.0.0.1'}
+        resp = mocker.Mock()
+        resp.json.side_effect = side_effect
+        return resp
 
-        with patch("aiohttp.client.ClientSession._request") as resp:
-            resp.side_effect = side_effect
-            self.assertEqual(await rs.get_real_ext_ip(), '127.0.0.1')
+    with mocker.patch('aiohttp.client.ClientSession._request', side_effect=f):
+        assert await resolver.get_real_ext_ip() == '127.0.0.1'
 
-    async def test_resolve(self):
-        rs = Resolver(timeout=0.1)
-        self.assertEqual(await rs.resolve('127.0.0.1'), '127.0.0.1')
 
-        with self.assertRaises(ResolveError):
-            await rs.resolve('256.0.0.1')
+@pytest.mark.asyncio
+async def test_resolve(event_loop, mocker, resolver):
+    assert await resolver.resolve('127.0.0.1') == '127.0.0.1'
 
-        with patch("aiodns.DNSResolver.query") as query:
-            query.side_effect = future_iter([ResolveResult('127.0.0.1', 0)])
-            self.assertEqual(await rs.resolve('test.com'), '127.0.0.1')
+    with pytest.raises(ResolveError):
+        await resolver.resolve('256.0.0.1')
 
-    async def test_resolve_family(self):
-        rs = Resolver(timeout=0.1)
-        with patch("aiodns.DNSResolver.query") as query:
-            query.side_effect = future_iter([ResolveResult('127.0.0.2', 0)])
-            resp = [{'hostname': 'test2.com', 'host': '127.0.0.2', 'port': 80,
-                     'family': socket.AF_INET, 'proto': socket.IPPROTO_IP,
-                     'flags': socket.AI_NUMERICHOST}]
-            self.assertEqual(
-                await rs.resolve('test2.com', family=socket.AF_INET), resp)
+    f = future_iter([ResolveResult('127.0.0.1', 0)])
+    with mocker.patch('aiodns.DNSResolver.query', side_effect=f):
+        assert await resolver.resolve('test.com') == '127.0.0.1'
 
-    async def test_resolve_cache(self):
-        rs = Resolver(timeout=0.1)
 
-        with patch("aiodns.DNSResolver.query") as query:
-            query.side_effect = future_iter([ResolveResult('127.0.0.1', 0)])
-            await rs.resolve('test.com')
+@pytest.mark.asyncio
+async def test_resolve_family(mocker, resolver):
+    f = future_iter([ResolveResult('127.0.0.2', 0)])
+    with mocker.patch('aiodns.DNSResolver.query', side_effect=f):
+        resp = [{'hostname': 'test2.com', 'host': '127.0.0.2', 'port': 80,
+                 'family': socket.AF_INET, 'proto': socket.IPPROTO_IP,
+                 'flags': socket.AI_NUMERICHOST}]
+        resolved = await resolver.resolve('test2.com', family=socket.AF_INET)
+        assert resolved == resp
 
-            query.side_effect = future_iter([ResolveResult('127.0.0.2', 0)])
-            port = 80
-            resp = [{'hostname': 'test2.com', 'host': '127.0.0.2', 'port': port,
-                     'family': socket.AF_INET, 'proto': socket.IPPROTO_IP,
-                     'flags': socket.AI_NUMERICHOST}]
-            await rs.resolve('test2.com', port=80, family=socket.AF_INET)
 
-        rs._resolve = None
-        self.assertEqual(await rs.resolve('test.com'), '127.0.0.1')
-        resp = await rs.resolve('test2.com')
-        self.assertEqual(resp[0]['host'], '127.0.0.2')
+@pytest.mark.asyncio
+async def test_resolve_cache(event_loop, mocker, resolver):
+    mocker.spy(resolver, '_resolve')
+    assert await resolver.resolve('test.com') == '127.0.0.1'
+    assert resolver._resolve.call_count == 0
+
+    resolver._cached_hosts.clear()
+    f = future_iter([ResolveResult('127.0.0.1', 0)],
+                    [ResolveResult('127.0.0.2', 0)],
+                    [Exception])
+    with mocker.patch('aiodns.DNSResolver.query', side_effect=f):
+        await resolver.resolve('test.com')
+        await resolver.resolve('test2.com', port=80, family=socket.AF_INET)
+    assert resolver._resolve.call_count == 2
+
+    assert await resolver.resolve('test.com') == '127.0.0.1'
+    resp = await resolver.resolve('test2.com')
+    assert resp[0]['host'] == '127.0.0.2'
+    assert resolver._resolve.call_count == 2
+
+    with mocker.patch('aiodns.DNSResolver.query', side_effect=f),\
+            pytest.raises(Exception):
+            await resolver.resolve('test3.com')
+    assert resolver._resolve.call_count == 3

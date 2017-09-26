@@ -1,5 +1,6 @@
 __dev__
 __pycache__
+*.eggs
 *.egg-info
 .idea
 .DS_Store
