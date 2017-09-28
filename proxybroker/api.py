@@ -64,6 +64,7 @@ class Broker:
         self._server = None
         self._limit = 0  # not limited
         self._countries = None
+        self._ports = None
 
         max_concurrent_conn = kwargs.get('max_concurrent_conn')
         if max_concurrent_conn:
@@ -96,21 +97,24 @@ class Broker:
         except NotImplementedError:
             pass
 
-    async def grab(self, *, countries=None, limit=0):
+    async def grab(self, *, countries=None, ports=None, limit=0):
         """Gather proxies from the providers without checking.
 
         :param list countries: (optional) List of ISO country codes
                                where should be located proxies
+        :param list ports: (optional) List of ports indicating
+                            allowed proxy ports
         :param int limit: (optional) The maximum number of proxies
 
         :ref:`Example of usage <proxybroker-examples-grab>`.
         """
         self._countries = countries
+        self._ports = ports
         self._limit = limit
         task = asyncio.ensure_future(self._grab(check=False))
         self._all_tasks.append(task)
 
-    async def find(self, *, types=None, data=None, countries=None,
+    async def find(self, *, types=None, data=None, countries=None, ports=None,
                    post=False, strict=False, dnsbl=None, limit=0, **kwargs):
         """Gather and check proxies from providers or from a passed data.
 
@@ -126,6 +130,8 @@ class Broker:
         :param list countries:
             (optional) List of ISO country codes where should be located
             proxies
+        :param list ports:
+            (optional) List of ports indicating allowed proxy ports
         :param bool post:
             (optional) Flag indicating use POST instead of GET for requests
             when checking proxies
@@ -159,6 +165,7 @@ class Broker:
             real_ext_ip=ip, types=types, post=post,
             strict=strict, dnsbl=dnsbl, loop=self._loop)
         self._countries = countries
+        self._ports = ports
         self._limit = limit
 
         tasks = [asyncio.ensure_future(self._checker.check_judges())]
@@ -304,6 +311,10 @@ class Broker:
             return
 
         if not self._is_unique(proxy) or not self._geo_passed(proxy):
+            return
+
+        if self._ports and proxy.port not in self._ports:
+            proxy.log('Proxy port is not in allowed ports list')
             return
 
         if check:
