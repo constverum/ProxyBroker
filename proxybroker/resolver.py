@@ -66,12 +66,23 @@ class Resolver:
                 async with aiohttp.ClientSession(loop=self._loop) as session,\
                         session.get('http://httpbin.org/ip') as resp:
                     data = await resp.json()
-        except asyncio.TimeoutError as e:
-            raise RuntimeError('Could not get a external IP. Error: %s' % e)
+        except asyncio.TimeoutError:
+            log.debug('Could not get an external IP from "httpbin.org/ip".')
         else:
             ip = data['origin'].split(', ')[0]
             log.debug('Real external IP: %s' % ip)
-        return ip
+            return ip
+
+        try:
+            with aiohttp.Timeout(self._timeout, loop=self._loop):
+                async with aiohttp.ClientSession(loop=self._loop) as session,\
+                        session.get('http://ipv4.icanhazip.com') as resp:
+                    ip = await resp.text()
+        except asyncio.TimeoutError as e:
+            raise RuntimeError('Could not get an external IP. Error: %s' % e)
+        else:
+            log.debug('Real external IP: %s' % ip)
+            return ip
 
     async def resolve(self, host, port=80, family=None,
                       qtype='A', logging=True):
