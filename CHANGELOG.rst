@@ -3,10 +3,11 @@ Change Log
 ==========
 
 
-`0.2.1`_ (Unreleased)
+`0.3.0`_ (Unreleased)
 ---------------------
 * Added the ``--format`` flag, which indicating in what format the results will be presented.
 * Improved the ``--outfile`` flag behavior. Earlier it was required to wait until whole process has finished, now the result is available in real-time `#39`_
+* Improved way to get the external IP address `#25`_
 
 
 `0.2.0`_ (2017-09-17)
@@ -109,6 +110,7 @@ Change Log
 
 .. _#4: https://github.com/constverum/ProxyBroker/issues/4
 .. _#7: https://github.com/constverum/ProxyBroker/issues/7
+.. _#25: https://github.com/constverum/ProxyBroker/issues/25
 .. _#39: https://github.com/constverum/ProxyBroker/issues/39
 .. _0.1a1: https://github.com/constverum/ProxyBroker/compare/cf465b3
 .. _0.1a2: https://github.com/constverum/ProxyBroker/compare/cf465b3...f8e2428

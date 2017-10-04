@@ -2,6 +2,7 @@ import socket
 import asyncio
 import os.path
 import ipaddress
+import random
 from collections import namedtuple
 
 import aiodns
@@ -21,6 +22,16 @@ class Resolver:
     """Async host resolver based on aiodns."""
 
     _cached_hosts = {}
+    _ip_hosts = [
+        'https://ifconfig.co/ip',
+        'https://wtfismyip.com/text',
+        'http://api.ipify.org/',
+        'http://ipinfo.io/ip',
+        'http://ipv4.icanhazip.com/',
+        'http://myexternalip.com/raw',
+        'http://ipinfo.io/ip',
+        'http://ifconfig.io/ip',
+    ]
 
     def __init__(self, timeout=5, loop=None):
         self._timeout = timeout
@@ -59,18 +70,29 @@ class Resolver:
             name = ipInfo['continent']['names']['en']
         return GeoData(code, name)
 
+    def _pop_random_ip_host(self):
+        host = random.choice(self._ip_hosts)
+        self._ip_hosts.remove(host)
+        return host
+
     async def get_real_ext_ip(self):
         """Return real external IP address."""
-        try:
-            with aiohttp.Timeout(self._timeout, loop=self._loop):
-                async with aiohttp.ClientSession(loop=self._loop) as session,\
-                        session.get('http://httpbin.org/ip') as resp:
-                    data = await resp.json()
-        except asyncio.TimeoutError as e:
-            raise RuntimeError('Could not get a external IP. Error: %s' % e)
+        for _ in range(len(self._ip_hosts)):
+            try:
+                with aiohttp.Timeout(self._timeout, loop=self._loop):
+                    async with \
+                        aiohttp.ClientSession(loop=self._loop) as session,\
+                            session.get(self._pop_random_ip_host()) as resp:
+                        ip = await resp.text()
+            except (asyncio.TimeoutError, IndexError):
+                pass
+            else:
+                ip = ip.strip()
+                if self.host_is_ip(ip):
+                    log.debug('Real external IP: %s', ip)
+                    break
         else:
-            ip = data['origin'].split(', ')[0]
-            log.debug('Real external IP: %s' % ip)
+            raise RuntimeError('Could not get the external IP')
         return ip
 
     async def resolve(self, host, port=80, family=None,

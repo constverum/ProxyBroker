@@ -29,9 +29,9 @@ def test_get_ip_info(resolver):
 async def test_get_real_ext_ip(event_loop, mocker, resolver):
     async def f(*args, **kwargs):
         async def side_effect(*args, **kwargs):
-            return {'origin': '127.0.0.1'}
+            return '127.0.0.1\n'
         resp = mocker.Mock()
-        resp.json.side_effect = side_effect
+        resp.text.side_effect = side_effect
         return resp
 
     with mocker.patch('aiohttp.client.ClientSession._request', side_effect=f):
