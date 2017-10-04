@@ -631,6 +631,8 @@ PROVIDERS = [
              proto=('HTTP', 'CONNECT:80', 'HTTPS', 'CONNECT:25')),  # 153
     Provider(url='https://geekelectronics.org/my-servisy/proxy',
              proto=('HTTP', 'CONNECT:80', 'HTTPS', 'CONNECT:25')),  # 400
+    Provider(url='http://pubproxy.com/api/proxy?limit=20&format=txt',
+             proto=('HTTP', 'CONNECT:80', 'HTTPS', 'CONNECT:25')),  # 20
     Proxy_list_org(proto=('HTTP', 'CONNECT:80', 'HTTPS', 'CONNECT:25')),           # noqa; 140
     Xseo_in(proto=('HTTP', 'CONNECT:80', 'HTTPS', 'CONNECT:25')),                  # noqa; 240
     Spys_ru(proto=('HTTP', 'CONNECT:80', 'HTTPS', 'CONNECT:25')),                  # noqa; 660
