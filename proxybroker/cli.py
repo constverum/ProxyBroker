@@ -9,6 +9,7 @@ from contextlib import contextmanager
 
 from . import __version__ as version
 from .api import Broker
+from .utils import update_geoip_db
 
 
 def create_parser():
@@ -72,6 +73,17 @@ def create_parser():
         checking of new proxies will be lazily paused.
         See the documentation for more information''')
     add_help_arg(sparser.add_argument_group(title='Common options'))
+
+    uparser = subparsers.add_parser(
+        'update-geo',
+        add_help=False,
+        help='Download and use a detailed GeoIP database',
+        description=('Download and use a detailed GeoIP DB to get '
+                     'additional geolocation information of the proxy '
+                     '(ISO and name of region, city name).'))
+    uparser_group = uparser.add_argument_group(title='Options')
+    uparser.set_defaults(func=update_geoip_db)
+    add_help_arg(uparser_group)
 
     return parser
 
@@ -308,6 +320,9 @@ def cli(args=sys.argv[1:]):
 
     if not ns.command:
         parser.print_help()
+        return
+    elif ns.command == 'update-geo':
+        ns.func()
         return
 
     logging.basicConfig(

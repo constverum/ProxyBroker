@@ -62,6 +62,11 @@ def test_as_json_w_geo():
                 'code': 'US',
                 'name': 'United States',
             },
+            'region': {
+                'code': 'Unknown',
+                'name': 'Unknown',
+            },
+            'city': 'Unknown',
         },
         'types': [
             {'type': 'HTTP', 'level': 'Anonymous'},
@@ -86,6 +91,11 @@ def test_as_json_wo_geo():
                 'code': '--',
                 'name': 'Unknown',
             },
+            'region': {
+                'code': 'Unknown',
+                'name': 'Unknown',
+            },
+            'city': 'Unknown',
         },
         'types': [],
         'avg_resp_time': 0,

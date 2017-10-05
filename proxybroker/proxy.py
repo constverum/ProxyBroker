@@ -193,6 +193,9 @@ class Proxy:
             Named tuple with fields:
                 * ``code`` - ISO country code
                 * ``name`` - Full name of country
+                * ``region_code`` - ISO region code
+                * ``region_name`` - Full name of region
+                * ``city_name`` - Full name of city
         :rtype: collections.namedtuple
 
         .. versionchanged:: 0.2.0
@@ -221,6 +224,11 @@ class Proxy:
                     'code': self._geo.code,
                     'name': self._geo.name,
                 },
+                'region': {
+                    'code': self._geo.region_code,
+                    'name': self._geo.region_name,
+                },
+                'city': self._geo.city_name,
             },
             'types': [],
             'avg_resp_time': self.avg_resp_time,

@@ -10,12 +10,17 @@ import aiohttp
 import maxminddb
 
 from .errors import ResolveError
-from .utils import log, BASE_DIR
+from .utils import log, DATA_DIR
 
 
-GeoData = namedtuple('GeoData', ['code', 'name'])
-_mmdb_reader = maxminddb.open_database(
-    os.path.join(BASE_DIR, 'data', 'GeoLite2-Country.mmdb'))
+GeoData = namedtuple(
+    'GeoData', ['code', 'name', 'region_code', 'region_name', 'city_name'])
+
+_countrydb = os.path.join(DATA_DIR, 'GeoLite2-Country.mmdb')
+_citydb = os.path.join(DATA_DIR, 'GeoLite2-City.mmdb')
+_geo_db = _citydb if os.path.exists(_citydb) else _countrydb
+
+_mmdb_reader = maxminddb.open_database(_geo_db)
 
 
 class Resolver:
@@ -53,22 +58,32 @@ class Resolver:
     def get_ip_info(ip):
         """Return geo information about IP address.
 
-        `code` - ISO code
-        `name` - The full name of the country proxy location
+        `code` - ISO country code
+        `name` - Full name of country
+        `region_code` - ISO region code
+        `region_name` - Full name of region
+        `city_name` - Full name of city
         """
+        # from pprint import pprint
         try:
             ipInfo = _mmdb_reader.get(ip) or {}
         except (maxminddb.errors.InvalidDatabaseError, ValueError):
             ipInfo = {}
 
         code, name = '--', 'Unknown'
+        city_name, region_code, region_name = ('Unknown',) * 3
         if 'country' in ipInfo:
             code = ipInfo['country']['iso_code']
             name = ipInfo['country']['names']['en']
         elif 'continent' in ipInfo:
             code = ipInfo['continent']['code']
             name = ipInfo['continent']['names']['en']
-        return GeoData(code, name)
+        if 'city' in ipInfo:
+            city_name = ipInfo['city']['names']['en']
+        if 'subdivisions' in ipInfo:
+            region_code = ipInfo['subdivisions'][0]['iso_code']
+            region_name = ipInfo['subdivisions'][0]['names']['en']
+        return GeoData(code, name, region_code, region_name, city_name)
 
     def _pop_random_ip_host(self):
         host = random.choice(self._ip_hosts)

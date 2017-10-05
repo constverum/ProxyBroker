@@ -20,9 +20,15 @@ def test_host_is_ip(resolver):
 
 
 def test_get_ip_info(resolver):
-    assert resolver.get_ip_info('test.com') == ('--', 'Unknown')
-    assert resolver.get_ip_info('127.0.0.1') == ('--', 'Unknown')
-    assert resolver.get_ip_info('8.8.8.8') == ('US', 'United States')
+    ip = resolver.get_ip_info('127.0.0.1')
+    assert ip.code == '--'
+    assert ip.name == 'Unknown'
+    assert ip.region_code == 'Unknown'
+    assert ip.region_name == 'Unknown'
+    assert ip.city_name == 'Unknown'
+    ip = resolver.get_ip_info('8.8.8.8')
+    assert ip.code == 'US'
+    assert ip.name == 'United States'
 
 
 @pytest.mark.asyncio

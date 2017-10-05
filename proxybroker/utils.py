@@ -1,12 +1,21 @@
+"""Utils."""
+
 import re
 import random
-import os.path
 import logging
+import os
+import os.path
+import tarfile
+import urllib.request
+import tempfile
+import shutil
 
 from . import __version__ as version
 from .errors import BadStatusLine
 
+
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DATA_DIR = os.path.join(BASE_DIR, 'data')
 log = logging.getLogger(__package__)
 
 IPPattern = re.compile(
@@ -94,3 +103,28 @@ def parse_headers(headers):
         host, port = _headers['Host'].split(':')
         _headers['Host'], _headers['Port'] = host, int(port)
     return _headers
+
+
+def update_geoip_db():
+    print('The update in progress, please waite for a while...')
+    filename = 'GeoLite2-City.tar.gz'
+    local_file = os.path.join(DATA_DIR, filename)
+    city_db = os.path.join(DATA_DIR, 'GeoLite2-City.mmdb')
+    url = 'http://geolite.maxmind.com/download/geoip/database/%s' % filename
+
+    urllib.request.urlretrieve(url, local_file)
+
+    tmp_dir = tempfile.gettempdir()
+    with tarfile.open(name=local_file, mode='r:gz') as tf:
+        for tar_info in tf.getmembers():
+            if tar_info.name.endswith('.mmdb'):
+                tf.extract(tar_info, tmp_dir)
+                tmp_path = os.path.join(tmp_dir, tar_info.name)
+    shutil.move(tmp_path, city_db)
+    os.remove(local_file)
+
+    if os.path.exists(city_db):
+        print('The GeoLite2-City DB successfully downloaded and now you '
+              'have access to detailed geolocation information of the proxy.')
+    else:
+        print('Something went wrong, please try again later.')
