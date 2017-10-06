@@ -15,7 +15,7 @@ with codecs.open('requirements.txt', mode='r', encoding='utf-8') as f:
     REQUIRES = f.read().split()
 
 SETUP_REQUIRES = ['pytest-runner']
-TEST_REQUIRES = ['pytest>=3.2.2', 'pytest-asyncio>=0.8', 'pytest-mock>=1.6.3',
+TEST_REQUIRES = ['pytest>=3.2.1', 'pytest-asyncio>=0.8', 'pytest-mock>=1.6.3',
                  'pytest-pep8>=1.0.6', 'pytest-flakes>=2.0.0']
 PACKAGES = ['proxybroker', 'proxybroker.data']
 PACKAGE_DATA = {'': ['LICENSE'], INFO['package']: ['data/*.mmdb']}
