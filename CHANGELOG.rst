@@ -2,9 +2,13 @@
 Change Log
 ==========
 
-
-`0.3.0`_ (Unreleased)
+`0.4.0`_ (Unreleased)
 ---------------------
+
+
+`0.3.0`_ (2017-10-31)
+---------------------
+
 * Added ``update-geo`` command; This command will update the GeoIP database. After that ProxyBroker will have access to additional geolocation information of the proxy (ISO and name of region, city name) `#26`_
 * Added ``--format`` flag, which indicating in what format the results will be presented
 * Improved ``--outfile`` flag behavior. Earlier it was required to wait until whole process has finished, now the result is available in real-time `#39`_
@@ -124,4 +128,6 @@ Change Log
 .. _0.1.2: https://github.com/constverum/ProxyBroker/compare/v0.1...v0.1.2
 .. _0.1.3: https://github.com/constverum/ProxyBroker/compare/v0.1.2...v0.1.3
 .. _0.1.4: https://github.com/constverum/ProxyBroker/compare/v0.1.3...v0.1.4
-.. _0.2.0: https://github.com/constverum/ProxyBroker/compare/v0.1.4...HEAD
+.. _0.2.0: https://github.com/constverum/ProxyBroker/compare/v0.1.4...v0.2.0
+.. _0.3.0: https://github.com/constverum/ProxyBroker/compare/v0.2.0...v0.3.0
+.. _0.4.0: https://github.com/constverum/ProxyBroker/compare/v0.3.0...HEAD
