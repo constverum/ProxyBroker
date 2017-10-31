@@ -554,7 +554,6 @@ class Free_proxy_cz(Provider):
         #     _urls.append(url)
 
 
-# под вопросом
 class Proxyb_net(Provider):
     domain = 'proxyb.net'
     _port_pattern_b64 = re.compile(r"stats\('([\w=]+)'\)")

@@ -1,5 +1,5 @@
 """
-Copyright © 2015-2016 Constverum <constverum@gmail.com>. All rights reserved.
+Copyright © 2015-2018 Constverum <constverum@gmail.com>. All rights reserved.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -22,7 +22,7 @@ __author__ = 'Constverum'
 __author_email__ = 'constverum@gmail.com'
 __url__ = 'https://github.com/constverum/ProxyBroker'
 __license__ = 'Apache License, Version 2.0'
-__copyright__ = 'Copyright 2015-2017 Constverum'
+__copyright__ = 'Copyright 2015-2018 Constverum'
 
 
 from .proxy import Proxy  # noqa

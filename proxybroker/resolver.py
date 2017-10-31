@@ -92,14 +92,14 @@ class Resolver:
 
     async def get_real_ext_ip(self):
         """Return real external IP address."""
-        for _ in range(len(self._ip_hosts)):
+        while self._ip_hosts:
             try:
                 with aiohttp.Timeout(self._timeout, loop=self._loop):
                     async with \
                         aiohttp.ClientSession(loop=self._loop) as session,\
                             session.get(self._pop_random_ip_host()) as resp:
                         ip = await resp.text()
-            except (asyncio.TimeoutError, IndexError):
+            except asyncio.TimeoutError:
                 pass
             else:
                 ip = ip.strip()
