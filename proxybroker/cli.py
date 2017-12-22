@@ -264,7 +264,7 @@ def add_format_arg(group):
         nargs='?',
         type=str.lower,
         help='''Flag indicating in what format the results will be presented.
-                Available formats: default and json''')
+                Available formats: default, proxychains and json''')
 
 
 def add_show_stats_arg(group):
@@ -297,6 +297,7 @@ def outformat(outfile, format):
 async def handle(proxies, outfile, format):
     with outformat(outfile, format):
         is_json = format == 'json'
+        is_proxychains = format == 'proxychains'
         is_first = True
         while True:
             proxy = await proxies.get()
@@ -305,6 +306,8 @@ async def handle(proxies, outfile, format):
 
             if is_json:
                 line = '%s' % json.dumps(proxy.as_json())
+            if is_proxychains:
+                line = '%s\n' % proxy.as_proxychains()
             else:
                 line = '%r\n' % proxy
 
@@ -373,3 +376,7 @@ def cli(args=sys.argv[1:]):
     finally:
         loop.stop()
         loop.close()
+
+
+if __name__ == "__main__":
+    cli()
