@@ -8,6 +8,8 @@ from urllib.parse import unquote, urlparse
 
 import aiohttp
 
+import async_timeout
+
 from .errors import BadStatusError
 from .utils import log, get_headers, IPPattern, IPPortPatternGlobal
 
@@ -124,7 +126,7 @@ class Provider:
         page = ''
         try:
             with (await self._sem_provider),\
-                    aiohttp.Timeout(self._timeout, loop=self._loop):
+                    async_timeout.timeout(self._timeout, loop=self._loop):
                 async with self._session.request(
                         method, url, data=data, headers=headers) as resp:
                     page = await resp.text()

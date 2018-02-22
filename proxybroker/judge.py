@@ -4,6 +4,8 @@ from urllib.parse import urlparse
 
 import aiohttp
 
+import async_timeout
+
 from .errors import ResolveError
 from .utils import log, get_headers
 from .resolver import Resolver
@@ -69,7 +71,7 @@ class Judge:
         connector = aiohttp.TCPConnector(
             loop=self._loop, ssl=self.verify_ssl, force_close=True)
         try:
-            with aiohttp.Timeout(self.timeout, loop=self._loop):
+            with async_timeout.timeout(self.timeout, loop=self._loop):
                 async with aiohttp.ClientSession(connector=connector,
                                                  loop=self._loop) as session,\
                         session.get(url=self.url, headers=headers,
