@@ -67,7 +67,7 @@ class Judge:
         page = False
         headers, rv = get_headers(rv=True)
         connector = aiohttp.TCPConnector(
-            loop=self._loop, verify_ssl=self.verify_ssl, force_close=True)
+            loop=self._loop, ssl=self.verify_ssl, force_close=True)
         try:
             with aiohttp.Timeout(self.timeout, loop=self._loop):
                 async with aiohttp.ClientSession(connector=connector,
