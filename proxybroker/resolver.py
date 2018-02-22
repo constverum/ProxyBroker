@@ -29,7 +29,6 @@ class Resolver:
 
     _cached_hosts = {}
     _ip_hosts = [
-        'https://ifconfig.co/ip',
         'https://wtfismyip.com/text',
         'http://api.ipify.org/',
         'http://ipinfo.io/ip',
