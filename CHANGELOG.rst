@@ -135,4 +135,5 @@ Change Log
 .. _0.1.4: https://github.com/constverum/ProxyBroker/compare/v0.1.3...v0.1.4
 .. _0.2.0: https://github.com/constverum/ProxyBroker/compare/v0.1.4...v0.2.0
 .. _0.3.0: https://github.com/constverum/ProxyBroker/compare/v0.2.0...v0.3.0
-.. _0.4.0: https://github.com/constverum/ProxyBroker/compare/v0.3.0...HEAD
+.. _0.3.1: https://github.com/constverum/ProxyBroker/compare/v0.3.0...v0.3.1
+.. _0.4.0: https://github.com/constverum/ProxyBroker/compare/v0.3.1...HEAD
