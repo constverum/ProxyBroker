@@ -114,6 +114,10 @@ class Proxy:
         """
         return self._types
 
+    def as_proxychains(self):
+        tp = list(self.types.keys())[0] if self.types.keys() else "http"
+        return "%s  %s  %s" % (tp.lower(), self.host, self.port)
+
     @property
     def is_working(self):
         """True if the proxy is working, False otherwise.
