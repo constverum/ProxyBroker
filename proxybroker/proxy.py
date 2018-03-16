@@ -97,9 +97,7 @@ class Proxy:
             s = s.format(tp=tp, lvl=lvl)
             tpinfo.append(s)
         tpinfo = ', '.join(tpinfo)
-        return '<Proxy {code} {avg:.2f}s [{types}] {host}:{port}>'.format(
-               code=self._geo.code, types=tpinfo, host=self.host,
-               port=self.port, avg=self.avg_resp_time)
+        return '{host}:{port}'.format(host=self.host, port=self.port)
 
     @property
     def types(self):
