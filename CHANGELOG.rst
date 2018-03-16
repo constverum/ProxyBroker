@@ -1,9 +1,45 @@
+
 Change Log
 ==========
 
-
-`0.1.5`_ (Unreleased)
+`0.4.0`_ (Unreleased)
 ---------------------
+
+
+`0.3.0`_ (2017-10-31)
+---------------------
+
+* Added ``update-geo`` command; This command will update the GeoIP database. After that ProxyBroker will have access to additional geolocation information of the proxy (ISO and name of region, city name) `#26`_
+* Added ``--format`` flag, which indicating in what format the results will be presented
+* Improved ``--outfile`` flag behavior. Earlier it was required to wait until whole process has finished, now the result is available in real-time `#39`_
+* Improved way to get the external IP address `#25`_
+
+
+`0.2.0`_ (2017-09-17)
+---------------------
+
+* Added CLI interface
+* Added :meth:`Broker.serve` function.
+  Now ProxyBroker can work as a proxy server that distributes incoming requests to a pool of found proxies
+* To available types (protocols) added:
+    * ``CONNECT:80`` - CONNECT method to port 80
+    * ``CONNECT:25`` - CONNECT method to port 25 (SMTP)
+* Added new options of checking and filtering proxies.
+  :meth:`Broker.find` method has takes new parameters:
+  :attr:`post`, :attr:`strict`, :attr:`dnsbl`.
+  See documentation for more information
+* Added check proxies to support Cookies and Referer
+* Added gzip and deflate support
+* :class:`Broker` attributes :attr:`max_concurrent_conn` and :attr:`attempts_conn`
+  are deprecated, use :attr:`max_conn` and :attr:`max_tries` instead.
+* Parameter :attr:`full` in :meth:`Broker.show_stats` is deprecated, use :attr:`verbose` instead
+* Parameter :attr:`types` in :meth:`Broker.find` (and :meth:`Broker.serve`) from now is required
+* :class:`ProxyChecker` renamed to :class:`Checker`.
+  :class:`ProxyChecker` class is deprecated, use :class:`Checker` instead
+* :attr:`Proxy.avgRespTime` renamed to :attr:`Proxy.avg_resp_time`.
+  :attr:`Proxy.avgRespTime` is deprecated, use :attr:`Proxy.avg_resp_time` instead
+* Improved documentation
+* Major refactoring
 
 
 `0.1.4`_ (2016-04-07)
@@ -16,7 +52,7 @@ Change Log
 ---------------------
 
 * ``ProxyProvider`` renamed to ``Provider``.
-  ``ProxyProvider`` class is deprecated, use ``Provider`` instead
+  ``ProxyProvider`` class is deprecated, use ``Provider`` instead.
 * ``Broker`` now accepts a list of providers and judges not only as strings 
   but also objects of classes ``Provider`` and ``Judge``
 * Fixed bug with signal handler on Windows `#4`_
@@ -79,6 +115,9 @@ Change Log
 
 .. _#4: https://github.com/constverum/ProxyBroker/issues/4
 .. _#7: https://github.com/constverum/ProxyBroker/issues/7
+.. _#25: https://github.com/constverum/ProxyBroker/issues/25
+.. _#26: https://github.com/constverum/ProxyBroker/issues/26
+.. _#39: https://github.com/constverum/ProxyBroker/issues/39
 .. _0.1a1: https://github.com/constverum/ProxyBroker/compare/cf465b3
 .. _0.1a2: https://github.com/constverum/ProxyBroker/compare/cf465b3...f8e2428
 .. _0.1b1: https://github.com/constverum/ProxyBroker/compare/f8e2428...162f261
@@ -89,4 +128,6 @@ Change Log
 .. _0.1.2: https://github.com/constverum/ProxyBroker/compare/v0.1...v0.1.2
 .. _0.1.3: https://github.com/constverum/ProxyBroker/compare/v0.1.2...v0.1.3
 .. _0.1.4: https://github.com/constverum/ProxyBroker/compare/v0.1.3...v0.1.4
-.. _0.1.5: https://github.com/constverum/ProxyBroker/compare/v0.1.4...HEAD
+.. _0.2.0: https://github.com/constverum/ProxyBroker/compare/v0.1.4...v0.2.0
+.. _0.3.0: https://github.com/constverum/ProxyBroker/compare/v0.2.0...v0.3.0
+.. _0.4.0: https://github.com/constverum/ProxyBroker/compare/v0.3.0...HEAD
