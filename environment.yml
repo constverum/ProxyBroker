@@ -1,0 +1,12 @@
+name: py36
+dependencies:
+- pip=9.0.1=py36_1
+- python=3.6.2=0
+- setuptools=27.2=py36_0
+- wheel=0.29.0=py36_0
+- pip:
+  - sphinx
+  - alabaster
+  - aiohttp
+  - aiodns
+  - maxminddb
