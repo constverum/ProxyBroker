@@ -10,7 +10,7 @@ from .judge import Judge, get_judges
 from .utils import log, get_headers, get_all_ip, get_status_code, parse_headers
 from .resolver import Resolver
 from .negotiators import NGTRS
-
+from requests.auth import _basic_auth_str
 
 class Checker:
     """Proxy checker."""
@@ -198,13 +198,15 @@ class Checker:
         return result
 
 
-def _request(method, host, path, fullpath=False, data=''):
+def _request(proxy, method, host, path, fullpath=False, data=''):
     hdrs, rv = get_headers(rv=True)
     hdrs['Host'] = host
     hdrs['Connection'] = 'close'
     hdrs['Content-Length'] = len(data)
     if method == 'POST':
         hdrs['Content-Type'] = 'application/octet-stream'
+    if proxy.login and proxy.password:
+        hdrs['Proxy-Authorization'] = _basic_auth_str(proxy.login, proxy.password)
     kw = {'method': method,
           'path': 'http://%s%s' % (host, path) if fullpath else path,  # HTTP
           'headers': '\r\n'.join(('%s: %s' % (k, v) for k, v in hdrs.items())),
@@ -216,7 +218,7 @@ def _request(method, host, path, fullpath=False, data=''):
 
 async def _send_test_request(method, proxy, judge):
     resp, content, err = None, None, None
-    request, rv = _request(method=method, host=judge.host, path=judge.path,
+    request, rv = _request(proxy, method=method, host=judge.host, path=judge.path,
                            fullpath=proxy.ngtr.use_full_path)
     try:
         await proxy.send(request)

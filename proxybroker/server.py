@@ -235,6 +235,7 @@ class Server:
                 elif scheme and not checked:
                     self._check_response(data, scheme)
                     checked = True
+
                 writer.write(data)
                 await writer.drain()
         except (asyncio.TimeoutError, ConnectionResetError, OSError,

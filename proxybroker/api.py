@@ -10,7 +10,7 @@ from .errors import ResolveError
 from .proxy import Proxy
 from .server import Server
 from .checker import Checker
-from .utils import log, IPPortPatternLine
+from .utils import log, IPPortPatternLine, IPPortAuthPatternLine
 from .resolver import Resolver
 from .providers import Provider, PROVIDERS
 
@@ -261,7 +261,7 @@ class Broker:
         if isinstance(data, io.TextIOWrapper):
             data = data.read()
         if isinstance(data, str):
-            data = IPPortPatternLine.findall(data)
+            data = IPPortAuthPatternLine.findall(data)
         proxies = set(data)
         for proxy in proxies:
             await self._handle(proxy, check=check)
