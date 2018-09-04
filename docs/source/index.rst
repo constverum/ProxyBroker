@@ -53,13 +53,13 @@ To install last stable release from pypi:
 
 .. code-block:: bash
 
-    $ pip install proxybroker
+    $ pip3 install proxybroker
 
 The latest development version can be installed directly from GitHub:
 
 .. code-block:: bash
 
-    $ pip install -U git+https://github.com/constverum/ProxyBroker.git
+    $ pip3 install -U git+https://github.com/constverum/ProxyBroker.git
 
 
 Usage
