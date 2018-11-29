@@ -11,6 +11,8 @@ ProxyBroker
     :target: https://pypi.python.org/pypi/proxybroker/
 .. image:: https://img.shields.io/pypi/l/proxybroker.svg?style=flat-square
     :target: https://pypi.python.org/pypi/proxybroker/
+.. image:: https://img.shields.io/badge/Reviewed_by-Hound-8E64B0.svg?style=flat-square&longCache=true
+    :target: https://houndci.com
 
 ProxyBroker is an open source tool that asynchronously finds public proxies from multiple sources and concurrently checks them.
 
