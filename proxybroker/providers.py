@@ -613,6 +613,7 @@ class ProxyProvider(Provider):
                       DeprecationWarning)
         super().__init__(*args, **kwargs)
 
+
 PROVIDERS = [
     Provider(url='http://www.proxylists.net/',
              proto=('HTTP', 'CONNECT:80', 'HTTPS', 'CONNECT:25')),  # 49
