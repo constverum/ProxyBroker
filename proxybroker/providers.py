@@ -595,6 +595,16 @@ class Proxylistplus_com(Provider):
                 for i in names for n in range(1, 7)]
         await self._find_on_pages(urls)
 
+class Proxylist_download(Provider):
+    domain = 'www.proxy-list.download'
+
+    async def _pipe(self):
+        urls = ['https://www.proxy-list.download/api/v1/get?type=http',
+                'https://www.proxy-list.download/api/v1/get?type=https',
+                'https://www.proxy-list.download/api/v1/get?type=socks4',
+                'https://www.proxy-list.download/api/v1/get?type=socks5']
+        pages = await asyncio.gather(*[self.get(url) for url in urls])
+        await self._find_on_pages(urls)
 
 class ProxyProvider(Provider):
     def __init__(self, *args, **kwargs):
