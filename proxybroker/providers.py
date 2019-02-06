@@ -125,7 +125,7 @@ class Provider:
     async def _get(self, url, data=None, headers=None, method='GET'):
         page = ''
         try:
-            with (await self._sem_provider),\
+            async with (self._sem_provider),\
                     async_timeout.timeout(self._timeout, loop=self._loop):
                 async with self._session.request(
                         method, url, data=data, headers=headers) as resp:
