@@ -180,6 +180,12 @@ def add_grab_args(group):
         nargs='+',
         help='List of ISO country codes where should be located proxies')
 
+    group.add_argument(
+        '--ports', '-p',
+        type=int,
+        nargs='+',
+        help='List of ports indicating allowed proxy ports')
+
 
 def add_serve_args(group):
     group.add_argument(
@@ -347,10 +353,10 @@ def cli(args=sys.argv[1:]):
 
     if ns.command == 'find':
         tasks.append(broker.find(
-            data=ns.data, types=ns.types, countries=ns.countries,
+            data=ns.data, types=ns.types, countries=ns.countries, ports=ns.ports,
             post=ns.post, strict=ns.strict, dnsbl=ns.dnsbl, limit=ns.limit))
     elif ns.command == 'grab':
-        tasks.append(broker.grab(countries=ns.countries, limit=ns.limit))
+        tasks.append(broker.grab(countries=ns.countries, ports=ns.ports, limit=ns.limit))
     elif ns.command == 'serve':
         broker.serve(
             host=ns.host, port=ns.port, limit=ns.limit,
