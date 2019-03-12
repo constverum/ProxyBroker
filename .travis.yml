@@ -20,13 +20,12 @@ matrix:
       python: 3.8-dev
     - name: "osx-py3.6"
       os: osx
-      python: "3.6"
-      # language: generic
-      # before_install:
-      #   - brew update
-      #   - brew upgrade python
-      #   - virtualenv env -p python3
-      #   - source env/bin/activate
+      language: generic
+      before_install:
+        - brew update
+        - brew upgrade python
+        - virtualenv env -p python3
+        - source env/bin/activate
   allow_failures:
     - name: "3.8-dev"
     - name: "osx-py3.6"
