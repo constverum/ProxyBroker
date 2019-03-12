@@ -51,7 +51,7 @@ class Broker:
 
     def __init__(self, queue=None, timeout=8, max_conn=200, max_tries=3,
                  judges=None, providers=None, verify_ssl=False, loop=None,
-                 **kwargs):
+                 stop__broker_on_sigint=True, **kwargs):
         self._loop = loop or asyncio.get_event_loop()
         self._proxies = queue or asyncio.Queue(loop=self._loop)
         self._resolver = Resolver(loop=self._loop)
@@ -88,13 +88,13 @@ class Broker:
         self._judges = judges
         self._providers = [p if isinstance(p, Provider) else Provider(p)
                            for p in (providers or PROVIDERS)]
-
-        try:
-            self._loop.add_signal_handler(signal.SIGINT, self.stop)
-            # add_signal_handler() is not implemented on Win
-            # https://docs.python.org/3.5/library/asyncio-eventloops.html#windows
-        except NotImplementedError:
-            pass
+        if stop__broker_on_sigint:
+            try:
+                self._loop.add_signal_handler(signal.SIGINT, self.stop)
+                # add_signal_handler() is not implemented on Win
+                # https://docs.python.org/3.5/library/asyncio-eventloops.html#windows
+            except NotImplementedError:
+                pass
 
     async def grab(self, *, countries=None, limit=0):
         """Gather proxies from the providers without checking.
