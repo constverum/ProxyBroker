@@ -86,7 +86,7 @@ class Server:
         http_allowed_codes=None,
         backlog=100,
         loop=None,
-        **kwargs,
+        **kwargs
     ):
         self.host = host
         self.port = int(port)

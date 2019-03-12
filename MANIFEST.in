@@ -2,4 +2,5 @@ include LICENSE
 include README.rst
 include CHANGELOG.rst
 include requirements.txt
+include requirements/*.txt
 include proxybroker/data/*.mmdb

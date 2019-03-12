@@ -53,7 +53,7 @@ class Proxy:
 
         :raises ResolveError: If could not resolve the host
         :raises ValueError: If the port > 65535
-        """
+        """  # noqa: W605
         loop = kwargs.pop('loop', None)
         resolver = kwargs.pop('resolver', Resolver(loop=loop))
         try:
@@ -105,7 +105,7 @@ class Proxy:
     def __repr__(self):
         # <Proxy US 1.12 [HTTP: Anonymous, HTTPS] 10.0.0.1:8080>
         tpinfo = []
-        order = lambda tp_lvl: (len(tp_lvl[0]), tp_lvl[0][-1])
+        order = lambda tp_lvl: (len(tp_lvl[0]), tp_lvl[0][-1])  # noqa: 731
         for tp, lvl in sorted(self.types.items(), key=order):
             s = '{tp}: {lvl}' if lvl else '{tp}'
             s = s.format(tp=tp, lvl=lvl)
@@ -254,7 +254,7 @@ class Proxy:
             'error_rate': self.error_rate,
         }
 
-        order = lambda tp_lvl: (len(tp_lvl[0]), tp_lvl[0][-1])
+        order = lambda tp_lvl: (len(tp_lvl[0]), tp_lvl[0][-1])  # noqa: 731
         for tp, lvl in sorted(self.types.items(), key=order):
             info['types'].append({'type': tp, 'level': lvl or ''})
         return info
@@ -362,7 +362,7 @@ class Proxy:
             msg = 'Received: timeout'
             err = ProxyTimeoutError(msg)
             raise err
-        except (ConnectionResetError, OSError) as e:
+        except (ConnectionResetError, OSError):
             msg = 'Received: failed'  # (connection is reset by the peer)
             err = ProxyRecvError(msg)
             raise err

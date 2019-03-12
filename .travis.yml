@@ -5,6 +5,8 @@ matrix:
       python: "3.5"
     - os: linux
       python: "3.6"
+    - os: linux
+      python: "3.7"
     - os: osx
       language: generic
       before_install:
@@ -13,8 +15,8 @@ matrix:
         - virtualenv env -p python3
         - source env/bin/activate
 install:
-  - pip install -r requirements.txt
-script: python setup.py test
+  - pip install -r requirements/dev.txt
+script: pytest
 deploy:
   provider: pypi
   user: constverum
@@ -24,4 +26,4 @@ deploy:
   on:
     tags: true
     branch: master
-    python: 3.5
+    python: 3.6

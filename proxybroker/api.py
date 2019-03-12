@@ -59,7 +59,7 @@ class Broker:
         providers=None,
         verify_ssl=False,
         loop=None,
-        **kwargs,
+        **kwargs
     ):
         self._loop = loop or asyncio.get_event_loop()
         self._proxies = queue or asyncio.Queue(loop=self._loop)
@@ -133,7 +133,7 @@ class Broker:
         strict=False,
         dnsbl=None,
         limit=0,
-        **kwargs,
+        **kwargs
     ):
         """Gather and check proxies from providers or from a passed data.
 
@@ -280,7 +280,7 @@ class Broker:
             timeout=self._timeout,
             max_tries=kwargs.pop('max_tries', self._max_tries),
             loop=self._loop,
-            **kwargs,
+            **kwargs
         )
         self._server.start()
 

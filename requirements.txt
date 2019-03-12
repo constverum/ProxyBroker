@@ -1,4 +1,1 @@
-aiohttp>=3.5.4
-async-timeout>=3.0.1
-aiodns>=2.0.0
-maxminddb>=1.4.1
+-r requirements/base.txt
