@@ -1,8 +1,8 @@
-import socket
 import asyncio
-import os.path
 import ipaddress
+import os.path
 import random
+import socket
 from collections import namedtuple
 
 import aiodns
@@ -10,11 +10,11 @@ import aiohttp
 import maxminddb
 
 from .errors import ResolveError
-from .utils import log, DATA_DIR
-
+from .utils import DATA_DIR, log
 
 GeoData = namedtuple(
-    'GeoData', ['code', 'name', 'region_code', 'region_name', 'city_name'])
+    'GeoData', ['code', 'name', 'region_code', 'region_name', 'city_name']
+)
 
 _countrydb = os.path.join(DATA_DIR, 'GeoLite2-Country.mmdb')
 _citydb = os.path.join(DATA_DIR, 'GeoLite2-City.mmdb')
@@ -94,8 +94,9 @@ class Resolver:
         while self._ip_hosts:
             try:
                 timeout = aiohttp.ClientTimeout(total=self._timeout)
-                async with aiohttp.ClientSession(timeout=timeout, loop=self._loop) as session,\
-                        session.get(self._pop_random_ip_host()) as resp:
+                async with aiohttp.ClientSession(
+                    timeout=timeout, loop=self._loop
+                ) as session, session.get(self._pop_random_ip_host()) as resp:
                     ip = await resp.text()
             except asyncio.TimeoutError:
                 pass
@@ -108,8 +109,9 @@ class Resolver:
             raise RuntimeError('Could not get the external IP')
         return ip
 
-    async def resolve(self, host, port=80, family=None,
-                      qtype='A', logging=True):
+    async def resolve(
+        self, host, port=80, family=None, qtype='A', logging=True
+    ):
         """Return resolving IP address(es) from host name."""
         if self.host_is_ip(host):
             return host
@@ -121,16 +123,25 @@ class Resolver:
         resp = await self._resolve(host, qtype)
 
         if resp:
-            hosts = [{'hostname': host, 'host': r.host, 'port': port,
-                      'family': family, 'proto': socket.IPPROTO_IP,
-                      'flags': socket.AI_NUMERICHOST} for r in resp]
+            hosts = [
+                {
+                    'hostname': host,
+                    'host': r.host,
+                    'port': port,
+                    'family': family,
+                    'proto': socket.IPPROTO_IP,
+                    'flags': socket.AI_NUMERICHOST,
+                }
+                for r in resp
+            ]
             if family:
                 self._cached_hosts[host] = hosts
             else:
                 self._cached_hosts[host] = hosts[0]['host']
             if logging:
-                log.debug('%s: Host resolved: %s' % (
-                    host, self._cached_hosts[host]))
+                log.debug(
+                    '%s: Host resolved: %s' % (host, self._cached_hosts[host])
+                )
         else:
             if logging:
                 log.warning('%s: Could not resolve host' % host)
@@ -138,8 +149,9 @@ class Resolver:
 
     async def _resolve(self, host, qtype):
         try:
-            resp = await asyncio.wait_for(self._resolver.query(host, qtype),
-                                          timeout=self._timeout)
+            resp = await asyncio.wait_for(
+                self._resolver.query(host, qtype), timeout=self._timeout
+            )
         except (aiodns.error.DNSError, asyncio.TimeoutError):
             raise ResolveError
         else:

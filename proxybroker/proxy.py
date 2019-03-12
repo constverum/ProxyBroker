@@ -1,16 +1,20 @@
-import time
 import asyncio
-import warnings
 import ssl as _ssl
+import time
+import warnings
 from collections import Counter
 
 from .errors import (
-    ProxyEmptyRecvError, ProxyConnError, ProxyRecvError,
-    ProxySendError, ProxyTimeoutError, ResolveError)
-from .utils import log, parse_headers
-from .resolver import Resolver
+    ProxyConnError,
+    ProxyEmptyRecvError,
+    ProxyRecvError,
+    ProxySendError,
+    ProxyTimeoutError,
+    ResolveError,
+)
 from .negotiators import NGTRS
-
+from .resolver import Resolver
+from .utils import log, parse_headers
 
 _HTTP_PROTOS = {'HTTP', 'CONNECT:80', 'SOCKS4', 'SOCKS5'}
 _HTTPS_PROTOS = {'HTTPS', 'SOCKS4', 'SOCKS5'}
@@ -60,22 +64,32 @@ class Proxy:
             raise
         return self
 
-    def __init__(self, host=None, port=None, types=(),
-                 timeout=8, verify_ssl=False):
+    def __init__(
+        self, host=None, port=None, types=(), timeout=8, verify_ssl=False
+    ):
         self.host = host
         if not Resolver.host_is_ip(self.host):
-            raise ValueError('The host of proxy should be the IP address. '
-                             'Try Proxy.create() if the host is a domain')
+            raise ValueError(
+                'The host of proxy should be the IP address. '
+                'Try Proxy.create() if the host is a domain'
+            )
 
         self.port = int(port)
         if self.port > 65535:
             raise ValueError('The port of proxy cannot be greater than 65535')
 
-        self.expected_types = set(types) & {'HTTP', 'HTTPS', 'CONNECT:80',
-                                            'CONNECT:25', 'SOCKS4', 'SOCKS5'}
+        self.expected_types = set(types) & {
+            'HTTP',
+            'HTTPS',
+            'CONNECT:80',
+            'CONNECT:25',
+            'SOCKS4',
+            'SOCKS5',
+        }
         self._timeout = timeout
-        self._ssl_context = (True if verify_ssl else
-                             _ssl._create_unverified_context())
+        self._ssl_context = (
+            True if verify_ssl else _ssl._create_unverified_context()
+        )
         self._types = {}
         self._is_working = False
         self.stat = {'requests': 0, 'errors': Counter()}
@@ -98,8 +112,12 @@ class Proxy:
             tpinfo.append(s)
         tpinfo = ', '.join(tpinfo)
         return '<Proxy {code} {avg:.2f}s [{types}] {host}:{port}>'.format(
-               code=self._geo.code, types=tpinfo, host=self.host,
-               port=self.port, avg=self.avg_resp_time)
+            code=self._geo.code,
+            types=tpinfo,
+            host=self.host,
+            port=self.port,
+            avg=self.avg_resp_time,
+        )
 
     @property
     def types(self):
@@ -151,7 +169,8 @@ class Proxy:
         if not self.stat['requests']:
             return 0
         return round(
-            sum(self.stat['errors'].values()) / self.stat['requests'], 2)
+            sum(self.stat['errors'].values()) / self.stat['requests'], 2
+        )
 
     @property
     def schemes(self):
@@ -181,8 +200,11 @@ class Proxy:
         .. deprecated:: 2.0
             Use :attr:`avg_resp_time` instead.
         """
-        warnings.warn('`avgRespTime` property is deprecated, '
-                      'use `avg_resp_time` instead.', DeprecationWarning)
+        warnings.warn(
+            '`avgRespTime` property is deprecated, '
+            'use `avg_resp_time` instead.',
+            DeprecationWarning,
+        )
         return self.avg_resp_time
 
     @property
@@ -220,10 +242,7 @@ class Proxy:
             'host': self.host,
             'port': self.port,
             'geo': {
-                'country': {
-                    'code': self._geo.code,
-                    'name': self._geo.name,
-                },
+                'country': {'code': self._geo.code, 'name': self._geo.name},
                 'region': {
                     'code': self._geo.region_code,
                     'name': self._geo.region_name,
@@ -243,8 +262,11 @@ class Proxy:
     def log(self, msg, stime=0, err=None):
         ngtr = self.ngtr.name if self.ngtr else 'INFO'
         runtime = time.time() - stime if stime else 0
-        log.debug('{h}:{p} [{n}]: {msg}; Runtime: {rt:.2f}'.format(
-            h=self.host, p=self.port, n=ngtr, msg=msg, rt=runtime))
+        log.debug(
+            '{h}:{p} [{n}]: {msg}; Runtime: {rt:.2f}'.format(
+                h=self.host, p=self.port, n=ngtr, msg=msg, rt=runtime
+            )
+        )
         trunc = '...' if len(msg) > 58 else ''
         msg = '{msg:.60s}{trunc}'.format(msg=msg, trunc=trunc)
         self._log.append((ngtr, msg, runtime))
@@ -272,14 +294,17 @@ class Proxy:
             if ssl:
                 _type = 'ssl'
                 sock = self._writer['conn'].get_extra_info('socket')
-                params = {'ssl': self._ssl_context, 'sock': sock,
-                          'server_hostname': self.host}
+                params = {
+                    'ssl': self._ssl_context,
+                    'sock': sock,
+                    'server_hostname': self.host,
+                }
             else:
                 _type = 'conn'
                 params = {'host': self.host, 'port': self.port}
-            self._reader[_type], self._writer[_type] = \
-                await asyncio.wait_for(asyncio.open_connection(**params),
-                                       timeout=self._timeout)
+            self._reader[_type], self._writer[_type] = await asyncio.wait_for(
+                asyncio.open_connection(**params), timeout=self._timeout
+            )
         except asyncio.TimeoutError:
             msg += 'Connection: timeout'
             err = ProxyTimeoutError(msg)
@@ -331,7 +356,8 @@ class Proxy:
         stime = time.time()
         try:
             resp = await asyncio.wait_for(
-                self._recv(length, head_only), timeout=self._timeout)
+                self._recv(length, head_only), timeout=self._timeout
+            )
         except asyncio.TimeoutError:
             msg = 'Received: timeout'
             err = ProxyTimeoutError(msg)

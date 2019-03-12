@@ -1,34 +1,36 @@
 """Utils."""
 
-import re
-import random
 import logging
 import os
 import os.path
-import tarfile
-import urllib.request
-import tempfile
+import random
+import re
 import shutil
+import tarfile
+import tempfile
+import urllib.request
 
 from . import __version__ as version
 from .errors import BadStatusLine
-
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DATA_DIR = os.path.join(BASE_DIR, 'data')
 log = logging.getLogger(__package__)
 
 IPPattern = re.compile(
-    r'(?:(?:25[0-5]|2[0-4]\d|[01]?\d\d?)\.){3}(?:25[0-5]|2[0-4]\d|[01]?\d\d?)')
+    r'(?:(?:25[0-5]|2[0-4]\d|[01]?\d\d?)\.){3}(?:25[0-5]|2[0-4]\d|[01]?\d\d?)'
+)
 
 IPPortPatternLine = re.compile(
     r'^.*?(?P<ip>(?:(?:25[0-5]|2[0-4]\d|[01]?\d\d?)\.){3}(?:25[0-5]|2[0-4]\d|[01]?\d\d?)).*?(?P<port>\d{2,5}).*$',  # noqa
-    flags=re.MULTILINE)
+    flags=re.MULTILINE,
+)
 
 IPPortPatternGlobal = re.compile(
     r'(?P<ip>(?:(?:25[0-5]|2[0-4]\d|[01]?\d\d?)\.){3}(?:25[0-5]|2[0-4]\d|[01]?\d\d?))'  # noqa
     r'(?=.*?(?:(?:(?:(?:25[0-5]|2[0-4]\d|[01]?\d\d?)\.){3}(?:25[0-5]|2[0-4]\d|[01]?\d\d?))|(?P<port>\d{2,5})))',  # noqa
-    flags=re.DOTALL)
+    flags=re.DOTALL,
+)
 
 # IsIpPattern = re.compile(
 #     r'^(?:(?:25[0-5]|2[0-4]\d|[01]?\d\d?)\.){3}(?:25[0-5]|2[0-4]\d|[01]?\d\d?)$')
@@ -44,7 +46,8 @@ def get_headers(rv=False):
         'Pragma': 'no-cache',
         'Cache-control': 'no-cache',
         'Cookie': 'cookie=ok',
-        'Referer': 'https://www.google.com/'}
+        'Referer': 'https://www.google.com/',
+    }
     return headers if not rv else (headers, _rv)
 
 
@@ -124,7 +127,9 @@ def update_geoip_db():
     os.remove(local_file)
 
     if os.path.exists(city_db):
-        print('The GeoLite2-City DB successfully downloaded and now you '
-              'have access to detailed geolocation information of the proxy.')
+        print(
+            'The GeoLite2-City DB successfully downloaded and now you '
+            'have access to detailed geolocation information of the proxy.'
+        )
     else:
         print('Something went wrong, please try again later.')

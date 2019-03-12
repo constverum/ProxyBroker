@@ -1,13 +1,19 @@
 import struct
-from socket import inet_aton
 from abc import ABC, abstractmethod
+from socket import inet_aton
 
-from .errors import BadStatusError, BadResponseError
+from .errors import BadResponseError, BadStatusError
 from .utils import get_headers, get_status_code
 
-
-__all__ = ['Socks5Ngtr', 'Socks4Ngtr', 'Connect80Ngtr', 'Connect25Ngtr',
-           'HttpsNgtr', 'HttpNgtr', 'NGTRS']
+__all__ = [
+    'Socks5Ngtr',
+    'Socks4Ngtr',
+    'Connect80Ngtr',
+    'Connect25Ngtr',
+    'HttpsNgtr',
+    'HttpNgtr',
+    'NGTRS',
+]
 
 
 SMTP_READY = 220
@@ -15,10 +21,19 @@ SMTP_READY = 220
 
 def _CONNECT_request(host, port, **kwargs):
     kwargs.setdefault('User-Agent', get_headers()['User-Agent'])
-    kw = {'host': host, 'port': port, 'headers': '\r\n'.join(
-          ('%s: %s' % (k, v) for k, v in kwargs.items()))}
-    req = ('CONNECT {host}:{port} HTTP/1.1\r\nHost: {host}\r\n'
-           '{headers}\r\nConnection: keep-alive\r\n\r\n').format(**kw).encode()
+    kw = {
+        'host': host,
+        'port': port,
+        'headers': '\r\n'.join(('%s: %s' % (k, v) for k, v in kwargs.items())),
+    }
+    req = (
+        (
+            'CONNECT {host}:{port} HTTP/1.1\r\nHost: {host}\r\n'
+            '{headers}\r\nConnection: keep-alive\r\n\r\n'
+        )
+        .format(**kw)
+        .encode()
+    )
     return req
 
 
@@ -46,7 +61,7 @@ class Socks5Ngtr(BaseNegotiator):
         await self._proxy.send(struct.pack('3B', 5, 1, 0))
         resp = await self._proxy.recv(2)
 
-        if resp[0] == 0x05 and resp[1] == 0xff:
+        if resp[0] == 0x05 and resp[1] == 0xFF:
             self._proxy.log('Failed (auth is required)', err=BadResponseError)
             raise BadResponseError
         elif resp[0] != 0x05 or resp[1] != 0x00:
@@ -96,8 +111,9 @@ class Connect80Ngtr(BaseNegotiator):
         resp = await self._proxy.recv(head_only=True)
         code = get_status_code(resp)
         if code != 200:
-            self._proxy.log('Connect: failed. HTTP status: %s' % code,
-                            err=BadStatusError)
+            self._proxy.log(
+                'Connect: failed. HTTP status: %s' % code, err=BadStatusError
+            )
             raise BadStatusError
 
 
@@ -111,15 +127,17 @@ class Connect25Ngtr(BaseNegotiator):
         resp = await self._proxy.recv(head_only=True)
         code = get_status_code(resp)
         if code != 200:
-            self._proxy.log('Connect: failed. HTTP status: %s' % code,
-                            err=BadStatusError)
+            self._proxy.log(
+                'Connect: failed. HTTP status: %s' % code, err=BadStatusError
+            )
             raise BadStatusError
 
         resp = await self._proxy.recv(length=3)
         code = get_status_code(resp, start=0, stop=3)
         if code != SMTP_READY:
-            self._proxy.log('Failed (invalid data): %s' % code,
-                            err=BadStatusError)
+            self._proxy.log(
+                'Failed (invalid data): %s' % code, err=BadStatusError
+            )
             raise BadStatusError
 
 
@@ -133,8 +151,9 @@ class HttpsNgtr(BaseNegotiator):
         resp = await self._proxy.recv(head_only=True)
         code = get_status_code(resp)
         if code != 200:
-            self._proxy.log('Connect: failed. HTTP status: %s' % code,
-                            err=BadStatusError)
+            self._proxy.log(
+                'Connect: failed. HTTP status: %s' % code, err=BadStatusError
+            )
             raise BadStatusError
         await self._proxy.connect(ssl=True)
 
@@ -150,6 +169,11 @@ class HttpNgtr(BaseNegotiator):
         pass
 
 
-NGTRS = {'HTTP': HttpNgtr, 'HTTPS': HttpsNgtr,
-         'SOCKS4': Socks4Ngtr, 'SOCKS5': Socks5Ngtr,
-         'CONNECT:80': Connect80Ngtr, 'CONNECT:25': Connect25Ngtr}
+NGTRS = {
+    'HTTP': HttpNgtr,
+    'HTTPS': HttpsNgtr,
+    'SOCKS4': Socks4Ngtr,
+    'SOCKS5': Socks5Ngtr,
+    'CONNECT:80': Connect80Ngtr,
+    'CONNECT:25': Connect25Ngtr,
+}

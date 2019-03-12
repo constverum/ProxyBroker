@@ -21,12 +21,17 @@ async def fetch(url, proxy_pool, timeout, loop):
         print('Found proxy:', proxy)
         proxy_url = 'http://%s:%d' % (proxy.host, proxy.port)
         _timeout = aiohttp.ClientTimeout(total=timeout)
-        async with aiohttp.ClientSession(timeout=_timeout, loop=loop) as session,\
-                session.get(url, proxy=proxy_url) as response:
+        async with aiohttp.ClientSession(
+            timeout=_timeout, loop=loop
+        ) as session, session.get(url, proxy=proxy_url) as response:
             resp = await response.text()
-    except (aiohttp.errors.ClientOSError, aiohttp.errors.ClientResponseError,
-            aiohttp.errors.ServerDisconnectedError, asyncio.TimeoutError,
-            NoProxyError) as e:
+    except (
+        aiohttp.errors.ClientOSError,
+        aiohttp.errors.ClientResponseError,
+        aiohttp.errors.ServerDisconnectedError,
+        asyncio.TimeoutError,
+        NoProxyError,
+    ) as e:
         print('Error!\nURL: %s;\nError: %r\n', url, e)
     finally:
         if proxy:
@@ -59,18 +64,30 @@ def main():
     ]
 
     broker = Broker(
-        proxies, timeout=8, max_conn=200, max_tries=3, verify_ssl=False,
-        judges=judges, providers=providers, loop=loop)
+        proxies,
+        timeout=8,
+        max_conn=200,
+        max_tries=3,
+        verify_ssl=False,
+        judges=judges,
+        providers=providers,
+        loop=loop,
+    )
 
-    types = [('HTTP', ('Anonymous', 'High')), ]
+    types = [('HTTP', ('Anonymous', 'High'))]
     countries = ['US', 'UK', 'DE', 'FR']
 
-    urls = ['http://httpbin.org/get', 'http://httpbin.org/redirect/1',
-            'http://httpbin.org/anything', 'http://httpbin.org/status/404']
+    urls = [
+        'http://httpbin.org/get',
+        'http://httpbin.org/redirect/1',
+        'http://httpbin.org/anything',
+        'http://httpbin.org/status/404',
+    ]
 
     tasks = asyncio.gather(
         broker.find(types=types, countries=countries, strict=True, limit=10),
-        get_pages(urls, proxy_pool, loop=loop))
+        get_pages(urls, proxy_pool, loop=loop),
+    )
     loop.run_until_complete(tasks)
 
     # broker.show_stats(verbose=True)

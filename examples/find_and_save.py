@@ -1,6 +1,7 @@
 """Find 10 working HTTP(S) proxies and save them to a file."""
 
 import asyncio
+
 from proxybroker import Broker
 
 
@@ -19,8 +20,10 @@ async def save(proxies, filename):
 def main():
     proxies = asyncio.Queue()
     broker = Broker(proxies)
-    tasks = asyncio.gather(broker.find(types=['HTTP', 'HTTPS'], limit=10),
-                           save(proxies, filename='proxies.txt'))
+    tasks = asyncio.gather(
+        broker.find(types=['HTTP', 'HTTPS'], limit=10),
+        save(proxies, filename='proxies.txt'),
+    )
     loop = asyncio.get_event_loop()
     loop.run_until_complete(tasks)
 
