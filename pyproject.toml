@@ -1,0 +1,35 @@
+[tool.black]
+py36 = true
+line-length = 80
+skip-string-normalization = true
+include = '\.pyi?$'
+exclude = '''
+(
+  /(
+      \.eggs         # exclude a few common directories in the
+    | \.git          # root of the project
+    | build
+    | dist
+  )
+)
+'''
+
+# https://github.com/pytest-dev/pytest/issues/1556
+# https://github.com/pytest-dev/pytest/pull/3686
+# [tool.poetry.plugins.pytest]
+# addopts = --verbose
+# testpaths = tests
+# qt_api = pyqt5
+
+# https://gitlab.com/pycqa/flake8/issues/428
+# https://gitlab.com/pycqa/flake8/merge_requests/245
+# [tool.flake8]
+# max-line-length = 80
+
+# https://github.com/timothycrosley/isort/issues/760
+# [tool.isort]
+# line_length = 80
+# multi_line_output = 3
+# include_trailing_comma = true
+# sections = "FUTURE,STDLIB,THIRDPARTY,FIRSTPARTY,LOCALFOLDER"
+# default_section = "FIRSTPARTY"
