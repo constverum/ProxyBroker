@@ -15,7 +15,8 @@ matrix:
         - virtualenv env -p python3
         - source env/bin/activate
 install:
-  - pip install -r requirements/dev.txt
+  - pip install -U pip wheel setuptools
+  - pip install -U -r requirements/dev.txt
 script: pytest
 deploy:
   provider: pypi
