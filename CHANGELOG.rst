@@ -6,6 +6,12 @@ Change Log
 ---------------------
 
 
+`0.3.2`_ (2018-03-12)
+---------------------
+* Update dependencies and minor fixes
+* Improve formating (by ``black``)
+
+
 `0.3.1`_ (2018-02-22)
 ---------------------
 * Update dependencies and minor fixes
@@ -58,7 +64,7 @@ Change Log
 
 * ``ProxyProvider`` renamed to ``Provider``.
   ``ProxyProvider`` class is deprecated, use ``Provider`` instead.
-* ``Broker`` now accepts a list of providers and judges not only as strings 
+* ``Broker`` now accepts a list of providers and judges not only as strings
   but also objects of classes ``Provider`` and ``Judge``
 * Fixed bug with signal handler on Windows `#4`_
 
@@ -99,7 +105,7 @@ Change Log
 `0.1b1`_ (2015-12-29)
 ---------------------
 
-* Changed the name of a PyProxyChecker on ProxyBroker in 
+* Changed the name of a PyProxyChecker on ProxyBroker in
   connection with the expansion of the concept.
 * Added support of multiple proxy providers.
 * Initial public release on PyPi
@@ -136,4 +142,5 @@ Change Log
 .. _0.2.0: https://github.com/constverum/ProxyBroker/compare/v0.1.4...v0.2.0
 .. _0.3.0: https://github.com/constverum/ProxyBroker/compare/v0.2.0...v0.3.0
 .. _0.3.1: https://github.com/constverum/ProxyBroker/compare/v0.3.0...v0.3.1
-.. _0.4.0: https://github.com/constverum/ProxyBroker/compare/v0.3.1...HEAD
+.. _0.3.2: https://github.com/constverum/ProxyBroker/compare/v0.3.1...v0.3.2
+.. _0.4.0: https://github.com/constverum/ProxyBroker/compare/v0.3.2...HEAD
