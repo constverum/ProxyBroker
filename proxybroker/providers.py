@@ -596,6 +596,17 @@ class Proxylistplus_com(Provider):
         await self._find_on_pages(urls)
 
 
+class Proxylist_download(Provider):
+    domain = 'www.proxy-list.download'
+
+    async def _pipe(self):
+        urls = ['https://www.proxy-list.download/api/v1/get?type=http',
+                'https://www.proxy-list.download/api/v1/get?type=https',
+                'https://www.proxy-list.download/api/v1/get?type=socks4',
+                'https://www.proxy-list.download/api/v1/get?type=socks5']
+        await self._find_on_pages(urls)
+
+
 class ProxyProvider(Provider):
     def __init__(self, *args, **kwargs):
         warnings.warn('`ProxyProvider` is deprecated, use `Provider` instead.',
@@ -653,6 +664,7 @@ PROVIDERS = [
     Freeproxylists_com(),                                                          # noqa; 1338
     Webanetlabs_net(),                                                             # noqa; 5000
     Maxiproxies_com(),                                                             # noqa; 430
+    Proxylist_download(),                                                          # noqa; 35590
     # # Bad...
     # http://www.proxylist.ro/
     # Provider(url='http://proxydb.net/',
