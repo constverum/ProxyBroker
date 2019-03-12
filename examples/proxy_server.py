@@ -6,14 +6,6 @@ import aiohttp
 
 from proxybroker import Broker
 
-
-async def get_pages(urls, proxy_url):
-    tasks = [fetch(url, proxy_url) for url in urls]
-    for task in asyncio.as_completed(tasks):
-        url, content = await task
-        print('Done! url: %s; content: %.100s' % (url, content))
-
-
 async def fetch(url, proxy_url):
     resp = None
     try:
@@ -22,9 +14,16 @@ async def fetch(url, proxy_url):
             resp = await response.json()
     except (aiohttp.errors.ClientOSError, aiohttp.errors.ClientResponseError,
             aiohttp.errors.ServerDisconnectedError) as e:
-        print('Error. url: %s; error: %r' % (url, e))
+        print('Error!\nURL: %s;\nError: %r' % (url, e))
     finally:
         return (url, resp)
+
+
+async def get_pages(urls, proxy_url):
+    tasks = [fetch(url, proxy_url) for url in urls]
+    for task in asyncio.as_completed(tasks):
+        url, content = await task
+        print('%s\nDone!\nURL: %s;\nContent: %s' % ('-' * 20, url, content))
 
 
 def main():
