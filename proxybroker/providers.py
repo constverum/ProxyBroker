@@ -8,8 +8,6 @@ from urllib.parse import unquote, urlparse
 
 import aiohttp
 
-import async_timeout
-
 from .errors import BadStatusError
 from .utils import log, get_headers, IPPattern, IPPortPatternGlobal
 
@@ -125,16 +123,15 @@ class Provider:
     async def _get(self, url, data=None, headers=None, method='GET'):
         page = ''
         try:
-            async with (self._sem_provider),\
-                    async_timeout.timeout(self._timeout, loop=self._loop):
-                async with self._session.request(
-                        method, url, data=data, headers=headers) as resp:
-                    page = await resp.text()
-                    if resp.status != 200:
-                        log.debug(
-                            'url: %s\nheaders: %s\ncookies: %s\npage:\n%s' % (
-                                url, resp.headers, resp.cookies, page))
-                        raise BadStatusError('Status: %s' % resp.status)
+            timeout = aiohttp.ClientTimeout(total=self._timeout)
+            async with self._sem_provider,\
+                    self._session.request(method, url, data=data, headers=headers, timeout=timeout) as resp:
+                page = await resp.text()
+                if resp.status != 200:
+                    log.debug(
+                        'url: %s\nheaders: %s\ncookies: %s\npage:\n%s' % (
+                            url, resp.headers, resp.cookies, page))
+                    raise BadStatusError('Status: %s' % resp.status)
         except (UnicodeDecodeError, BadStatusError, asyncio.TimeoutError,
                 aiohttp.ClientOSError, aiohttp.ClientResponseError,
                 aiohttp.ServerDisconnectedError) as e:

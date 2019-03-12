@@ -7,7 +7,6 @@ from collections import namedtuple
 
 import aiodns
 import aiohttp
-import async_timeout
 import maxminddb
 
 from .errors import ResolveError
@@ -94,11 +93,10 @@ class Resolver:
         """Return real external IP address."""
         while self._ip_hosts:
             try:
-                with async_timeout.timeout(self._timeout, loop=self._loop):
-                    async with \
-                        aiohttp.ClientSession(loop=self._loop) as session,\
-                            session.get(self._pop_random_ip_host()) as resp:
-                        ip = await resp.text()
+                timeout = aiohttp.ClientTimeout(total=self._timeout)
+                async with aiohttp.ClientSession(timeout=timeout, loop=self._loop) as session,\
+                        session.get(self._pop_random_ip_host()) as resp:
+                    ip = await resp.text()
             except asyncio.TimeoutError:
                 pass
             else:

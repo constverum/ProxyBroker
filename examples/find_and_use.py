@@ -9,8 +9,6 @@ from urllib.parse import urlparse
 
 import aiohttp
 
-import async_timeout
-
 from proxybroker import Broker, ProxyPool
 from proxybroker.errors import NoProxyError
 
@@ -27,10 +25,10 @@ async def fetch(url, proxy_pool, timeout, loop):
     try:
         proxy = await proxy_pool.get(scheme=urlparse(url).scheme)
         proxy_url = 'http://%s:%d' % (proxy.host, proxy.port)
-        with async_timeout.timeout(timeout, loop=loop):
-            async with aiohttp.ClientSession(loop=loop) as session:
-                async with session.get(url, proxy=proxy_url) as response:
-                    resp = await response.read()
+        _timeout = aiohttp.ClientTimeout(total=timeout)
+        async with aiohttp.ClientSession(timeout=_timeout, loop=loop) as session,\
+                session.get(url, proxy=proxy_url) as response:
+            resp = await response.text()
     except (aiohttp.errors.ClientOSError, aiohttp.errors.ClientResponseError,
             aiohttp.errors.ServerDisconnectedError, asyncio.TimeoutError,
             NoProxyError) as e:

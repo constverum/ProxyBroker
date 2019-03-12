@@ -17,9 +17,9 @@ async def get_pages(urls, proxy_url):
 async def fetch(url, proxy_url):
     resp = None
     try:
-        async with aiohttp.ClientSession() as session:
-            async with session.get(url, proxy=proxy_url) as response:
-                resp = await response.read()
+        async with aiohttp.ClientSession() as session,\
+                session.get(url, proxy=proxy_url) as response:
+            resp = await response.json()
     except (aiohttp.errors.ClientOSError, aiohttp.errors.ClientResponseError,
             aiohttp.errors.ServerDisconnectedError) as e:
         print('Error. url: %s; error: %r' % (url, e))
