@@ -22,13 +22,20 @@ matrix:
       os: osx
       language: generic
       before_install:
+        - python -m venv env
+        - source env/bin/activate
+    - name: "osx-py3.7"
+      os: osx
+      language: generic
+      before_install:
         - brew update
         - brew upgrade python
-        - virtualenv env -p python3
+        - python -m venv env
         - source env/bin/activate
   allow_failures:
     - name: "3.8-dev"
     - name: "osx-py3.6"
+    - name: "osx-py3.7"
 install:
   - pip install -U pip wheel setuptools
   - pip install -U -r requirements/dev.txt
