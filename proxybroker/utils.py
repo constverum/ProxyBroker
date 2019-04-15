@@ -109,7 +109,7 @@ def parse_headers(headers):
 
 
 def update_geoip_db():
-    print('The update in progress, please waite for a while...')
+    print('The update in progress, please wait for a while...')
     filename = 'GeoLite2-City.tar.gz'
     local_file = os.path.join(DATA_DIR, filename)
     city_db = os.path.join(DATA_DIR, 'GeoLite2-City.mmdb')
