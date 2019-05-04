@@ -707,6 +707,18 @@ PROVIDERS = [
         proto=('HTTP', 'CONNECT:80', 'HTTPS', 'CONNECT:25'),
     ),  # 49
     Provider(
+        url='https://api.proxyscrape.com/?request=getproxies&proxytype=http',
+        proto=('HTTP', 'CONNECT:80', 'HTTPS', 'CONNECT:25'),
+    ), # added by ZerGo0
+    Provider(
+        url='https://api.proxyscrape.com/?request=getproxies&proxytype=socks4',
+        proto=('SOCKS4'),
+    ), # added by ZerGo0
+    Provider(
+        url='https://api.proxyscrape.com/?request=getproxies&proxytype=socks5',
+        proto=('SOCKS5'),
+    ), # added by ZerGo0
+    Provider(
         url='http://ipaddress.com/proxy-list/',
         proto=('HTTP', 'CONNECT:80', 'HTTPS', 'CONNECT:25'),
     ),  # 53
