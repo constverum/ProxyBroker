@@ -156,7 +156,7 @@ class Server:
         self._connections[f] = (client_reader, client_writer)
 
     async def _handle(self, client_reader, client_writer):
-        log.debug(
+        log.info(
             'Accepted connection from %s'
             % (client_writer.get_extra_info('peername'),)
         )
@@ -173,7 +173,7 @@ class Server:
             stime, err = 0, None
             proxy = await self._proxy_pool.get(scheme)
             proto = self._choice_proto(proxy, scheme)
-            log.debug(
+            log.info(
                 'client: %d; attempt: %d; proxy: %s; proto: %s'
                 % (client, attempt, proxy, proto)
             )

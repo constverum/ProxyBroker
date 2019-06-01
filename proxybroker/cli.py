@@ -146,7 +146,7 @@ def add_broker_args(group):
     group.add_argument(
         '--log',
         nargs='?',
-        default=logging.CRITICAL,
+        default=logging.INFO,
         choices=['NOTSET', 'DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'],
         help='Logging level',
     )
@@ -370,6 +370,9 @@ def cli(args=sys.argv[1:]):
         format='%(asctime)s - %(levelname)s - %(name)s - %(message)s',
         datefmt='[%H:%M:%S]',
         level=ns.log,
+        handlers=[
+            logging.StreamHandler()
+        ]
     )
 
     if hasattr(ns, 'anon_lvl') and 'HTTP' in ns.types:
@@ -426,7 +429,6 @@ def cli(args=sys.argv[1:]):
             strict=ns.strict,
             dnsbl=ns.dnsbl,
         )
-        print('Server started at http://%s:%d' % (ns.host, ns.port))
 
     try:
         if tasks:
