@@ -58,14 +58,14 @@ class Checker:
 
     async def check_judges(self):
         # TODO: need refactoring
-        log.debug('Start check judges')
+        log.trace('Start check judges')
         stime = time.time()
         await asyncio.gather(
             *[j.check(real_ext_ip=self._real_ext_ip) for j in self._judges]
         )
 
         self._judges = [j for j in self._judges if j.is_working]
-        log.debug(
+        log.trace(
             '%d judges added. Runtime: %.4f;'
             % (len(self._judges), time.time() - stime)
         )
@@ -105,7 +105,7 @@ class Checker:
                 UserWarning,
             )
         if self._judges:
-            log.debug('Loaded: %d proxy judges' % len(set(self._judges)))
+            log.trace('Loaded: %d proxy judges' % len(set(self._judges)))
         else:
             RuntimeError('Not found judges')
 
@@ -280,7 +280,7 @@ async def _send_test_request(method, proxy, judge):
         raise err
     finally:
         proxy.log('Get: %s' % ('success' if content else 'failed'), err=err)
-        log.debug(
+        log.trace(
             '{h}:{p} [{n}]: ({j}) rv: {rv}, response: {resp}'.format(
                 h=proxy.host,
                 p=proxy.port,

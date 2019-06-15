@@ -262,7 +262,7 @@ class Proxy:
     def log(self, msg, stime=0, err=None):
         ngtr = self.ngtr.name if self.ngtr else 'INFO'
         runtime = time.time() - stime if stime else 0
-        log.debug(
+        log.trace(
             '{h}:{p} [{n}]: {msg}; Runtime: {rt:.2f}'.format(
                 h=self.host, p=self.port, n=ngtr, msg=msg, rt=runtime
             )
@@ -314,7 +314,7 @@ class Proxy:
             err = ProxyConnError(msg)
             raise err
         # except asyncio.CancelledError:
-        #     log.debug('Cancelled in proxy.connect()')
+        #     log.trace('Cancelled in proxy.connect()')
         #     raise ProxyConnError()
         else:
             msg += 'Connection: success'

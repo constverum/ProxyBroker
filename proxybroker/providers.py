@@ -72,14 +72,14 @@ class Provider:
 
         :return: :attr:`.proxies`
         """
-        log.debug('Try to get proxies from %s' % self.domain)
+        log.trace('Try to get proxies from %s' % self.domain)
 
         async with aiohttp.ClientSession(
             headers=get_headers(), cookies=self._cookies, loop=self._loop
         ) as self._session:
             await self._pipe()
 
-        log.debug(
+        log.trace(
             '%d proxies received from %s: %s'
             % (len(self.proxies), self.domain, self.proxies)
         )
@@ -114,7 +114,7 @@ class Provider:
             )
         self.proxies = received
         added = len(self.proxies) - oldcount
-        log.debug(
+        log.trace(
             '%d(%d) proxies added(received) from %s'
             % (added, len(received), url)
         )
@@ -137,7 +137,7 @@ class Provider:
             ) as resp:
                 page = await resp.text()
                 if resp.status != 200:
-                    log.debug(
+                    log.trace(
                         'url: %s\nheaders: %s\ncookies: %s\npage:\n%s'
                         % (url, resp.headers, resp.cookies, page)
                     )
@@ -151,7 +151,7 @@ class Provider:
             aiohttp.ServerDisconnectedError,
         ) as e:
             page = ''
-            log.debug('%s is failed. Error: %r;' % (url, e))
+            log.trace('%s is failed. Error: %r;' % (url, e))
         return page
 
     def find_proxies(self, page):

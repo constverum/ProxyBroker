@@ -293,7 +293,7 @@ class Broker:
         Transform the passed data from [raw string | file-like object | list]
         to set {(host, port), ...}: {('192.168.0.1', '80'), }
         """
-        log.debug('Load proxies from the raw data')
+        log.trace('Load proxies from the raw data')
         if isinstance(data, io.TextIOWrapper):
             data = data.read()
         if isinstance(data, str):
@@ -320,18 +320,18 @@ class Broker:
                 self._all_tasks.extend(tasks)
                 yield tasks
 
-        log.debug('Start grabbing proxies')
+        log.trace('Start grabbing proxies')
         while True:
             for tasks in _get_tasks():
                 for task in asyncio.as_completed(tasks):
                     proxies = await task
                     for proxy in proxies:
                         await self._handle(proxy, check=check)
-            log.debug('Grab cycle is complete')
+            log.trace('Grab cycle is complete')
             if self._server:
-                log.debug('fall asleep for %d seconds' % GRAB_PAUSE)
+                log.trace('fall asleep for %d seconds' % GRAB_PAUSE)
                 await asyncio.sleep(GRAB_PAUSE)
-                log.debug('awaked')
+                log.trace('awaked')
             else:
                 break
         await self._on_check.join()
@@ -384,12 +384,12 @@ class Broker:
                 pass
 
         if self._server and not self._proxies.empty() and self._limit <= 0:
-            log.debug(
+            log.trace(
                 'pause. proxies: %s; limit: %s'
                 % (self._proxies.qsize(), self._limit)
             )
             await self._proxies.join()
-            log.debug('unpause. proxies: %s' % self._proxies.qsize())
+            log.trace('unpause. proxies: %s' % self._proxies.qsize())
 
         await self._on_check.put(None)
         task = asyncio.ensure_future(self._checker.check(proxy))
@@ -397,7 +397,7 @@ class Broker:
         self._all_tasks.append(task)
 
     def _push_to_result(self, proxy):
-        log.debug('push to result: %r' % proxy)
+        log.trace('push to result: %r' % proxy)
         self._proxies.put_nowait(proxy)
         self._update_limit()
 
@@ -415,7 +415,7 @@ class Broker:
         log.info('Stop!')
 
     def _done(self):
-        log.debug('called done')
+        log.trace('called done')
         while self._all_tasks:
             task = self._all_tasks.pop()
             if not task.done():

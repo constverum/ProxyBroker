@@ -103,7 +103,7 @@ class Resolver:
             else:
                 ip = ip.strip()
                 if self.host_is_ip(ip):
-                    log.debug('Real external IP: %s', ip)
+                    log.trace('Real external IP: %s', ip)
                     break
         else:
             raise RuntimeError('Could not get the external IP')
@@ -139,7 +139,7 @@ class Resolver:
             else:
                 self._cached_hosts[host] = hosts[0]['host']
             if logging:
-                log.debug(
+                log.trace(
                     '%s: Host resolved: %s' % (host, self._cached_hosts[host])
                 )
         else:

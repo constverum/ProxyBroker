@@ -61,12 +61,12 @@ class ProxyPool:
             (proxy.error_rate > self._max_error_rate)
             or (proxy.avg_resp_time > self._max_resp_time)
         ):
-            log.debug(
+            log.trace(
                 '%s:%d removed from proxy pool' % (proxy.host, proxy.port)
             )
         else:
             heapq.heappush(self._pool, (proxy.priority, proxy))
-        log.debug('%s:%d stat: %s' % (proxy.host, proxy.port, proxy.stat))
+        log.trace('%s:%d stat: %s' % (proxy.host, proxy.port, proxy.stat))
 
 
 class Server:
@@ -86,7 +86,7 @@ class Server:
         http_allowed_codes=None,
         backlog=100,
         loop=None,
-        **kwargs
+        **kwargs,
     ):
         self.host = host
         self.port = int(port)
@@ -139,11 +139,11 @@ class Server:
         def _on_completion(f):
             reader, writer = self._connections.pop(f)
             writer.close()
-            log.debug('client: %d; closed' % id(client_reader))
+            log.trace('client: %d; closed' % id(client_reader))
             try:
                 exc = f.exception()
             except asyncio.CancelledError:
-                log.debug('CancelledError in server._handle:_on_completion')
+                log.trace('CancelledError in server._handle:_on_completion')
                 exc = None
             if exc:
                 if isinstance(exc, NoProxyError):
@@ -164,7 +164,7 @@ class Server:
         request, headers = await self._parse_request(client_reader)
         scheme = self._identify_scheme(headers)
         client = id(client_reader)
-        log.debug(
+        log.trace(
             'client: %d; request: %s; headers: %s; scheme: %s'
             % (client, request, headers, scheme)
         )
@@ -212,7 +212,7 @@ class Server:
                 ]
                 await asyncio.gather(*stream, loop=self._loop)
             except asyncio.CancelledError:
-                log.debug('Cancelled in server._handle')
+                log.trace('Cancelled in server._handle')
                 break
             except (
                 ProxyTimeoutError,
@@ -223,10 +223,10 @@ class Server:
                 BadStatusError,
                 BadResponseError,
             ) as e:
-                log.debug('client: %d; error: %r' % (client, e))
+                log.trace('client: %d; error: %r' % (client, e))
                 continue
             except ErrorOnStream as e:
-                log.debug(
+                log.trace(
                     'client: %d; error: %r; EOF: %s'
                     % (client, e, client_reader.at_eof())
                 )

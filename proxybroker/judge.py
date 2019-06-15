@@ -86,7 +86,7 @@ class Judge:
             aiohttp.ClientResponseError,
             aiohttp.ServerDisconnectedError,
         ) as e:
-            log.debug('%s is failed. Error: %r;' % (self, e))
+            log.trace('%s is failed. Error: %r;' % (self, e))
             return
 
         page = page.lower()
@@ -97,9 +97,9 @@ class Judge:
             self.is_working = True
             self.available[self.scheme].append(self)
             self.ev[self.scheme].set()
-            log.debug('%s is verified' % self)
+            log.trace('%s is verified' % self)
         else:
-            log.debug(
+            log.trace(
                 (
                     '{j} is failed. HTTP status code: {code}; '
                     'Real IP on page: {ip}; Version: {word}; '
