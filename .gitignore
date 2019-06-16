@@ -7,3 +7,4 @@ __pycache__
 .cache
 build
 dist
+pip-wheel-metadata
