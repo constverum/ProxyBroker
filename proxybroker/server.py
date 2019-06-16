@@ -114,9 +114,11 @@ class Server:
         )
         self._server = self._loop.run_until_complete(srv)
 
+        url, ip = self._server.sockets[0].getsockname()
+
         log.info(
-            'Listening established on {0}'.format(
-                self._server.sockets[0].getsockname()
+            'ProxyBroker established on {}:{}'.format(
+                url, ip
             )
         )
 
