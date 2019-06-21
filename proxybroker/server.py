@@ -86,7 +86,7 @@ class Server:
         http_allowed_codes=None,
         backlog=100,
         loop=None,
-        **kwargs
+        **kwargs,
     ):
         self.host = host
         self.port = int(port)
@@ -116,11 +116,7 @@ class Server:
 
         url, ip = self._server.sockets[0].getsockname()
 
-        log.info(
-            'ProxyBroker established on {}:{}'.format(
-                url, ip
-            )
-        )
+        log.info('Server established on {}:{}.'.format(url, ip))
 
     def stop(self):
         if not self._server:
@@ -158,26 +154,33 @@ class Server:
         self._connections[f] = (client_reader, client_writer)
 
     async def _handle(self, client_reader, client_writer):
-        log.debug(
-            'Accepted connection from %s'
-            % (client_writer.get_extra_info('peername'),)
-        )
+        client, client_ip = client_writer.get_extra_info('peername')
+
+        log.info('Accepted connection from {}:{}'.format(client, client_ip))
 
         request, headers = await self._parse_request(client_reader)
         scheme = self._identify_scheme(headers)
-        client = id(client_reader)
+
         log.debug(
-            'client: %d; request: %s; headers: %s; scheme: %s'
-            % (client, request, headers, scheme)
+            'client: {}:{}; request: {}; headers: {}; scheme: {}'.format(
+                client, client_ip, request, headers, scheme
+            )
         )
 
         for attempt in range(self._max_tries):
             stime, err = 0, None
             proxy = await self._proxy_pool.get(scheme)
             proto = self._choice_proto(proxy, scheme)
-            log.debug(
-                'client: %d; attempt: %d; proxy: %s; proto: %s'
-                % (client, attempt, proxy, proto)
+            log.info(
+                'Client {}:{} is attempting to reach "{}" on attempt {}, with protocal {} and proxy {}:{}.'.format(
+                    client,
+                    client_ip,
+                    headers['Host'],
+                    attempt,
+                    proto,
+                    proxy.host,
+                    proxy.port,
+                )
             )
             try:
                 await proxy.connect()
@@ -225,12 +228,13 @@ class Server:
                 BadStatusError,
                 BadResponseError,
             ) as e:
-                log.debug('client: %d; error: %r' % (client, e))
+                log.info('client: %d; error: %r' % (client, e))
                 continue
             except ErrorOnStream as e:
                 log.debug(
-                    'client: %d; error: %r; EOF: %s'
-                    % (client, e, client_reader.at_eof())
+                    "client: {}; error: {}; EOF: {}".format(
+                        client, e, client_reader.at_eof()
+                    )
                 )
                 for task in stream:
                     if not task.done():
@@ -241,6 +245,8 @@ class Server:
                     # returned, so do not consider this error of proxy
                     break
                 err = e
+
+                # IN HERE
                 if scheme == 'HTTPS':  # SSL Handshake probably failed
                     break
             else:
