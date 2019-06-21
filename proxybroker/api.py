@@ -412,7 +412,7 @@ class Broker:
         if self._server:
             self._server.stop()
             self._server = None
-        log.info('Stop!')
+        log.debug('Stop!')
 
     def _done(self):
         log.debug('called done')
@@ -421,7 +421,7 @@ class Broker:
             if not task.done():
                 task.cancel()
         self._push_to_result(None)
-        log.info('Done! Total found proxies: %d' % len(self.unique_proxies))
+        log.debug('Done! Total found proxies: %d' % len(self.unique_proxies))
 
     def show_stats(self, verbose=False, **kwargs):
         """Show statistics on the found proxies.
