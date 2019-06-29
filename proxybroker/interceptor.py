@@ -65,7 +65,7 @@ class EmulatedClient(object):
         http_allowed_codes,
         proxy_pool,
         resolver,
-        connect_statement=None,
+        using_ssl,
     ):
         # Setting the class variables.
         self._loop = loop
@@ -75,14 +75,14 @@ class EmulatedClient(object):
         self._http_allowed_codes = http_allowed_codes
         self._proxy_pool = proxy_pool
         self._resolver = resolver
-        self._connect_statement = connect_statement
+        self._using_ssl = using_ssl
 
         # Last response gathered to return back to client.
         self._last_resp = None
 
     async def connect(self, data):
 
-        scheme = 'HTTPS' if self._connect_statement else 'HTTP'
+        scheme = 'HTTPS' if self._using_ssl else 'HTTP'
 
         for attempt in range(self._max_tries):
             # Setting intial variables for proxy filtering (if needed).
@@ -98,7 +98,7 @@ class EmulatedClient(object):
             uri = http_parser.get_wsgi_environ()['RAW_URI']
 
             # Sets the proper URL client is trying to reach.
-            if self._connect_statement:
+            if self._using_ssl:
                 url = f"https://{host}:{uri}"
             else:
                 url = uri
@@ -151,19 +151,28 @@ class EmulatedClient(object):
         return self._last_resp
 
     async def stream(self, proxy, data, url):
-
         try:
+            # Retrieves the destination server data.
             async with aiohttp.ClientSession() as session:
                 async with session.get(
                     url, proxy=f"http://{proxy.host}:{proxy.port}", ssl=False
                 ) as response:
                     status = response.status
-                    resp = await response.text()
+                    reason = response.reason
+                    headers = response.headers
+                    response = await response.read()
 
+            # Creating the response.
+            resp = f"HTTP/1.1 {status} {reason}\r\n".encode("latin-1")
+            for header in headers:
+                resp += f"{header}: {headers[header]}\r\n".encode("latin-1")
+            resp += b"\r\n" + response
+
+            # Does checks, and returns response.
             if resp and status in self._http_allowed_codes:
-                self._last_resp = resp.encode()
-                return resp.encode()
+                return resp
             else:
+                self._last_resp = resp
                 raise ErrorOnStream("Response is invalid.")
         except (
             ProxyTimeoutError,
@@ -211,7 +220,7 @@ class HTTP(asyncio.Protocol):
         http_allowed_codes,
         proxy_pool,
         resolver,
-        connect_statement=None,
+        using_tls,
     ):
 
         # Setting the class variables.
@@ -222,7 +231,7 @@ class HTTP(asyncio.Protocol):
         self._http_allowed_codes = http_allowed_codes
         self._proxy_pool = proxy_pool
         self._resolver = resolver
-        self._connect_statement = connect_statement
+        self._using_ssl = using_tls
 
         # Initiates the HttpParser object.
         self.http_parser = HttpParser()
@@ -239,9 +248,6 @@ class HTTP(asyncio.Protocol):
 
         self._loop.create_task(self.reply(data))
 
-    def data_received_connect(self, data):
-        self._connect_statement = data
-
     async def reply(self, data):
         """ Receives reply from destination server through the Emulated Client. """
 
@@ -254,14 +260,11 @@ class HTTP(asyncio.Protocol):
             http_allowed_codes=self._http_allowed_codes,
             proxy_pool=self._proxy_pool,
             resolver=self._resolver,
-            connect_statement=self._connect_statement,
+            using_ssl=self._using_ssl,
         )
 
         # Gathering the reply from the emulated client.
         reply = (await asyncio.gather(self.emulated_client.connect(data)))[0]
-
-        # Replies to the client that the HTTP portion of the server has connected.
-        self.transport.write(b"HTTP/1.1 200 OK\r\n\r\n")
 
         # Writing back to the client.
         self.transport.write(reply)
@@ -310,7 +313,9 @@ class Interceptor(asyncio.Protocol):
         self._http_allowed_codes = http_allowed_codes
         self._proxy_pool = proxy_pool
         self._resolver = resolver
-        self._connect_statement = None
+
+        # Creates the TLS flag.
+        self.using_tls = False
 
         # Initiates the HttpParser object.
         self.http_parser = HttpParser()
@@ -324,14 +329,11 @@ class Interceptor(asyncio.Protocol):
             http_allowed_codes=self._http_allowed_codes,
             proxy_pool=self._proxy_pool,
             resolver=self._resolver,
-            connect_statement=self._connect_statement,
+            using_tls=self.using_tls,
         )
 
         # We only initialize our HTTPS_Protocol when we get a CONNECT statement.
         self.HTTPS_Protocol = None
-
-        # Creates the TLS flag.
-        self.using_tls = False
 
     def connection_made(self, transport):
         """ Called when client makes initial connection to the server. Receives a transporting object from the client. """
@@ -372,8 +374,8 @@ class Interceptor(asyncio.Protocol):
                     "Generating SSL certificate to communicate with client."
                 )
 
-            # Saves the CONNECT response for later use.
-            self._connect_statement = data
+            # Sets TLS flag as on -- after exiting this if statement, the data will be encrypted.
+            self.using_tls = True
 
             # Loading the protocol certificates.
             ssl_context = ssl.SSLContext(ssl.PROTOCOL_SSLv23)
@@ -382,7 +384,16 @@ class Interceptor(asyncio.Protocol):
             # Initialize the HTTPS_Protocol.
             self.HTTPS_Protocol = asyncio.sslproto.SSLProtocol(
                 loop=self._loop,
-                app_protocol=self.HTTP_Protocol,
+                app_protocol=HTTP(
+                    loop=self._loop,
+                    timeout=self._timeout,
+                    max_tries=self._max_tries,
+                    prefer_connect=self._prefer_connect,
+                    http_allowed_codes=self._http_allowed_codes,
+                    proxy_pool=self._proxy_pool,
+                    resolver=self._resolver,
+                    using_tls=self.using_tls,
+                ),
                 sslcontext=ssl_context,
                 waiter=None,
                 server_side=True,
@@ -392,12 +403,8 @@ class Interceptor(asyncio.Protocol):
             self.transport.write(b"HTTP/1.1 200 OK\r\n\r\n")
             # Sending initial CONNECT request over for handshake.
             self.HTTPS_Protocol.data_received(data)
-            # Sending initial CONNECT request over to store it.
-            self.HTTPS_Protocol._app_protocol.data_received_connect(data)
             # Does a TLS/SSL handshake with the client.
             self.HTTPS_Protocol.connection_made(self.transport)
-            # Sets TLS flag as on -- after exiting this if statement, the data will be encrypted.
-            self.using_tls = True
         elif self.using_tls:
             # With HTTPS protocol enabled, receives encrypted data from the client (gets decrypted by data_received).
             self.HTTPS_Protocol.data_received(data)
