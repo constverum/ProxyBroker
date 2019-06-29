@@ -9,3 +9,4 @@ build
 dist
 pip-wheel-metadata
 .ropeproject
+.python-version
