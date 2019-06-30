@@ -84,26 +84,32 @@ class EmulatedClient(object):
 
         scheme = 'HTTPS' if self._using_ssl else 'HTTP'
 
+        # Parses the incoming data.
+        http_parser = HttpParser()
+        http_parser.execute(data, len(data))
+        host = http_parser.get_wsgi_environ()['HTTP_HOST']
+        uri = http_parser.get_wsgi_environ()['RAW_URI']
+
+        # Sets the proper URL client is trying to reach.
+        if self._using_ssl:
+            url = f"https://{host}:{uri}"
+        else:
+            url = uri
+
+        # Skips first action for depedencies to load with async.
+        await asyncio.sleep(1)
+
+        # Begins attempts.
         for attempt in range(self._max_tries):
+
             # Setting intial variables for proxy filtering (if needed).
             stime, err = 0, None
 
             # Gets a proxy from the Proxy pool.
             proxy = await self._proxy_pool.get(scheme)
 
-            # Parses the incoming data.
-            http_parser = HttpParser()
-            http_parser.execute(data, len(data))
-            host = http_parser.get_wsgi_environ()['HTTP_HOST']
-            uri = http_parser.get_wsgi_environ()['RAW_URI']
-
-            # Sets the proper URL client is trying to reach.
-            if self._using_ssl:
-                url = f"https://{host}:{uri}"
-            else:
-                url = uri
-
             try:
+                # Connects to the proxy.
                 await proxy.connect()
 
                 log.info(
@@ -117,69 +123,86 @@ class EmulatedClient(object):
                 # If the response exists, return it.
                 if resp:
                     log.info(
-                        f"Successfully reached host {host}. Returning data to client."
+                        f"Successfully reached host {host}. Returning data to client.\n"
                     )
                     return resp.result()
 
                 # Saves the proxy time.
                 stime = time.time()
 
-            except asyncio.TimeoutError:
-                log.debug(
+            except asyncio.TimeoutError as e:
+                log.info(
                     f"Timeout error with proxy {proxy.host}:{proxy.port}. Flagging from pool."
                 )
+                err = e
                 continue
             except ErrorOnStream as e:
-                if "Proxy error" in e:
-                    log.debug(
+                if "Proxy error" in str(e):
+                    log.info(
                         f"Issue with proxy {proxy.host}:{proxy.port}. Flagging from pool."
                     )
+                elif "Response is invalid" in str(e):
+                    log.info(
+                        "Received a response that is not within the http_allowed_codes."
+                    )
+                elif "Unknown error" in str(e):
+                    log.info("An unknown error has occured in the stream.")
 
-                if "Response error" in e:
-                    log.debug(f"Issue with getting the response.")
+                err = e
                 continue
-            except Exception:
+            except Exception as e:
                 # Prints the traceback if the exception is not caught.
-                traceback.print_exc()
+                err = e
                 continue
             finally:
                 proxy.log(data.decode(), stime, err=err)
                 proxy.close()
                 self._proxy_pool.put(proxy)
 
+        log.info("ProxyBroker was unable to reach the destination server.")
+
         # Here if all the attempts were exhausted without success.
-        return self._last_resp
+        if self._last_resp:
+            return self._last_resp
+        else:
+            return b"HTTP/1.1 500 Internal Server Error\r\n\r\nProxyBroker was unable to reach the destination server."
 
     async def stream(self, proxy, data, url):
         try:
+
+            resp = b""
+
             # Retrieves the destination server data.
             async with aiohttp.ClientSession() as session:
                 async with session.get(
-                    url, proxy=f"http://{proxy.host}:{proxy.port}", ssl=False
+                    url,
+                    proxy=f"http://{proxy.host}:{proxy.port}",
+                    ssl=False,
+                    timeout=self._timeout,
                 ) as response:
                     status = response.status
                     reason = response.reason
-                    headers = response.headers
                     response = await response.read()
 
             # Creating the response.
             resp = f"HTTP/1.1 {status} {reason}\r\n".encode("latin-1")
-            for header in headers:
-                resp += f"{header}: {headers[header]}\r\n".encode("latin-1")
+
+            # If headers are intended to be sent, you can uncomment this.
+            # for header in headers:
+            # resp += f"{header}: {headers[header]}\r\n".encode("latin-1")
+
             resp += b"\r\n" + response
 
             # Does checks, and returns response.
             if resp and status in self._http_allowed_codes:
                 return resp
-            else:
-                self._last_resp = resp
-                raise ErrorOnStream("Response is invalid.")
         except (
             ProxyTimeoutError,
             ProxyConnError,
             ProxyRecvError,
             ProxySendError,
             ProxyEmptyRecvError,
+            asyncio.CancelledError,
         ) as e:
             raise ErrorOnStream(f"Proxy error. {e}")
         except (
@@ -190,6 +213,11 @@ class EmulatedClient(object):
             BadResponseError,
         ) as e:
             raise ErrorOnStream(f"Response error. {e}")
+        except Exception:
+            raise ErrorOnStream("Unknown error.")
+
+        # If none of the exceptions are caught, its probably an invalid request.
+        raise ErrorOnStream("Request is invalid.")
 
     def check_proxy_protocol(self, proxy, scheme):
         if scheme == 'HTTP':
