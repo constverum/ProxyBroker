@@ -123,7 +123,7 @@ class EmulatedClient(object):
                 # If the response exists, return it.
                 if resp:
                     log.info(
-                        f"Successfully reached host {host}. Returning data to client.\n"
+                        f"Successfully reached host {host} with proxy {proxy.host}{proxy.port}. Returning data to client."
                     )
                     return resp.result()
 
@@ -134,7 +134,7 @@ class EmulatedClient(object):
                 log.info(
                     f"Timeout error with proxy {proxy.host}:{proxy.port}. Flagging from pool."
                 )
-                err = e
+                err = ErrorOnStream("asyncio_timeout")
                 continue
             except ErrorOnStream as e:
                 if "Proxy error" in str(e):
@@ -152,14 +152,16 @@ class EmulatedClient(object):
                 continue
             except Exception as e:
                 # Prints the traceback if the exception is not caught.
-                err = e
+                err = ErrorOnStream("unknown")
                 continue
             finally:
                 proxy.log(data.decode(), stime, err=err)
                 proxy.close()
                 self._proxy_pool.put(proxy)
 
-        log.info("ProxyBroker was unable to reach the destination server.")
+        log.info(
+            f"ProxyBroker was unable to reach the destination server, proxy_pool size {len(self._proxy_pool._pool)}."
+        )
 
         # Here if all the attempts were exhausted without success.
         if self._last_resp:
