@@ -105,6 +105,7 @@ class Server(asyncio.Protocol):
             ),
             host=self.host,
             port=self.port,
+            backlog=self._backlog,
         )
 
         # Prints information about the server.
