@@ -15,7 +15,13 @@ from .errors import BadStatusLine
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DATA_DIR = os.path.join(BASE_DIR, 'data')
-log = logging.getLogger(__package__)
+logging.basicConfig(
+    format='%(message)s',
+    datefmt='[%H:%M:%S]',
+    level='INFO',
+    handlers=[logging.StreamHandler()],
+)
+log = logging
 
 IPPattern = re.compile(
     r'(?:(?:25[0-5]|2[0-4]\d|[01]?\d\d?)\.){3}(?:25[0-5]|2[0-4]\d|[01]?\d\d?)'

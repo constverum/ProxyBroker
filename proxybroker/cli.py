@@ -426,8 +426,7 @@ def cli(args=sys.argv[1:]):
             strict=ns.strict,
             dnsbl=ns.dnsbl,
         )
-        print('Server started at http://%s:%d' % (ns.host, ns.port))
-
+        
     try:
         if tasks:
             loop.run_until_complete(asyncio.gather(*tasks, loop=loop))
