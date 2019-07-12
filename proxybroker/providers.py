@@ -1,4 +1,5 @@
 import asyncio
+import os
 import re
 import warnings
 from base64 import b64decode
@@ -79,10 +80,7 @@ class Provider:
         ) as self._session:
             await self._pipe()
 
-        log.debug(
-            '%d proxies received from %s: %s'
-            % (len(self.proxies), self.domain, self.proxies)
-        )
+        log.info(f'{len(self.proxies)} proxies received from {self.domain}')
         return self.proxies
 
     async def _pipe(self):
@@ -103,6 +101,8 @@ class Provider:
 
     async def _find_on_page(self, url, data=None, headers=None, method='GET'):
         page = await self.get(url, data=data, headers=headers, method=method)
+        if not page:
+            return
         oldcount = len(self.proxies)
         try:
             received = self.find_proxies(page)
@@ -112,9 +112,12 @@ class Provider:
                 'Error when executing find_proxies.'
                 'Domain: %s; Error: %r' % (self.domain, e)
             )
+        if not received:
+            log.error(f'Got 0 proxies from {url}')
+            return
         self.proxies = received
         added = len(self.proxies) - oldcount
-        log.debug(
+        log.info(
             '%d(%d) proxies added(received) from %s'
             % (added, len(received), url)
         )
@@ -151,7 +154,7 @@ class Provider:
             aiohttp.ServerDisconnectedError,
         ) as e:
             page = ''
-            log.debug('%s is failed. Error: %r;' % (url, e))
+            log.info('%s is failed. Error: %r;' % (url, e))
         return page
 
     def find_proxies(self, page):
@@ -213,6 +216,8 @@ class Webanetlabs_net(Provider):
     async def _pipe(self):
         exp = r'''href\s*=\s*['"]([^'"]*proxylist_at_[^'"]*)['"]'''
         page = await self.get('https://webanetlabs.net/publ/24')
+        if not page:
+            return
         urls = [
             'https://webanetlabs.net%s' % path for path in re.findall(exp, page)
         ]
@@ -225,6 +230,8 @@ class Checkerproxy_net(Provider):
     async def _pipe(self):
         exp = r'''href\s*=\s*['"](/archive/\d{4}-\d{2}-\d{2})['"]'''
         page = await self.get('https://checkerproxy.net/')
+        if not page:
+            return
         urls = [
             'https://checkerproxy.net/api%s' % path
             for path in re.findall(exp, page)
@@ -244,6 +251,8 @@ class Proxz_com(Provider):
         )  # noqa
         url = 'http://www.proxz.com/proxy_list_high_anonymous_0.html'
         page = await self.get(url)
+        if not page:
+            return
         urls = [
             'http://www.proxz.com/%s' % path for path in re.findall(exp, page)
         ]
@@ -264,6 +273,8 @@ class Proxy_list_org(Provider):
         exp = r'''href\s*=\s*['"]\./([^'"]?index\.php\?p=\d+[^'"]*)['"]'''
         url = 'http://proxy-list.org/english/index.php?p=1'
         page = await self.get(url)
+        if not page:
+            return
         urls = [
             'http://proxy-list.org/english/%s' % path
             for path in re.findall(exp, page)
@@ -306,6 +317,8 @@ class Maxiproxies_com(Provider):
     async def _pipe(self):
         exp = r'''<a href\s*=\s*['"]([^'"]*example[^'"#]*)['"]>'''
         page = await self.get('http://maxiproxies.com/category/proxy-lists/')
+        if not page:
+            return
         urls = re.findall(exp, page)
         await self._find_on_pages(urls)
 
@@ -316,6 +329,8 @@ class _50kproxies_com(Provider):
     async def _pipe(self):
         exp = r'''<a href\s*=\s*['"]([^'"]*-proxy-list-[^'"#]*)['"]>'''
         page = await self.get('http://50kproxies.com/category/proxy-list/')
+        if not page:
+            return
         urls = re.findall(exp, page)
         await self._find_on_pages(urls)
 
@@ -326,6 +341,8 @@ class Proxylist_me(Provider):
     async def _pipe(self):
         exp = r'''href\s*=\s*['"][^'"]*/?page=(\d+)['"]'''
         page = await self.get('https://proxylist.me/')
+        if not page:
+            return
         lastId = max([int(n) for n in re.findall(exp, page)])
         urls = ['https://proxylist.me/?page=%d' % n for n in range(lastId)]
         await self._find_on_pages(urls)
@@ -503,6 +520,8 @@ class Proxynova_com(Provider):
     async def _pipe(self):
         expCountries = r'"([a-z]{2})"'
         page = await self.get('https://www.proxynova.com/proxy-server-list/')
+        if not page:
+            return
         tpl = 'https://www.proxynova.com/proxy-server-list/country-%s/'
         urls = [
             tpl % isoCode
@@ -548,6 +567,8 @@ class Spys_ru(Provider):
         expSession = r"'([a-z0-9]{32})'"
         url = 'http://spys.one/proxies/'
         page = await self.get(url)
+        if not page:
+            return
         sessionId = re.findall(expSession, page)[0]
         data = {
             'xf0': sessionId,  # session id
@@ -574,6 +595,8 @@ class My_proxy_com(Provider):
         exp = r'''href\s*=\s*['"]([^'"]?free-[^'"]*)['"]'''
         url = 'https://www.my-proxy.com/free-proxy-list.html'
         page = await self.get(url)
+        if not page:
+            return
         urls = [
             'https://www.my-proxy.com/%s' % path
             for path in re.findall(exp, page)
@@ -731,9 +754,9 @@ PROVIDERS = [
         proto=('HTTP', 'CONNECT:80', 'HTTPS', 'CONNECT:25'),
     ),  # 200
     Provider(
-        url='http://fineproxy.org/eng/fresh-proxies/',
+        url='https://t.me/s/proxiesfine',
         proto=('HTTP', 'CONNECT:80', 'HTTPS', 'CONNECT:25'),
-    ),  # 5500
+    ),  # 4200
     Provider(url='https://socks-proxy.net/', proto=('SOCKS4', 'SOCKS5')),  # 80
     Provider(
         url='http://www.httptunnel.ge/ProxyListForFree.aspx',
