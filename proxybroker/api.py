@@ -327,7 +327,7 @@ class Broker:
                     proxies = await task
                     for proxy in proxies:
                         await self._handle(proxy, check=check)
-            log.debug('Grab cycle is complete')
+            log.info('Grab cycle is complete')
             if self._server:
                 log.debug('fall asleep for %d seconds' % GRAB_PAUSE)
                 await asyncio.sleep(GRAB_PAUSE)
