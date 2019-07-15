@@ -171,7 +171,7 @@ class Freeproxylists_com(Provider):
     async def _pipe(self):
         exp = r'''href\s*=\s*['"](?P<t>[^'"]*)/(?P<uts>\d{10})[^'"]*['"]'''
         urls = [
-            'http://www.freeproxylists.com/socks.html',
+            # 'http://www.freeproxylists.com/socks.html',
             'http://www.freeproxylists.com/elite.html',
             'http://www.freeproxylists.com/anonymous.html',
         ]
@@ -289,7 +289,7 @@ class Aliveproxy_com(Provider):
 
     async def _pipe(self):
         paths = [
-            'socks5-list',
+            # 'socks5-list',
             'high-anonymity-proxy-list',
             'anonymous-proxy-list',
             'fastest-proxies',
@@ -693,7 +693,7 @@ class Proxylistplus_com(Provider):
     domain = 'list.proxylistplus.com'
 
     async def _pipe(self):
-        names = ['Fresh-HTTP-Proxy', 'SSL', 'Socks']
+        names = ['Fresh-HTTP-Proxy'] # , 'SSL', 'Socks']
         urls = [
             'http://list.proxylistplus.com/%s-List-%d' % (i, n)
             for i in names
@@ -709,8 +709,8 @@ class Proxylist_download(Provider):
         urls = [
             'https://www.proxy-list.download/api/v1/get?type=http',
             'https://www.proxy-list.download/api/v1/get?type=https',
-            'https://www.proxy-list.download/api/v1/get?type=socks4',
-            'https://www.proxy-list.download/api/v1/get?type=socks5',
+            # 'https://www.proxy-list.download/api/v1/get?type=socks4',
+            # 'https://www.proxy-list.download/api/v1/get?type=socks5',
         ]
         await self._find_on_pages(urls)
 
@@ -757,7 +757,7 @@ PROVIDERS = [
         url='https://t.me/s/proxiesfine',
         proto=('HTTP', 'CONNECT:80', 'HTTPS', 'CONNECT:25'),
     ),  # 4200
-    Provider(url='https://socks-proxy.net/', proto=('SOCKS4', 'SOCKS5')),  # 80
+    # Provider(url='https://socks-proxy.net/', proto=('SOCKS4', 'SOCKS5')),  # 80
     Provider(
         url='http://www.httptunnel.ge/ProxyListForFree.aspx',
         proto=('HTTP', 'CONNECT:80', 'HTTPS', 'CONNECT:25'),
@@ -805,12 +805,12 @@ PROVIDERS = [
     Blogspot_com(
         proto=('HTTP', 'CONNECT:80', 'HTTPS', 'CONNECT:25')
     ),  # noqa; 24800
-    Gatherproxy_com_socks(proto=('SOCKS4', 'SOCKS5')),  # noqa; 30
-    Blogspot_com_socks(proto=('SOCKS4', 'SOCKS5')),  # noqa; 1486
-    Tools_rosinstrument_com(
-        proto=('HTTP', 'CONNECT:80', 'HTTPS', 'CONNECT:25')
-    ),  # noqa; 4000
-    Tools_rosinstrument_com_socks(proto=('SOCKS4', 'SOCKS5')),  # noqa; 1800
+    # Gatherproxy_com_socks(proto=('SOCKS4', 'SOCKS5')),  # noqa; 30
+    # Blogspot_com_socks(proto=('SOCKS4', 'SOCKS5')),  # noqa; 1486
+    # Tools_rosinstrument_com(
+    #     proto=('HTTP', 'CONNECT:80', 'HTTPS', 'CONNECT:25')
+    # ),  # noqa; 4000
+    # Tools_rosinstrument_com_socks(proto=('SOCKS4', 'SOCKS5')),  # noqa; 1800
     My_proxy_com(max_conn=2),  # noqa; 1000
     Checkerproxy_net(),  # noqa; 60000
     Aliveproxy_com(),  # noqa; 210
