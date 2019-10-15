@@ -326,8 +326,11 @@ def add_help_arg(group):
 @contextmanager
 def outformat(outfile, format):
     is_json = format == 'json'
+    is_proxychains = format == 'proxychains'
     if is_json:
         outfile.write('[\n')
+    if is_proxychains:
+        outfile.write('[ProxyList]\n')
     try:
         yield
     finally:
@@ -338,6 +341,7 @@ def outformat(outfile, format):
 async def handle(proxies, outfile, format):
     with outformat(outfile, format):
         is_json = format == 'json'
+        is_proxychains = format == 'proxychains'
         is_first = True
         while True:
             proxy = await proxies.get()
@@ -346,6 +350,8 @@ async def handle(proxies, outfile, format):
 
             if is_json:
                 line = '%s' % json.dumps(proxy.as_json())
+            if is_proxychains:
+                line = '%s\n' % proxy.as_proxychains()
             else:
                 line = '%r\n' % proxy
 
@@ -440,3 +446,6 @@ def cli(args=sys.argv[1:]):
     finally:
         loop.stop()
         loop.close()
+
+if __name__ == "__main__":
+    cli()
