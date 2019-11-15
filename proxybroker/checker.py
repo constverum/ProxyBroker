@@ -1,23 +1,41 @@
 import asyncio
 import time
-import zlib
 import warnings
+import zlib
 
 from .errors import (
-    BadStatusError, BadResponseError, ProxyEmptyRecvError, ProxyConnError,
-    ProxyTimeoutError, ProxyRecvError, ProxySendError, ResolveError)
+    BadResponseError,
+    BadStatusError,
+    ProxyConnError,
+    ProxyEmptyRecvError,
+    ProxyRecvError,
+    ProxySendError,
+    ProxyTimeoutError,
+    ResolveError,
+)
 from .judge import Judge, get_judges
-from .utils import log, get_headers, get_all_ip, get_status_code, parse_headers
-from .resolver import Resolver
 from .negotiators import NGTRS
 from requests.auth import _basic_auth_str
+from .resolver import Resolver
+from .utils import get_all_ip, get_headers, get_status_code, log, parse_headers
+
 
 class Checker:
     """Proxy checker."""
 
-    def __init__(self, judges, max_tries=3, timeout=8, verify_ssl=False,
-                 strict=False, dnsbl=None, real_ext_ip=None, types=None,
-                 post=False, loop=None):
+    def __init__(
+        self,
+        judges,
+        max_tries=3,
+        timeout=8,
+        verify_ssl=False,
+        strict=False,
+        dnsbl=None,
+        real_ext_ip=None,
+        types=None,
+        post=False,
+        loop=None,
+    ):
         Judge.clear()
         self._judges = get_judges(judges, timeout, verify_ssl)
         self._method = 'POST' if post else 'GET'
@@ -30,9 +48,12 @@ class Checker:
         self._resolver = Resolver(loop=self._loop)
 
         self._req_http_proto = not types or bool(
-            ('HTTP', 'CONNECT:80', 'SOCKS4', 'SOCKS5') & types.keys())
+            ('HTTP', 'CONNECT:80', 'SOCKS4', 'SOCKS5') & types.keys()
+        )
         self._req_https_proto = not types or bool(('HTTPS',) & types.keys())
-        self._req_smtp_proto = not types or bool(('CONNECT:25',) & types.keys())  # noqa
+        self._req_smtp_proto = not types or bool(
+            ('CONNECT:25',) & types.keys()
+        )  # noqa
 
         self._ngtrs = {proto for proto in types or NGTRS}
 
@@ -40,20 +61,22 @@ class Checker:
         # TODO: need refactoring
         log.debug('Start check judges')
         stime = time.time()
-        await asyncio.gather(*[j.check(real_ext_ip=self._real_ext_ip)
-                               for j in self._judges])
+        await asyncio.gather(
+            *[j.check(real_ext_ip=self._real_ext_ip) for j in self._judges]
+        )
 
         self._judges = [j for j in self._judges if j.is_working]
-        log.debug('%d judges added. Runtime: %.4f;' % (
-            len(self._judges), time.time() - stime))
+        log.debug(
+            '%d judges added. Runtime: %.4f;'
+            % (len(self._judges), time.time() - stime)
+        )
 
         nojudges = []
         disable_protocols = []
 
         if len(Judge.available['HTTP']) == 0:
             nojudges.append('HTTP')
-            disable_protocols.extend(
-                ['HTTP', 'CONNECT:80', 'SOCKS4', 'SOCKS5'])
+            disable_protocols.extend(['HTTP', 'CONNECT:80', 'SOCKS4', 'SOCKS5'])
             self._req_http_proto = False
             # for coroutines, which is already waiting
             Judge.ev['HTTP'].set()
@@ -75,10 +98,13 @@ class Checker:
                 self._ngtrs.remove(proto)
 
         if nojudges:
-            warnings.warn('Not found judges for the {nojudges} protocol.\n'
-                          'Checking proxy on protocols {disp} is disabled.'
-                          .format(nojudges=nojudges, disp=disable_protocols),
-                          UserWarning)
+            warnings.warn(
+                'Not found judges for the {nojudges} protocol.\n'
+                'Checking proxy on protocols {disp} is disabled.'.format(
+                    nojudges=nojudges, disp=disable_protocols
+                ),
+                UserWarning,
+            )
         if self._judges:
             log.debug('Loaded: %d proxy judges' % len(set(self._judges)))
         else:
@@ -98,7 +124,8 @@ class Checker:
         if self._strict and proxy.types:
             return True
         proxy.log(
-            'Protocol or the level of anonymity differs from the requested')
+            'Protocol or the level of anonymity differs from the requested'
+        )
         return False
 
     async def _in_DNSBL(self, host):
@@ -114,7 +141,7 @@ class Checker:
 
     async def check(self, proxy):
         if self._dnsbl:
-            if (await self._in_DNSBL(proxy.host)):
+            if await self._in_DNSBL(proxy.host):
                 proxy.log('Found in DNSBL')
                 return False
 
@@ -155,8 +182,14 @@ class Checker:
                 await proxy.ngtr.negotiate(host=judge.host, ip=judge.ip)
             except ProxyTimeoutError:
                 continue
-            except (ProxyConnError, ProxyRecvError, ProxySendError,
-                    ProxyEmptyRecvError, BadStatusError, BadResponseError):
+            except (
+                ProxyConnError,
+                ProxyRecvError,
+                ProxySendError,
+                ProxyEmptyRecvError,
+                BadStatusError,
+                BadResponseError,
+            ):
                 break
             else:
                 proxy.types[proxy.ngtr.name] = None
@@ -175,12 +208,19 @@ class Checker:
                 proxy.ngtr = proto
                 await proxy.connect()
                 await proxy.ngtr.negotiate(host=judge.host, ip=judge.ip)
-                headers, content, rv = \
-                    await _send_test_request(self._method, proxy, judge)
+                headers, content, rv = await _send_test_request(
+                    self._method, proxy, judge
+                )
             except ProxyTimeoutError:
                 continue
-            except (ProxyConnError, ProxyRecvError, ProxySendError,
-                    ProxyEmptyRecvError, BadStatusError, BadResponseError):
+            except (
+                ProxyConnError,
+                ProxyRecvError,
+                ProxySendError,
+                ProxyEmptyRecvError,
+                BadStatusError,
+                BadResponseError,
+            ):
                 break
             else:
                 content = _decompress_content(headers, content)
@@ -188,7 +228,8 @@ class Checker:
                 if result:
                     if proxy.ngtr.check_anon_lvl:
                         lvl = _get_anonymity_lvl(
-                            self._real_ext_ip, proxy, judge, content)
+                            self._real_ext_ip, proxy, judge, content
+                        )
                     else:
                         lvl = None
                     proxy.types[proxy.ngtr.name] = lvl
@@ -213,6 +254,18 @@ def _request(proxy, method, host, path, fullpath=False, data=''):
           'data': data}
     req = (('{method} {path} HTTP/1.1\r\n{headers}\r\n\r\n{data}')
            .format(**kw).encode())
+=======
+    kw = {
+        'method': method,
+        'path': 'http://%s%s' % (host, path) if fullpath else path,  # HTTP
+        'headers': '\r\n'.join(('%s: %s' % (k, v) for k, v in hdrs.items())),
+        'data': data,
+    }
+    req = (
+        ('{method} {path} HTTP/1.1\r\n{headers}\r\n\r\n{data}')
+        .format(**kw)
+        .encode()
+    )
     return req, rv
 
 
@@ -220,6 +273,13 @@ async def _send_test_request(method, proxy, judge):
     resp, content, err = None, None, None
     request, rv = _request(proxy, method=method, host=judge.host, path=judge.path,
                            fullpath=proxy.ngtr.use_full_path)
+=======
+    request, rv = _request(
+        method=method,
+        host=judge.host,
+        path=judge.path,
+        fullpath=proxy.ngtr.use_full_path,
+    )
     try:
         await proxy.send(request)
         resp = await proxy.recv()
@@ -233,9 +293,16 @@ async def _send_test_request(method, proxy, judge):
         raise err
     finally:
         proxy.log('Get: %s' % ('success' if content else 'failed'), err=err)
-        log.debug('{h}:{p} [{n}]: ({j}) rv: {rv}, response: {resp}'.format(
-            h=proxy.host, p=proxy.port, n=proxy.ngtr.name, j=judge.url,
-            rv=rv, resp=resp))
+        log.debug(
+            '{h}:{p} [{n}]: ({j}) rv: {rv}, response: {resp}'.format(
+                h=proxy.host,
+                p=proxy.port,
+                n=proxy.ngtr.name,
+                j=judge.url,
+                rv=rv,
+                resp=resp,
+            )
+        )
     return headers, content, rv
 
 
@@ -268,8 +335,9 @@ def _check_test_response(proxy, headers, content, rv):
         return True
     else:
         proxy.log(
-            'Response: not correct; ip: %s, rv: %s, ref: %s, cookie: %s' % (
-                bool(foundIP), verIsCorrect, refSupported, cookieSupported))
+            'Response: not correct; ip: %s, rv: %s, ref: %s, cookie: %s'
+            % (bool(foundIP), verIsCorrect, refSupported, cookieSupported)
+        )
         return False
 
 
@@ -277,8 +345,9 @@ def _get_anonymity_lvl(real_ext_ip, proxy, judge, content):
     content = content.lower()
     foundIP = get_all_ip(content)
 
-    via = (content.count('via') > judge.marks['via']) or\
-          (content.count('proxy') > judge.marks['proxy'])
+    via = (content.count('via') > judge.marks['via']) or (
+        content.count('proxy') > judge.marks['proxy']
+    )
 
     if real_ext_ip in foundIP:
         lvl = 'Transparent'
@@ -286,13 +355,16 @@ def _get_anonymity_lvl(real_ext_ip, proxy, judge, content):
         lvl = 'Anonymous'
     else:
         lvl = 'High'
-    proxy.log('A: {lvl}; {ip}; via(p): {via}'.format(
-        lvl=lvl[:4], ip=foundIP, via=via))
+    proxy.log(
+        'A: {lvl}; {ip}; via(p): {via}'.format(lvl=lvl[:4], ip=foundIP, via=via)
+    )
     return lvl
 
 
 class ProxyChecker(Checker):
     def __init__(self, *args, **kwargs):
-        warnings.warn('`ProxyChecker` is deprecated, use `Checker` instead.',
-                      DeprecationWarning)
+        warnings.warn(
+            '`ProxyChecker` is deprecated, use `Checker` instead.',
+            DeprecationWarning,
+        )
         super().__init__(*args, **kwargs)

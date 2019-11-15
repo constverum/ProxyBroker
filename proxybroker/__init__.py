@@ -16,7 +16,7 @@ limitations under the License.
 
 __title__ = 'ProxyBroker'
 __package__ = 'proxybroker'
-__version__ = '0.3.1'
+__version__ = '0.3.2'
 __short_description__ = '[Finder/Checker/Server] Finds public proxies from multiple sources and concurrently checks them. Supports HTTP(S) and SOCKS4/5.'  # noqa
 __author__ = 'Constverum'
 __author_email__ = 'constverum@gmail.com'
@@ -44,12 +44,4 @@ warnings.simplefilter('always', UserWarning)
 warnings.simplefilter('once', DeprecationWarning)
 
 
-__all__ = (
-    Proxy,
-    Judge,
-    Provider,
-    Checker,
-    Server,
-    ProxyPool,
-    Broker,
-)
+__all__ = (Proxy, Judge, Provider, Checker, Server, ProxyPool, Broker)

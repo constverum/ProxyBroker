@@ -1,14 +1,22 @@
-import time
-import heapq
 import asyncio
+import heapq
+import time
 
 from .errors import (
-    BadStatusError, BadStatusLine, BadResponseError, ErrorOnStream,
-    NoProxyError, ProxyConnError, ProxyEmptyRecvError, ProxyRecvError,
-    ProxySendError, ProxyTimeoutError, ResolveError)
-from .utils import log, parse_headers, parse_status_line
+    BadResponseError,
+    BadStatusError,
+    BadStatusLine,
+    ErrorOnStream,
+    NoProxyError,
+    ProxyConnError,
+    ProxyEmptyRecvError,
+    ProxyRecvError,
+    ProxySendError,
+    ProxyTimeoutError,
+    ResolveError,
+)
 from .resolver import Resolver
-
+from .utils import log, parse_headers, parse_status_line
 
 CONNECTED = b'HTTP/1.1 200 Connection established\r\n\r\n'
 
@@ -16,8 +24,9 @@ CONNECTED = b'HTTP/1.1 200 Connection established\r\n\r\n'
 class ProxyPool:
     """Imports and gives proxies from queue on demand."""
 
-    def __init__(self, proxies, min_req_proxy=5,
-                 max_error_rate=0.5, max_resp_time=8):
+    def __init__(
+        self, proxies, min_req_proxy=5, max_error_rate=0.5, max_resp_time=8
+    ):
         self._proxies = proxies
         self._pool = []
         self._min_req_proxy = min_req_proxy
@@ -48,11 +57,13 @@ class ProxyPool:
                 return proxy
 
     def put(self, proxy):
-        if (proxy.stat['requests'] >= self._min_req_proxy and
-            ((proxy.error_rate > self._max_error_rate) or
-             (proxy.avg_resp_time > self._max_resp_time))):
-            log.debug('%s:%d removed from proxy pool' % (
-                      proxy.host, proxy.port))
+        if proxy.stat['requests'] >= self._min_req_proxy and (
+            (proxy.error_rate > self._max_error_rate)
+            or (proxy.avg_resp_time > self._max_resp_time)
+        ):
+            log.debug(
+                '%s:%d removed from proxy pool' % (proxy.host, proxy.port)
+            )
         else:
             heapq.heappush(self._pool, (proxy.priority, proxy))
         log.debug('%s:%d stat: %s' % (proxy.host, proxy.port, proxy.stat))
@@ -61,10 +72,22 @@ class ProxyPool:
 class Server:
     """Server distributes incoming requests to a pool of found proxies."""
 
-    def __init__(self, host, port, proxies, timeout=8, max_tries=3,
-                 min_req_proxy=5, max_error_rate=0.5, max_resp_time=8,
-                 prefer_connect=False, http_allowed_codes=None,
-                 backlog=100, loop=None, **kwargs):
+    def __init__(
+        self,
+        host,
+        port,
+        proxies,
+        timeout=8,
+        max_tries=3,
+        min_req_proxy=5,
+        max_error_rate=0.5,
+        max_resp_time=8,
+        prefer_connect=False,
+        http_allowed_codes=None,
+        backlog=100,
+        loop=None,
+        **kwargs
+    ):
         self.host = host
         self.port = int(port)
         self._loop = loop or asyncio.get_event_loop()
@@ -76,18 +99,26 @@ class Server:
         self._server = None
         self._connections = {}
         self._proxy_pool = ProxyPool(
-            proxies, min_req_proxy, max_error_rate, max_resp_time)
+            proxies, min_req_proxy, max_error_rate, max_resp_time
+        )
         self._resolver = Resolver(loop=self._loop)
         self._http_allowed_codes = http_allowed_codes or []
 
     def start(self):
         srv = asyncio.start_server(
-            self._accept, host=self.host, port=self.port,
-            backlog=self._backlog, loop=self._loop)
+            self._accept,
+            host=self.host,
+            port=self.port,
+            backlog=self._backlog,
+            loop=self._loop,
+        )
         self._server = self._loop.run_until_complete(srv)
 
-        log.info('Listening established on {0}'.format(
-            self._server.sockets[0].getsockname()))
+        log.info(
+            'Listening established on {0}'.format(
+                self._server.sockets[0].getsockname()
+            )
+        )
 
     def stop(self):
         if not self._server:
@@ -119,26 +150,33 @@ class Server:
                     self.stop()
                 else:
                     raise exc
+
         f = asyncio.ensure_future(self._handle(client_reader, client_writer))
         f.add_done_callback(_on_completion)
         self._connections[f] = (client_reader, client_writer)
 
     async def _handle(self, client_reader, client_writer):
-        log.debug('Accepted connection from %s' % (
-                  client_writer.get_extra_info('peername'),))
+        log.debug(
+            'Accepted connection from %s'
+            % (client_writer.get_extra_info('peername'),)
+        )
 
         request, headers = await self._parse_request(client_reader)
         scheme = self._identify_scheme(headers)
         client = id(client_reader)
-        log.debug('client: %d; request: %s; headers: %s; scheme: %s' % (
-                  client, request, headers, scheme))
+        log.debug(
+            'client: %d; request: %s; headers: %s; scheme: %s'
+            % (client, request, headers, scheme)
+        )
 
         for attempt in range(self._max_tries):
             stime, err = 0, None
             proxy = await self._proxy_pool.get(scheme)
             proto = self._choice_proto(proxy, scheme)
-            log.debug('client: %d; attempt: %d; proxy: %s; proto: %s' % (
-                      client, attempt, proxy, proto))
+            log.debug(
+                'client: %d; attempt: %d; proxy: %s; proto: %s'
+                % (client, attempt, proxy, proto)
+            )
             try:
                 await proxy.connect()
 
@@ -161,23 +199,37 @@ class Server:
 
                 stime = time.time()
                 stream = [
-                    asyncio.ensure_future(self._stream(
-                        reader=client_reader, writer=proxy.writer)),
-                    asyncio.ensure_future(self._stream(
-                        reader=proxy.reader, writer=client_writer,
-                        scheme=scheme))]
+                    asyncio.ensure_future(
+                        self._stream(reader=client_reader, writer=proxy.writer)
+                    ),
+                    asyncio.ensure_future(
+                        self._stream(
+                            reader=proxy.reader,
+                            writer=client_writer,
+                            scheme=scheme,
+                        )
+                    ),
+                ]
                 await asyncio.gather(*stream, loop=self._loop)
             except asyncio.CancelledError:
                 log.debug('Cancelled in server._handle')
                 break
-            except (ProxyTimeoutError, ProxyConnError, ProxyRecvError,
-                    ProxySendError, ProxyEmptyRecvError, BadStatusError,
-                    BadResponseError) as e:
+            except (
+                ProxyTimeoutError,
+                ProxyConnError,
+                ProxyRecvError,
+                ProxySendError,
+                ProxyEmptyRecvError,
+                BadStatusError,
+                BadResponseError,
+            ) as e:
                 log.debug('client: %d; error: %r' % (client, e))
                 continue
             except ErrorOnStream as e:
-                log.debug('client: %d; error: %r; EOF: %s' % (
-                          client, e, client_reader.at_eof()))
+                log.debug(
+                    'client: %d; error: %r; EOF: %s'
+                    % (client, e, client_reader.at_eof())
+                )
                 for task in stream:
                     if not task.done():
                         task.cancel()
@@ -215,8 +267,12 @@ class Server:
             if self._prefer_connect and ('CONNECT:80' in proxy.types):
                 proto = 'CONNECT:80'
             else:
-                relevant = ({'HTTP', 'CONNECT:80', 'SOCKS4', 'SOCKS5'} &
-                            proxy.types.keys())
+                relevant = {
+                    'HTTP',
+                    'CONNECT:80',
+                    'SOCKS4',
+                    'SOCKS5',
+                } & proxy.types.keys()
                 proto = relevant.pop()
         else:  # HTTPS
             relevant = {'HTTPS', 'SOCKS4', 'SOCKS5'} & proxy.types.keys()
@@ -228,7 +284,8 @@ class Server:
         try:
             while not reader.at_eof():
                 data = await asyncio.wait_for(
-                    reader.read(length), self._timeout)
+                    reader.read(length), self._timeout
+                )
                 if not data:
                     writer.close()
                     break
@@ -238,8 +295,14 @@ class Server:
 
                 writer.write(data)
                 await writer.drain()
-        except (asyncio.TimeoutError, ConnectionResetError, OSError,
-                ProxyRecvError, BadStatusError, BadResponseError) as e:
+        except (
+            asyncio.TimeoutError,
+            ConnectionResetError,
+            OSError,
+            ProxyRecvError,
+            BadStatusError,
+            BadResponseError,
+        ) as e:
             raise ErrorOnStream(e)
 
     def _check_response(self, data, scheme):
@@ -250,5 +313,7 @@ class Server:
             except BadStatusLine:
                 raise BadResponseError
             if header['Status'] not in self._http_allowed_codes:
-                raise BadStatusError('%r not in %r' % (
-                    header['Status'], self._http_allowed_codes))
+                raise BadStatusError(
+                    '%r not in %r'
+                    % (header['Status'], self._http_allowed_codes)
+                )

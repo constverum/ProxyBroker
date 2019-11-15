@@ -25,10 +25,10 @@ Features
 * Proxies may be filtered by type, anonymity level, response time, country and status in DNSBL.
 * Work as a proxy server that distributes incoming requests to external proxies. With automatic proxy rotation.
 * All proxies are checked to support Cookies and Referer (and POST requests if required).
-.. * Save found proxies to a file in custom format.
 * Automatically removes duplicate proxies.
 * Is asynchronous.
 
+.. * Save found proxies to a file in custom format.
 
 Requirements
 ------------
@@ -78,7 +78,7 @@ Find and show 10 HTTP(S) proxies from United States with the high level of anony
 Grab
 """"
 
-Find and save to a file 10 US proxies (without a check): 
+Find and save to a file 10 US proxies (without a check):
 
 .. code-block:: bash
 
@@ -154,9 +154,9 @@ Contributing
 ------------
 
 * Fork it: https://github.com/constverum/ProxyBroker/fork
-* Create your feature branch: git checkout -b my-new-feature
-* Commit your changes: git commit -am 'Add some feature'
-* Push to the branch: git push origin my-new-feature
+* Create your feature branch: ``git checkout -b my-new-feature``
+* Commit your changes: ``git commit -am 'Add some feature'``
+* Push to the branch: ``git push origin my-new-feature``
 * Submit a pull request!
 
 
