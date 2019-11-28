@@ -56,7 +56,6 @@ class Resolver:
     @staticmethod
     def get_ip_info(ip):
         """Return geo information about IP address.
-
         `code` - ISO country code
         `name` - Full name of country
         `region_code` - ISO region code
