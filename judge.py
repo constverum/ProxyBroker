@@ -4,19 +4,20 @@ from urllib.parse import urlparse
 
 import aiohttp
 
-import async_timeout
-
 from .errors import ResolveError
-from .utils import log, get_headers
 from .resolver import Resolver
+from .utils import get_headers, log
 
 
 class Judge:
     """Proxy Judge."""
 
     available = {'HTTP': [], 'HTTPS': [], 'SMTP': []}
-    ev = {'HTTP': asyncio.Event(), 'HTTPS': asyncio.Event(),
-          'SMTP': asyncio.Event()}
+    ev = {
+        'HTTP': asyncio.Event(),
+        'HTTPS': asyncio.Event(),
+        'SMTP': asyncio.Event(),
+    }
 
     def __init__(self, url, timeout=8, verify_ssl=False, loop=None):
         self.url = url
@@ -69,17 +70,22 @@ class Judge:
         page = False
         headers, rv = get_headers(rv=True)
         connector = aiohttp.TCPConnector(
-            loop=self._loop, ssl=self.verify_ssl, force_close=True)
+            loop=self._loop, ssl=self.verify_ssl, force_close=True
+        )
         try:
-            with async_timeout.timeout(self.timeout, loop=self._loop):
-                async with aiohttp.ClientSession(connector=connector,
-                                                 loop=self._loop) as session,\
-                        session.get(url=self.url, headers=headers,
-                                    allow_redirects=False) as resp:
-                    page = await resp.text()
-        except (asyncio.TimeoutError, aiohttp.ClientOSError,
-                aiohttp.ClientResponseError,
-                aiohttp.ServerDisconnectedError) as e:
+            timeout = aiohttp.ClientTimeout(total=self.timeout)
+            async with aiohttp.ClientSession(
+                connector=connector, timeout=timeout, loop=self._loop
+            ) as session, session.get(
+                url=self.url, headers=headers, allow_redirects=False
+            ) as resp:
+                page = await resp.text()
+        except (
+            asyncio.TimeoutError,
+            aiohttp.ClientOSError,
+            aiohttp.ClientResponseError,
+            aiohttp.ServerDisconnectedError,
+        ) as e:
             log.debug('%s is failed. Error: %r;' % (self, e))
             return
 
@@ -93,20 +99,34 @@ class Judge:
             self.ev[self.scheme].set()
             log.debug('%s is verified' % self)
         else:
-            log.debug(('{j} is failed. HTTP status code: {code}; '
-                       'Real IP on page: {ip}; Version: {word}; '
-                       'Response: {page}').format(
-                      j=self, code=resp.status, page=page,
-                      ip=(real_ext_ip in page), word=(rv in page)))
+            log.debug(
+                (
+                    '{j} is failed. HTTP status code: {code}; '
+                    'Real IP on page: {ip}; Version: {word}; '
+                    'Response: {page}'
+                ).format(
+                    j=self,
+                    code=resp.status,
+                    page=page,
+                    ip=(real_ext_ip in page),
+                    word=(rv in page),
+                )
+            )
 
 
 def get_judges(judges=None, timeout=8, verify_ssl=False):
     judges = judges or [
-        'http://httpbin.org/get?show_env', 'https://httpbin.org/get?show_env',
-        'smtp://smtp.gmail.com', 'smtp://aspmx.l.google.com',
-        'http://azenv.net/', 'https://www.proxy-listen.de/azenv.php',
-        'http://www.proxyfire.net/fastenv', 'http://proxyjudge.us/azenv.php',
-        'http://ip.spys.ru/', 'http://www.proxy-listen.de/azenv.php']
+        'http://httpbin.org/get?show_env',
+        'https://httpbin.org/get?show_env',
+        'smtp://smtp.gmail.com',
+        'smtp://aspmx.l.google.com',
+        'http://azenv.net/',
+        'https://www.proxy-listen.de/azenv.php',
+        'http://www.proxyfire.net/fastenv',
+        'http://proxyjudge.us/azenv.php',
+        'http://ip.spys.ru/',
+        'http://www.proxy-listen.de/azenv.php',
+    ]
     _judges = []
     for j in judges:
         j = j if isinstance(j, Judge) else Judge(j)
