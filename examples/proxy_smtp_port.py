@@ -2,6 +2,7 @@
    to 25 port (SMTP) and save them to a file."""
 
 import asyncio
+
 from proxybroker import Broker
 
 
@@ -21,14 +22,22 @@ def main():
 
     # Check proxy in spam databases (DNSBL). By default is disabled.
     # more databases: http://www.dnsbl.info/dnsbl-database-check.php
-    dnsbl = ['bl.spamcop.net', 'cbl.abuseat.org', 'dnsbl.sorbs.net',
-             'zen.spamhaus.org', 'bl.mcafee.com', 'spam.spamrats.com']
+    dnsbl = [
+        'bl.spamcop.net',
+        'cbl.abuseat.org',
+        'dnsbl.sorbs.net',
+        'zen.spamhaus.org',
+        'bl.mcafee.com',
+        'spam.spamrats.com',
+    ]
 
     tasks = asyncio.gather(
         broker.find(types=['CONNECT:25'], dnsbl=dnsbl, limit=10),
-        save(proxies, filename='proxies.txt'))
+        save(proxies, filename='proxies.txt'),
+    )
     loop = asyncio.get_event_loop()
     loop.run_until_complete(tasks)
+
 
 if __name__ == '__main__':
     main()

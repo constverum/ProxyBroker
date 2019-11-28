@@ -4,9 +4,9 @@ from asyncio.streams import StreamReader
 import pytest
 
 from proxybroker import Proxy
-from proxybroker.utils import log as logger
 from proxybroker.errors import ProxyConnError, ProxyTimeoutError, ResolveError
 from proxybroker.negotiators import HttpsNgtr
+from proxybroker.utils import log as logger
 
 from .utils import ResolveResult, future_iter
 
@@ -58,14 +58,8 @@ def test_as_json_w_geo():
         'host': '8.8.8.8',
         'port': 3128,
         'geo': {
-            'country': {
-                'code': 'US',
-                'name': 'United States',
-            },
-            'region': {
-                'code': 'Unknown',
-                'name': 'Unknown',
-            },
+            'country': {'code': 'US', 'name': 'United States'},
+            'region': {'code': 'Unknown', 'name': 'Unknown'},
             'city': 'Unknown',
         },
         'types': [
@@ -87,14 +81,8 @@ def test_as_json_wo_geo():
         'host': '127.0.0.1',
         'port': 80,
         'geo': {
-            'country': {
-                'code': '--',
-                'name': 'Unknown',
-            },
-            'region': {
-                'code': 'Unknown',
-                'name': 'Unknown',
-            },
+            'country': {'code': '--', 'name': 'Unknown'},
+            'region': {'code': 'Unknown', 'name': 'Unknown'},
             'city': 'Unknown',
         },
         'types': [],
@@ -169,7 +157,8 @@ def test_log(log):
         assert p._runtimes == []
         assert cm.output == [
             'DEBUG:proxybroker:127.0.0.1:80 [INFO]: MSG; Runtime: 0.00',
-            'DEBUG:proxybroker:127.0.0.1:80 [HTTP]: MSG; Runtime: 0.00']
+            'DEBUG:proxybroker:127.0.0.1:80 [HTTP]: MSG; Runtime: 0.00',
+        ]
 
     p.log(msg, stime, err)
     p.log(msg, stime, err)
@@ -246,8 +235,10 @@ async def test_recv_content_length(proxy):
 
 @pytest.mark.asyncio
 async def test_recv_content_encoding(proxy):
-    resp = (b'HTTP/1.1 200 OK\r\nContent-Encoding: gzip\r\n'
-            b'Content-Length: 7\r\n\r\n\x1f\x8b\x08\x00\n\x00\x00')
+    resp = (
+        b'HTTP/1.1 200 OK\r\nContent-Encoding: gzip\r\n'
+        b'Content-Length: 7\r\n\r\n\x1f\x8b\x08\x00\n\x00\x00'
+    )
     proxy.reader.feed_data(resp)
     proxy.reader.feed_eof()
     assert await proxy.recv() == resp
@@ -255,10 +246,12 @@ async def test_recv_content_encoding(proxy):
 
 @pytest.mark.asyncio
 async def test_recv_content_encoding_without_eof(event_loop, proxy):
-    resp = (b'HTTP/1.1 200 OK\r\n'
-            b'Content-Encoding: gzip\r\n'
-            b'Content-Length: 7\r\n\r\n'
-            b'\x1f\x8b\x08\x00\n\x00\x00')
+    resp = (
+        b'HTTP/1.1 200 OK\r\n'
+        b'Content-Encoding: gzip\r\n'
+        b'Content-Length: 7\r\n\r\n'
+        b'\x1f\x8b\x08\x00\n\x00\x00'
+    )
     proxy.reader.feed_data(resp)
     with pytest.raises(ProxyTimeoutError):
         await proxy.recv()
@@ -266,14 +259,18 @@ async def test_recv_content_encoding_without_eof(event_loop, proxy):
 
 @pytest.mark.asyncio
 async def test_recv_content_encoding_chunked(proxy):
-    resp = (b'HTTP/1.1 200 OK\r\nContent-Encoding: gzip\r\n'
-            b'Transfer-Encoding: chunked\r\n\r\n3\x1f\x8b\x00\r\n0\r\n')
+    resp = (
+        b'HTTP/1.1 200 OK\r\nContent-Encoding: gzip\r\n'
+        b'Transfer-Encoding: chunked\r\n\r\n3\x1f\x8b\x00\r\n0\r\n'
+    )
     proxy.reader.feed_data(resp)
     assert await proxy.recv() == resp
     proxy.reader._buffer.clear()
 
-    resp = (b'HTTP/1.1 200 OK\r\nContent-Encoding: gzip\r\n'
-            b'Transfer-Encoding: chunked\r\n\r\n'
-            b'5a' + b'\x1f' * 90 + b'\r\n\r\n0\r\n')
+    resp = (
+        b'HTTP/1.1 200 OK\r\nContent-Encoding: gzip\r\n'
+        b'Transfer-Encoding: chunked\r\n\r\n'
+        b'5a' + b'\x1f' * 90 + b'\r\n\r\n0\r\n'
+    )
     proxy.reader.feed_data(resp)
     assert await proxy.recv() == resp
