@@ -64,9 +64,7 @@ class Proxy:
             raise
         return self
 
-    def __init__(
-        self, host=None, port=None, login=None, password=None, types=(), timeout=8, verify_ssl=False
-    ):
+    def __init__(self, host=None, port=None, login=None, password=None, types=(), timeout=8, verify_ssl=False):
         self.host = host
         if not Resolver.host_is_ip(self.host):
             raise ValueError(

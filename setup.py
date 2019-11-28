@@ -11,12 +11,24 @@ with codecs.open('proxybroker/__init__.py', mode='r', encoding='utf-8') as f:
 with codecs.open('README.rst', mode='r', encoding='utf-8') as f:
     INFO['long_description'] = f.read()
 
-with codecs.open('requirements.txt', mode='r', encoding='utf-8') as f:
-    REQUIRES = f.read().split()
-
-SETUP_REQUIRES = ['pytest-runner']
-TEST_REQUIRES = ['pytest>=3.2.1', 'pytest-asyncio>=0.8', 'pytest-mock>=1.6.3',
-                 'pytest-pep8>=1.0.6', 'pytest-flakes>=2.0.0']
+REQUIRES = [
+    'aiohttp>=3.5.4',
+    'aiodns>=2.0.0',
+    'attrs==19.1.0',
+    'maxminddb>=1.4.1',
+]
+SETUP_REQUIRES = ['pytest-runner>=4.4']
+TEST_REQUIRES = [
+    # 'black>=18.9-beta.0',
+    'flake8>=3.7',
+    'isort>=4.3',
+    'pytest>=4.3',
+    'pytest-asyncio>=0.10',
+    'pytest-runner>=4.4',
+    'pytest-isort>=0.3',
+    'pytest-flake8>=1.0',
+    'pytest-mock>=1.10.1',
+]
 PACKAGES = ['proxybroker', 'proxybroker.data']
 PACKAGE_DATA = {'': ['LICENSE'], INFO['package']: ['data/*.mmdb']}
 
@@ -35,11 +47,8 @@ setup(
     packages=PACKAGES,
     package_data=PACKAGE_DATA,
     platforms='any',
-    entry_points={
-        'console_scripts': [
-            'proxybroker = proxybroker.cli:cli',
-        ],
-    },
+    python_requires='>=3.5.3',
+    entry_points={'console_scripts': ['proxybroker = proxybroker.cli:cli']},
     classifiers=[
         'Development Status :: 5 - Production/Stable',
         'Environment :: Console',
@@ -47,6 +56,8 @@ setup(
         'Intended Audience :: Developers',
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3.7',
+        'Programming Language :: Python :: 3.8',
         'Operating System :: POSIX',
         'Operating System :: MacOS :: MacOS X',
         'Operating System :: Microsoft :: Windows',
@@ -56,7 +67,8 @@ setup(
     ],
     keywords=(
         'proxy finder grabber scraper parser graber scrapper checker '
-        'broker async asynchronous http https connect socks socks4 socks5'),
+        'broker async asynchronous http https connect socks socks4 socks5'
+    ),
     zip_safe=False,
     test_suite='tests',
 )

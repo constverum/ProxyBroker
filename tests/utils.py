@@ -1,7 +1,6 @@
 import asyncio
 from collections import namedtuple
 
-
 ResolveResult = namedtuple('ResolveResult', ['host', 'ttl'])
 
 

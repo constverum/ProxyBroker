@@ -8,9 +8,9 @@ import logging
 
 import pytest
 
-
-_LoggingWatcher = collections.namedtuple("_LoggingWatcher",
-                                         ["records", "output"])
+_LoggingWatcher = collections.namedtuple(
+    "_LoggingWatcher", ["records", "output"]
+)
 
 
 class _CapturingHandler(logging.Handler):
@@ -70,9 +70,9 @@ class _AssertLogsContext:
             return False
         if len(self.watcher.records) == 0:
             __tracebackhide__ = True
-            assert 0, ("no logs of level {} or higher triggered on {}"
-                       .format(logging.getLevelName(self.level),
-                               self.logger.name))
+            assert 0, "no logs of level {} or higher triggered on {}".format(
+                logging.getLevelName(self.level), self.logger.name
+            )
 
 
 @pytest.fixture
