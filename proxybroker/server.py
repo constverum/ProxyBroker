@@ -1,6 +1,7 @@
 import asyncio
 import heapq
 import time
+from pprint import pprint
 
 from .errors import (
     BadResponseError,
@@ -25,24 +26,44 @@ class ProxyPool:
     """Imports and gives proxies from queue on demand."""
 
     def __init__(
-        self, proxies, min_req_proxy=5, max_error_rate=0.5, max_resp_time=8
+        self, proxies, min_req_proxy=5, max_error_rate=0.5, max_resp_time=8, min_queue=5
     ):
         self._proxies = proxies
         self._pool = []
+        self._newcomers = []
         self._min_req_proxy = min_req_proxy
         # if num of erros greater or equal 50% - proxy will be remove from pool
         self._max_error_rate = max_error_rate
         self._max_resp_time = max_resp_time
+        self._min_queue = min_queue
 
     async def get(self, scheme):
+        #pprint("GET(): self._pool")
+        #pprint(self._pool)
+        #pprint("GET(): self._newcomers")
+        #pprint(self._newcomers)
+        #pprint("GET(): self._proxies")
+        #pprint(self._proxies)
         scheme = scheme.upper()
-        for priority, proxy in self._pool:
-            if scheme in proxy.schemes:
-                chosen = proxy
-                self._pool.remove((proxy.priority, proxy))
-                break
-        else:
+        if (len(self._pool) + len(self._newcomers) < self._min_queue):
             chosen = await self._import(scheme)
+            #pprint("GET(): get new:")
+        elif (len(self._newcomers) > 0):
+            chosen = self._newcomers.pop(0)
+            #pprint("GET(): from newcomers:")
+        else:
+            for priority, proxy in self._pool:
+                if scheme in proxy.schemes:
+                    chosen = proxy
+                    self._pool.remove((proxy.priority, proxy))
+                    #heapq.heappop()
+                    #pprint("GET(): Removed from Pool:")
+                    break
+            else:
+                chosen = await self._import(scheme)
+                #pprint("GET(): In ELSE:")
+                
+        #pprint(chosen)
         return chosen
 
     async def _import(self, expected_scheme):
@@ -57,16 +78,26 @@ class ProxyPool:
                 return proxy
 
     def put(self, proxy):
-        if proxy.stat['requests'] >= self._min_req_proxy and (
+        #pprint("PUT(): proxy:")
+        #pprint(proxy)
+        if proxy.stat['requests'] < self._min_req_proxy:
+            self._newcomers.append(proxy)
+            #pprint("PUT(): to newcomers")
+        elif proxy.stat['requests'] >= self._min_req_proxy and (
             (proxy.error_rate > self._max_error_rate)
             or (proxy.avg_resp_time > self._max_resp_time)
         ):
             log.debug(
                 '%s:%d removed from proxy pool' % (proxy.host, proxy.port)
             )
+            #pprint('%s:%d removed from proxy pool' % (proxy.host, proxy.port))
         else:
+            #pprint("PUT(): heapq.heappush:")
+            #pprint(proxy)
             heapq.heappush(self._pool, (proxy.priority, proxy))
+            #pprint(self._pool)
         log.debug('%s:%d stat: %s' % (proxy.host, proxy.port, proxy.stat))
+        #pprint('%s:%d stat: %s' % (proxy.host, proxy.port, proxy.stat))
 
 
 class Server:
@@ -79,6 +110,7 @@ class Server:
         proxies,
         timeout=8,
         max_tries=3,
+        min_queue=5,
         min_req_proxy=5,
         max_error_rate=0.5,
         max_resp_time=8,
@@ -99,7 +131,7 @@ class Server:
         self._server = None
         self._connections = {}
         self._proxy_pool = ProxyPool(
-            proxies, min_req_proxy, max_error_rate, max_resp_time
+            proxies, min_req_proxy, max_error_rate, max_resp_time, min_queue
         )
         self._resolver = Resolver(loop=self._loop)
         self._http_allowed_codes = http_allowed_codes or []
@@ -168,6 +200,10 @@ class Server:
             'client: %d; request: %s; headers: %s; scheme: %s'
             % (client, request, headers, scheme)
         )
+        #pprint(
+        #    'client: %d; request: %s; headers: %s; scheme: %s'
+        #    % (client, request, headers, scheme)
+        #)
 
         for attempt in range(self._max_tries):
             stime, err = 0, None

@@ -95,7 +95,7 @@ of found HTTP(S) proxies with the high level of anonymity:
 
 .. code-block:: bash
 
-    $ proxybroker serve --host 127.0.0.1 --port 8888 --types HTTP HTTPS --lvl High
+    $ proxybroker serve --host 127.0.0.1 --port 8888 --types HTTP HTTPS --lvl High --min-queue 5
 
 
 .. image:: https://raw.githubusercontent.com/constverum/ProxyBroker/master/docs/source/_static/cli_serve_example.gif

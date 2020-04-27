@@ -236,6 +236,14 @@ def add_serve_args(group):
                 command''',
     )
     group.add_argument(
+        '--min-queue',
+        type=int,
+        default=5,
+        dest='min_queue',
+        help='''The minimum number of proxies to choose from before deciding
+                which is the most suitable to use''',
+    )
+    group.add_argument(
         '--min-req-proxy',
         type=int,
         default=5,
@@ -413,6 +421,7 @@ def cli(args=sys.argv[1:]):
             host=ns.host,
             port=ns.port,
             limit=ns.limit,
+            min_queue=ns.min_queue,
             min_req_proxy=ns.min_req_proxy,
             max_error_rate=ns.max_error_rate,
             max_resp_time=ns.max_resp_time,
