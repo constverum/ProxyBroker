@@ -236,6 +236,13 @@ def add_serve_args(group):
                 command''',
     )
     group.add_argument(
+        '--strategy',
+        type=str,
+        default='best',
+        dest='strategy',
+        help='''The strategy used for picking proxy from pool''',
+    )
+    group.add_argument(
         '--min-queue',
         type=int,
         default=5,
@@ -422,6 +429,7 @@ def cli(args=sys.argv[1:]):
             port=ns.port,
             limit=ns.limit,
             min_queue=ns.min_queue,
+            strategy=ns.strategy,
             min_req_proxy=ns.min_req_proxy,
             max_error_rate=ns.max_error_rate,
             max_resp_time=ns.max_resp_time,

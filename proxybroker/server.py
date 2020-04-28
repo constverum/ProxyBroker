@@ -26,16 +26,20 @@ class ProxyPool:
     """Imports and gives proxies from queue on demand."""
 
     def __init__(
-        self, proxies, min_req_proxy=5, max_error_rate=0.5, max_resp_time=8, min_queue=5
+        self, proxies, min_req_proxy=5, max_error_rate=0.5, max_resp_time=8, min_queue=5, strategy='best'
     ):
         self._proxies = proxies
         self._pool = []
         self._newcomers = []
+        self._strategy = strategy
         self._min_req_proxy = min_req_proxy
         # if num of erros greater or equal 50% - proxy will be remove from pool
         self._max_error_rate = max_error_rate
         self._max_resp_time = max_resp_time
         self._min_queue = min_queue
+
+        if strategy != 'best':
+            raise ValueError('`strategy` only support `best` for now.')
 
     async def get(self, scheme):
         #pprint("GET(): self._pool")
@@ -51,7 +55,7 @@ class ProxyPool:
         elif (len(self._newcomers) > 0):
             chosen = self._newcomers.pop(0)
             #pprint("GET(): from newcomers:")
-        else:
+        elif self._strategy == 'best':
             for priority, proxy in self._pool:
                 if scheme in proxy.schemes:
                     chosen = proxy

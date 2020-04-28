@@ -228,6 +228,8 @@ class Broker:
             request. If not specified, it will use the value specified during
             the creation of the :class:`Broker` object. Attempts can be made
             with different proxies. The default value is 3
+        :param int strategy:
+            (optional) The strategy used for picking proxy from pool. The default value is 'best'
         :param int min_queue:
             (optional) The minimum number of proxies to choose from before deciding
                 which is the most suitable to use. The default value is 5
