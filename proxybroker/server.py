@@ -63,7 +63,7 @@ class ProxyPool:
                 chosen = await self._import(scheme)
                 #pprint("GET(): In ELSE:")
                 
-        #pprint(chosen)
+        # pprint(chosen)
         return chosen
 
     async def _import(self, expected_scheme):
@@ -98,6 +98,37 @@ class ProxyPool:
             #pprint(self._pool)
         log.debug('%s:%d stat: %s' % (proxy.host, proxy.port, proxy.stat))
         #pprint('%s:%d stat: %s' % (proxy.host, proxy.port, proxy.stat))
+
+    def remove(self, host, port):
+        # pprint('REMOVE():')
+        # pprint(host)
+        # pprint(port)
+        # pprint(self._pool)
+
+        for proxy in self._newcomers:
+            # pprint(proxy)
+            # pprint(proxy.host)
+            # pprint(proxy.port)
+            if proxy.host == host and proxy.port == port:
+                # pprint('BINGO!!!!!! In newcomers')
+                chosen = proxy
+                self._newcomers.remove(proxy)
+                break
+        else:
+            for priority, proxy in self._pool:
+                # pprint(proxy)
+                # pprint(proxy.host)
+                # pprint(proxy.port)
+                if proxy.host == host and proxy.port == port:
+                    # pprint('BINGO!!!!!! In _pool')
+                    chosen = proxy
+                    self._pool.remove((proxy.priority, proxy))
+                    break
+
+        # pprint('Returning')
+        # pprint(self._newcomers)
+        # pprint(self._pool)
+        return chosen
 
 
 class Server:
@@ -200,10 +231,25 @@ class Server:
             'client: %d; request: %s; headers: %s; scheme: %s'
             % (client, request, headers, scheme)
         )
-        #pprint(
+        # pprint(
         #    'client: %d; request: %s; headers: %s; scheme: %s'
         #    % (client, request, headers, scheme)
-        #)
+        # )
+        # pprint(client)
+        # pprint(request)
+        # pprint(headers)
+        # pprint(headers['Path'])
+        # pprint(scheme)
+        if headers['Host'] == 'proxyremove':
+            host, port = headers['Path'].split('/')[3].split(':')
+            # pprint(host)
+            # pprint(port)
+            removed_proxy = self._proxy_pool.remove(host, int(port))
+            # pprint('REMOVED:')
+            # pprint(removed_proxy)
+            client_writer.write(b'HTTP/1.1 204 No Content\r\n\r\n')
+            await client_writer.drain()
+            return
 
         for attempt in range(self._max_tries):
             stime, err = 0, None
