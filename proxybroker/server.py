@@ -1,7 +1,7 @@
 import asyncio
 import heapq
 import time
-from pprint import pprint
+# from pprint import pprint
 
 from .errors import (
     BadResponseError,
@@ -26,7 +26,13 @@ class ProxyPool:
     """Imports and gives proxies from queue on demand."""
 
     def __init__(
-        self, proxies, min_req_proxy=5, max_error_rate=0.5, max_resp_time=8, min_queue=5, strategy='best'
+        self,
+        proxies,
+        min_req_proxy=5,
+        max_error_rate=0.5,
+        max_resp_time=8,
+        min_queue=5,
+        strategy='best'
     ):
         self._proxies = proxies
         self._pool = []
@@ -55,7 +61,7 @@ class ProxyPool:
                     break
             else:
                 chosen = await self._import(scheme)
-                
+
         return chosen
 
     async def _import(self, expected_scheme):
@@ -200,11 +206,11 @@ class Server:
             'client: %d; request: %s; headers: %s; scheme: %s'
             % (client, request, headers, scheme)
         )
-        
+
         if headers['Host'] == 'proxyremove':
             host, port = headers['Path'].split('/')[3].split(':')
             self._proxy_pool.remove(host, int(port))
-            
+
             client_writer.write(b'HTTP/1.1 204 No Content\r\n\r\n')
             await client_writer.drain()
             return
