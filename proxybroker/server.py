@@ -1,7 +1,7 @@
 import asyncio
 import heapq
 import time
-from pprint import pprint
+# from pprint import pprint
 
 from .errors import (
     BadResponseError,
@@ -199,19 +199,11 @@ class Server:
             'Accepted connection from %s'
             % (client_writer.get_extra_info('peername'),)
         )
-        pprint(
-            'Accepted connection from %s'
-            % (client_writer.get_extra_info('peername'),)
-        )
 
         request, headers = await self._parse_request(client_reader)
         scheme = self._identify_scheme(headers)
         client = id(client_reader)
         log.debug(
-            'client: %d; request: %s; headers: %s; scheme: %s'
-            % (client, request, headers, scheme)
-        )
-        pprint(
             'client: %d; request: %s; headers: %s; scheme: %s'
             % (client, request, headers, scheme)
         )
@@ -235,10 +227,7 @@ class Server:
                 'client: %d; attempt: %d; proxy: %s; proto: %s'
                 % (client, attempt, proxy, proto)
             )
-            pprint(
-                'client: %d; attempt: %d; proxy: %s; proto: %s'
-                % (client, attempt, proxy, proto)
-            )
+
             try:
                 await proxy.connect()
 
@@ -259,15 +248,12 @@ class Server:
                 else:  # proto: HTTP & HTTPS
                     await proxy.send(request)
 
-                pprint('Proxy Picked:')
-                pprint(proxy)
                 inject_resp_header = {
                     'headers': {
                         'X-Proxy-Info': proxy.host + ':' + str(proxy.port)
                     }
                 }
 
-                pprint('Connecting IO Stream')
                 stime = time.time()
                 stream = [
                     asyncio.ensure_future(
@@ -353,34 +339,23 @@ class Server:
 
     async def _stream(self, reader, writer, length=65536, scheme=None, inject=None):
         checked = False
-        pprint('_stream inject:')
-        pprint(inject)
+
         try:
             while not reader.at_eof():
-                pprint('_stream not eof')
                 data = await asyncio.wait_for(
                     reader.read(length), self._timeout
                 )
-                # pprint(data)
                 if not data:
-                    pprint('no data')
                     writer.close()
                     break
                 elif scheme and not checked:
-                    pprint('check status')
                     self._check_response(data, scheme)
-                    pprint('status checked')
 
-                    pprint(inject.get('headers'))
-                    pprint(str(len(inject['headers'])))
                     if inject.get('headers') != None and len(inject['headers']) > 0:
-                        pprint('going to inject headers')
                         data = self._inject_headers(data, scheme, inject['headers'])
 
                     checked = True
-                
-                pprint('SOME DATA')
-                
+
                 writer.write(data)
                 await writer.drain()
 
@@ -409,10 +384,6 @@ class Server:
 
     def _inject_headers(self, data, scheme, headers):
         custom_lines = []
-        pprint('in _inject_headers:')
-        pprint(scheme)
-        pprint(headers)
-        pprint(data)
 
         if scheme == 'HTTP' or scheme == 'HTTPS':
             status_line, rest_lines = data.split(b'\r\n', 1)
