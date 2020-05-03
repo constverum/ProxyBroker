@@ -1,7 +1,7 @@
 import asyncio
 import heapq
 import time
-# from pprint import pprint
+from pprint import pprint
 
 from .errors import (
     BadResponseError,
@@ -143,6 +143,7 @@ class Server:
         self._http_allowed_codes = http_allowed_codes or []
 
     def start(self):
+
         srv = asyncio.start_server(
             self._accept,
             host=self.host,
@@ -198,6 +199,10 @@ class Server:
             'Accepted connection from %s'
             % (client_writer.get_extra_info('peername'),)
         )
+        pprint(
+            'Accepted connection from %s'
+            % (client_writer.get_extra_info('peername'),)
+        )
 
         request, headers = await self._parse_request(client_reader)
         scheme = self._identify_scheme(headers)
@@ -206,11 +211,18 @@ class Server:
             'client: %d; request: %s; headers: %s; scheme: %s'
             % (client, request, headers, scheme)
         )
+        pprint(
+            'client: %d; request: %s; headers: %s; scheme: %s'
+            % (client, request, headers, scheme)
+        )
 
         if headers['Host'] == 'proxyremove':
-            proxy_host, proxy_port = headers['Path'].split('/')[3].split(':')
-            self._proxy_pool.remove(proxy_host, int(proxy_port))
-
+            host, port = headers['Path'].split('/')[3].split(':')
+            self._proxy_pool.remove(host, int(port))
+            log.debug(
+                'Remove Proxy: client: %d; request: %s; headers: %s; scheme: %s; proxy_host: %s; proxy_port: %s'
+                % (client, request, headers, scheme, host, port)
+            )
             client_writer.write(b'HTTP/1.1 204 No Content\r\n\r\n')
             await client_writer.drain()
             return
@@ -220,6 +232,10 @@ class Server:
             proxy = await self._proxy_pool.get(scheme)
             proto = self._choice_proto(proxy, scheme)
             log.debug(
+                'client: %d; attempt: %d; proxy: %s; proto: %s'
+                % (client, attempt, proxy, proto)
+            )
+            pprint(
                 'client: %d; attempt: %d; proxy: %s; proto: %s'
                 % (client, attempt, proxy, proto)
             )
@@ -243,6 +259,15 @@ class Server:
                 else:  # proto: HTTP & HTTPS
                     await proxy.send(request)
 
+                pprint('Proxy Picked:')
+                pprint(proxy)
+                inject_resp_header = {
+                    'headers': {
+                        'X-Proxy-Info': proxy.host + ':' + str(proxy.port)
+                    }
+                }
+
+                pprint('Connecting IO Stream')
                 stime = time.time()
                 stream = [
                     asyncio.ensure_future(
@@ -253,7 +278,7 @@ class Server:
                             reader=proxy.reader,
                             writer=client_writer,
                             scheme=scheme,
-                            inject={'headers': {'X-Proxy-Info': proxy.scheme + '://' + proxy.host + ':' + proxy.port}}
+                            inject=inject_resp_header
                         )
                     ),
                 ]
@@ -328,20 +353,33 @@ class Server:
 
     async def _stream(self, reader, writer, length=65536, scheme=None, inject=None):
         checked = False
+        pprint('_stream inject:')
+        pprint(inject)
         try:
             while not reader.at_eof():
+                pprint('_stream not eof')
                 data = await asyncio.wait_for(
                     reader.read(length), self._timeout
                 )
+                # pprint(data)
                 if not data:
+                    pprint('no data')
                     writer.close()
                     break
                 elif scheme and not checked:
+                    pprint('check status')
                     self._check_response(data, scheme)
+                    pprint('status checked')
+
+                    pprint(inject.get('headers'))
+                    pprint(str(len(inject['headers'])))
+                    if inject.get('headers') != None and len(inject['headers']) > 0:
+                        pprint('going to inject headers')
+                        data = self._inject_headers(data, scheme, inject['headers'])
+
                     checked = True
                 
-                if inject.get('headers') != None and len(inject.headers) > 0:
-                    data = self._inject_headers(data, scheme, inject.headers)
+                pprint('SOME DATA')
                 
                 writer.write(data)
                 await writer.drain()
@@ -371,6 +409,10 @@ class Server:
 
     def _inject_headers(self, data, scheme, headers):
         custom_lines = []
+        pprint('in _inject_headers:')
+        pprint(scheme)
+        pprint(headers)
+        pprint(data)
 
         if scheme == 'HTTP' or scheme == 'HTTPS':
             status_line, rest_lines = data.split(b'\r\n', 1)
