@@ -143,6 +143,7 @@ class Server:
         self._http_allowed_codes = http_allowed_codes or []
 
     def start(self):
+
         srv = asyncio.start_server(
             self._accept,
             host=self.host,
@@ -210,7 +211,10 @@ class Server:
         if headers['Host'] == 'proxyremove':
             host, port = headers['Path'].split('/')[3].split(':')
             self._proxy_pool.remove(host, int(port))
-
+            log.debug(
+                'Remove Proxy: client: %d; request: %s; headers: %s; scheme: %s; proxy_host: %s; proxy_port: %s'
+                % (client, request, headers, scheme, host, port)
+            )
             client_writer.write(b'HTTP/1.1 204 No Content\r\n\r\n')
             await client_writer.drain()
             return
@@ -223,6 +227,7 @@ class Server:
                 'client: %d; attempt: %d; proxy: %s; proto: %s'
                 % (client, attempt, proxy, proto)
             )
+
             try:
                 await proxy.connect()
 
@@ -243,6 +248,12 @@ class Server:
                 else:  # proto: HTTP & HTTPS
                     await proxy.send(request)
 
+                inject_resp_header = {
+                    'headers': {
+                        'X-Proxy-Info': proxy.host + ':' + str(proxy.port)
+                    }
+                }
+
                 stime = time.time()
                 stream = [
                     asyncio.ensure_future(
@@ -253,6 +264,7 @@ class Server:
                             reader=proxy.reader,
                             writer=client_writer,
                             scheme=scheme,
+                            inject=inject_resp_header
                         )
                     ),
                 ]
@@ -325,8 +337,9 @@ class Server:
             proto = relevant.pop()
         return proto
 
-    async def _stream(self, reader, writer, length=65536, scheme=None):
+    async def _stream(self, reader, writer, length=65536, scheme=None, inject=None):
         checked = False
+
         try:
             while not reader.at_eof():
                 data = await asyncio.wait_for(
@@ -337,9 +350,15 @@ class Server:
                     break
                 elif scheme and not checked:
                     self._check_response(data, scheme)
+
+                    if inject.get('headers') != None and len(inject['headers']) > 0:
+                        data = self._inject_headers(data, scheme, inject['headers'])
+
                     checked = True
+
                 writer.write(data)
                 await writer.drain()
+
         except (
             asyncio.TimeoutError,
             ConnectionResetError,
@@ -362,3 +381,19 @@ class Server:
                     '%r not in %r'
                     % (header['Status'], self._http_allowed_codes)
                 )
+
+    def _inject_headers(self, data, scheme, headers):
+        custom_lines = []
+
+        if scheme == 'HTTP' or scheme == 'HTTPS':
+            status_line, rest_lines = data.split(b'\r\n', 1)
+            custom_lines.append(status_line)
+
+            for k, v in headers.items():
+                custom_lines.append(('%s: %s' % (k,v)).encode())
+
+            custom_lines.append(rest_lines)
+            data = b'\r\n'.join(custom_lines)
+
+        return data
+
