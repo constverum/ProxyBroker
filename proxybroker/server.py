@@ -1,7 +1,8 @@
 import asyncio
 import heapq
 import time
-# from pprint import pprint
+from cachetools import TTLCache
+from pprint import pprint
 
 from .errors import (
     BadResponseError,
@@ -19,6 +20,8 @@ from .errors import (
 from .resolver import Resolver
 from .utils import log, parse_headers, parse_status_line
 
+# history = TTLCache(maxsize=None,ttl=600)
+history = TTLCache(maxsize=10000,ttl=600)
 CONNECTED = b'HTTP/1.1 200 Connection established\r\n\r\n'
 
 
@@ -208,16 +211,44 @@ class Server:
             % (client, request, headers, scheme)
         )
 
-        if headers['Host'] == 'proxyremove':
-            host, port = headers['Path'].split('/')[3].split(':')
-            self._proxy_pool.remove(host, int(port))
-            log.debug(
-                'Remove Proxy: client: %d; request: %s; headers: %s; scheme: %s; proxy_host: %s; proxy_port: %s'
-                % (client, request, headers, scheme, host, port)
-            )
-            client_writer.write(b'HTTP/1.1 204 No Content\r\n\r\n')
-            await client_writer.drain()
-            return
+        # API for controlling proxybroker2
+        if headers['Host'] == 'proxycontrol':
+            pprint('proxycontrol')
+            _api, _operation, _params = headers['Path'].split('/', 5)[3:]
+            if _api == 'api':
+                pprint('proxycontrol api')
+                if _operation == 'remove':
+                    proxy_host, proxy_port = _params.split(':', 1)
+                    self._proxy_pool.remove(proxy_host, int(proxy_port))
+                    log.debug(
+                        'Remove Proxy: client: %d; request: %s; headers: %s; scheme: %s; proxy_host: %s; proxy_port: %s'
+                        % (client, request, headers, scheme, proxy_host, proxy_port)
+                    )
+                    client_writer.write(b'HTTP/1.1 204 No Content\r\n\r\n')
+                    await client_writer.drain()
+                    return
+                elif _operation == 'history':
+                    pprint('proxycontrol api history')
+                    query_type, url = _params.split(':', 1)
+                    if query_type == 'url':
+                        pprint('proxycontrol api history url')
+                        pprint(client_reader._transport.get_extra_info('peername')[0] + '-' + url)
+                        pprint('X________X')
+                        pprint(history.get(client_reader._transport.get_extra_info('peername')[0] + '-' + url))
+                        pprint('@________@')
+                        previous_proxy = history.get(client_reader._transport.get_extra_info('peername')[0] + '-' + url)
+                        if previous_proxy is None:
+                            pprint('No previous proxy for: ' + client_reader._transport.get_extra_info('peername')[0] + ':' + url)
+                            client_writer.write(b'HTTP/1.1 204 No Content\r\n\r\n')
+                            await client_writer.drain()
+                            return
+                        else:
+                            pprint('proxycontrol api history' + previous_proxy)
+                            client_writer.write(b'HTTP/1.1 200 OK\r\n')
+                            client_writer.write((previous_proxy + '\r\n\r\n').encode())
+                            await client_writer.drain()
+                            return
+
 
         for attempt in range(self._max_tries):
             stime, err = 0, None
