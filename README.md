@@ -89,7 +89,7 @@ $ pip install proxybroker
 The latest development version can be installed directly from GitHub:
 
 ``` {.sourceCode .bash}
-$ pip install -U git+https://github.com/bluet/ProxyBroker.git
+$ pip install -U git+https://github.com/bluet/proxybroker2.git
 ```
 
 Usage
@@ -334,7 +334,7 @@ TODO
 Contributing
 ------------
 
--   Fork it: <https://github.com/bluet/ProxyBroker/fork>
+-   Fork it: <https://github.com/bluet/proxybroker2/fork>
 -   Create your feature branch: `git checkout -b my-new-feature`
 -   Commit your changes: `git commit -am 'Add some feature'`
 -   Push to the branch: `git push origin my-new-feature`
