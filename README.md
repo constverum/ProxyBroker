@@ -156,6 +156,165 @@ loop.run_until_complete(tasks)
 
 [More examples](https://proxybroker.readthedocs.io/en/latest/examples.html).
 
+### Proxy information per requests
+#### HTTP
+Check `X-Proxy-Info` header in response.
+```
+$ http_proxy=http://127.0.0.1:8888 https_proxy=http://127.0.0.1:8888 curl -v http://httpbin.org/get
+*   Trying 127.0.0.1...
+* TCP_NODELAY set
+* Connected to 127.0.0.1 (127.0.0.1) port 8888 (#0)
+> GET http://httpbin.org/get HTTP/1.1
+> Host: httpbin.org
+> User-Agent: curl/7.58.0
+> Accept: */*
+> Proxy-Connection: Keep-Alive
+> 
+< HTTP/1.1 200 OK
+< X-Proxy-Info: 174.138.42.112:8080
+< Date: Mon, 04 May 2020 03:39:40 GMT
+< Content-Type: application/json
+< Content-Length: 304
+< Server: gunicorn/19.9.0
+< Access-Control-Allow-Origin: *
+< Access-Control-Allow-Credentials: true
+< X-Cache: MISS from ADM-MANAGER
+< X-Cache-Lookup: MISS from ADM-MANAGER:880
+< Connection: keep-alive
+< 
+{
+  "args": {}, 
+  "headers": {
+    "Accept": "*/*", 
+    "Cache-Control": "max-age=259200", 
+    "Host": "httpbin.org", 
+    "User-Agent": "curl/7.58.0", 
+    "X-Amzn-Trace-Id": "Root=1-5eaf8e7c-6a1162a1387a1743a49063f4"
+  }, 
+  "origin": "...", 
+  "url": "http://httpbin.org/get"
+}
+* Connection #0 to host 127.0.0.1 left intact
+```
+
+#### HTTPS
+We are not able to modify HTTPS traffic to inject custom header once they start being encrypted. A `X-Proxy-Info` will be sent to client after `HTTP/1.1 200 Connection established` but not sure how clients can read it.
+```
+(env) bluet@ocisly:~/workspace/proxybroker2$ http_proxy=http://127.0.0.1:8888 https_proxy=http://127.0.0.1:8888 curl -v https://httpbin.org/get
+*   Trying 127.0.0.1...
+* TCP_NODELAY set
+* Connected to 127.0.0.1 (127.0.0.1) port 8888 (#0)
+* allocate connect buffer!
+* Establish HTTP proxy tunnel to httpbin.org:443
+> CONNECT httpbin.org:443 HTTP/1.1
+> Host: httpbin.org:443
+> User-Agent: curl/7.58.0
+> Proxy-Connection: Keep-Alive
+> 
+< HTTP/1.1 200 Connection established
+< X-Proxy-Info: 207.148.22.139:8080
+< 
+* Proxy replied 200 to CONNECT request
+* CONNECT phase completed!
+* ALPN, offering h2
+* ALPN, offering http/1.1
+* successfully set certificate verify locations:
+...
+*  SSL certificate verify ok.
+* Using HTTP2, server supports multi-use
+* Connection state changed (HTTP/2 confirmed)
+* Copying HTTP/2 data in stream buffer to connection buffer after upgrade: len=0
+* Using Stream ID: 1 (easy handle 0x5560b2e93580)
+> GET /get HTTP/2
+> Host: httpbin.org
+> User-Agent: curl/7.58.0
+> Accept: */*
+> 
+* Connection state changed (MAX_CONCURRENT_STREAMS updated)!
+< HTTP/2 200 
+< date: Mon, 04 May 2020 03:39:35 GMT
+< content-type: application/json
+< content-length: 256
+< server: gunicorn/19.9.0
+< access-control-allow-origin: *
+< access-control-allow-credentials: true
+< 
+{
+  "args": {}, 
+  "headers": {
+    "Accept": "*/*", 
+    "Host": "httpbin.org", 
+    "User-Agent": "curl/7.58.0", 
+    "X-Amzn-Trace-Id": "Root=1-5eaf8e77-efcb353b0983ad6a90f8bdcd"
+  }, 
+  "origin": "...", 
+  "url": "https://httpbin.org/get"
+}
+* Connection #0 to host 127.0.0.1 left intact
+```
+
+### HTTP API
+#### Get info of proxy been used for retrieving specific url
+For HTTP, it's easy.
+```
+$ http_proxy=http://127.0.0.1:8888 https_proxy=http://127.0.0.1:8888 curl -v http://proxycontrol/api/history/url:http://httpbin.org/get
+*   Trying 127.0.0.1...
+* TCP_NODELAY set
+* Connected to 127.0.0.1 (127.0.0.1) port 8888 (#0)
+> GET http://proxycontrol/api/history/url:http://httpbin.org/get HTTP/1.1
+> Host: proxycontrol
+> User-Agent: curl/7.58.0
+> Accept: */*
+> Proxy-Connection: Keep-Alive
+> 
+< HTTP/1.1 200 OK
+< Content-Type: application/json
+< Content-Length: 34
+< Access-Control-Allow-Origin: *
+< Access-Control-Allow-Credentials: true
+< 
+{"proxy": "..."}
+```
+
+For HTTPS, we're not able to know encrypted payload (request), so only hostname can be used.
+```
+$ http_proxy=http://127.0.0.1:8888 https_proxy=http://127.0.0.1:8888 curl -v http://proxycontrol/api/history/url:httpbin.org:443
+*   Trying 127.0.0.1...
+* TCP_NODELAY set
+* Connected to 127.0.0.1 (127.0.0.1) port 8888 (#0)
+> GET http://proxycontrol/api/history/url:httpbin.org:443 HTTP/1.1
+> Host: proxycontrol
+> User-Agent: curl/7.58.0
+> Accept: */*
+> Proxy-Connection: Keep-Alive
+> 
+< HTTP/1.1 200 OK
+< Content-Type: application/json
+< Content-Length: 34
+< Access-Control-Allow-Origin: *
+< Access-Control-Allow-Credentials: true
+< 
+{"proxy": "..."}
+* Connection #0 to host 127.0.0.1 left intact
+```
+
+#### Remove specific proxy from queue
+```
+$ http_proxy=http://127.0.0.1:8888 https_proxy=http://127.0.0.1:8888 curl -v http://proxycontrol/api/remove/PROXY_IP:PROXY_PORT
+*   Trying 127.0.0.1...
+* TCP_NODELAY set
+* Connected to 127.0.0.1 (127.0.0.1) port 8888 (#0)
+> GET http://proxycontrol/api/remove/... HTTP/1.1
+> Host: proxycontrol
+> User-Agent: curl/7.58.0
+> Accept: */*
+> Proxy-Connection: Keep-Alive
+> 
+< HTTP/1.1 204 No Content
+< 
+* Connection #0 to host 127.0.0.1 left intact
+```
+
 Documentation
 -------------
 
