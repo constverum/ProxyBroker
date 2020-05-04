@@ -8,7 +8,7 @@ from setuptools import setup
 with codecs.open('proxybroker/__init__.py', mode='r', encoding='utf-8') as f:
     INFO = dict(re.findall(r"__(\w+)__ = '([^']+)'", f.read(), re.MULTILINE))
 
-with codecs.open('README.rst', mode='r', encoding='utf-8') as f:
+with codecs.open('README.md', mode='r', encoding='utf-8') as f:
     INFO['long_description'] = f.read()
 
 REQUIRES = [
