@@ -1,0 +1,17 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+aiohttp = ">=3.5.4"
+aiodns = ">=2.0.0"
+attrs = "==19.1.0"
+maxminddb = ">=1.4.1"
+pre-commit = "*"
+black = "*"
+
+[dev-packages]
+
+[requires]
+python_version = "3.6"
