@@ -27,26 +27,26 @@ Docker
 Docker Hub https://hub.docker.com/r/bluet/proxybroker2
 
 ```
-$ docker run --rm bluet/proxybroker2 --help  
+$ docker run --rm bluet/proxybroker2 --help
   usage: proxybroker [--max-conn MAX_CONN] [--max-tries MAX_TRIES]
                      [--timeout SECONDS] [--judge JUDGES] [--provider PROVIDERS]
                      [--verify-ssl]
                      [--log [{NOTSET,DEBUG,INFO,WARNING,ERROR,CRITICAL}]]
-                     [--min-queue MINIMUM_PROXIES_IN_QUEUE] 
+                     [--min-queue MINIMUM_PROXIES_IN_QUEUE]
                      [--version] [--help]
                      {find,grab,serve,update-geo} ...
-  
+
   Proxy [Finder | Checker | Server]
-  
+
   Commands:
     These are common commands used in various situations
-  
+
     {find,grab,serve,update-geo}
       find                Find and check proxies
       grab                Find proxies without a check
       serve               Run a local proxy server
       update-geo          Download and use a detailed GeoIP database
-  
+
   Options:
     --max-conn MAX_CONN   The maximum number of concurrent checks of proxies
     --max-tries MAX_TRIES
@@ -62,7 +62,7 @@ $ docker run --rm bluet/proxybroker2 --help
                           Logging level
     --version, -v         Show program's version number and exit
     --help, -h            Show this help message and exit
-  
+
   Run 'proxybroker <command> --help' for more information on a command.
   Suggestions and bug reports are greatly appreciated:
   <https://github.com/bluet/proxybroker2/issues>
@@ -170,7 +170,7 @@ $ http_proxy=http://127.0.0.1:8888 https_proxy=http://127.0.0.1:8888 curl -v htt
 > User-Agent: curl/7.58.0
 > Accept: */*
 > Proxy-Connection: Keep-Alive
-> 
+>
 < HTTP/1.1 200 OK
 < X-Proxy-Info: 174.138.42.112:8080
 < Date: Mon, 04 May 2020 03:39:40 GMT
@@ -182,17 +182,17 @@ $ http_proxy=http://127.0.0.1:8888 https_proxy=http://127.0.0.1:8888 curl -v htt
 < X-Cache: MISS from ADM-MANAGER
 < X-Cache-Lookup: MISS from ADM-MANAGER:880
 < Connection: keep-alive
-< 
+<
 {
-  "args": {}, 
+  "args": {},
   "headers": {
-    "Accept": "*/*", 
-    "Cache-Control": "max-age=259200", 
-    "Host": "httpbin.org", 
-    "User-Agent": "curl/7.58.0", 
+    "Accept": "*/*",
+    "Cache-Control": "max-age=259200",
+    "Host": "httpbin.org",
+    "User-Agent": "curl/7.58.0",
     "X-Amzn-Trace-Id": "Root=1-5eaf8e7c-6a1162a1387a1743a49063f4"
-  }, 
-  "origin": "...", 
+  },
+  "origin": "...",
   "url": "http://httpbin.org/get"
 }
 * Connection #0 to host 127.0.0.1 left intact
@@ -211,10 +211,10 @@ We are not able to modify HTTPS traffic to inject custom header once they start 
 > Host: httpbin.org:443
 > User-Agent: curl/7.58.0
 > Proxy-Connection: Keep-Alive
-> 
+>
 < HTTP/1.1 200 Connection established
 < X-Proxy-Info: 207.148.22.139:8080
-< 
+<
 * Proxy replied 200 to CONNECT request
 * CONNECT phase completed!
 * ALPN, offering h2
@@ -230,25 +230,25 @@ We are not able to modify HTTPS traffic to inject custom header once they start 
 > Host: httpbin.org
 > User-Agent: curl/7.58.0
 > Accept: */*
-> 
+>
 * Connection state changed (MAX_CONCURRENT_STREAMS updated)!
-< HTTP/2 200 
+< HTTP/2 200
 < date: Mon, 04 May 2020 03:39:35 GMT
 < content-type: application/json
 < content-length: 256
 < server: gunicorn/19.9.0
 < access-control-allow-origin: *
 < access-control-allow-credentials: true
-< 
+<
 {
-  "args": {}, 
+  "args": {},
   "headers": {
-    "Accept": "*/*", 
-    "Host": "httpbin.org", 
-    "User-Agent": "curl/7.58.0", 
+    "Accept": "*/*",
+    "Host": "httpbin.org",
+    "User-Agent": "curl/7.58.0",
     "X-Amzn-Trace-Id": "Root=1-5eaf8e77-efcb353b0983ad6a90f8bdcd"
-  }, 
-  "origin": "...", 
+  },
+  "origin": "...",
   "url": "https://httpbin.org/get"
 }
 * Connection #0 to host 127.0.0.1 left intact
@@ -267,13 +267,13 @@ $ http_proxy=http://127.0.0.1:8888 https_proxy=http://127.0.0.1:8888 curl -v htt
 > User-Agent: curl/7.58.0
 > Accept: */*
 > Proxy-Connection: Keep-Alive
-> 
+>
 < HTTP/1.1 200 OK
 < Content-Type: application/json
 < Content-Length: 34
 < Access-Control-Allow-Origin: *
 < Access-Control-Allow-Credentials: true
-< 
+<
 {"proxy": "..."}
 ```
 
@@ -288,13 +288,13 @@ $ http_proxy=http://127.0.0.1:8888 https_proxy=http://127.0.0.1:8888 curl -v htt
 > User-Agent: curl/7.58.0
 > Accept: */*
 > Proxy-Connection: Keep-Alive
-> 
+>
 < HTTP/1.1 200 OK
 < Content-Type: application/json
 < Content-Length: 34
 < Access-Control-Allow-Origin: *
 < Access-Control-Allow-Credentials: true
-< 
+<
 {"proxy": "..."}
 * Connection #0 to host 127.0.0.1 left intact
 ```
@@ -310,9 +310,9 @@ $ http_proxy=http://127.0.0.1:8888 https_proxy=http://127.0.0.1:8888 curl -v htt
 > User-Agent: curl/7.58.0
 > Accept: */*
 > Proxy-Connection: Keep-Alive
-> 
+>
 < HTTP/1.1 204 No Content
-< 
+<
 * Connection #0 to host 127.0.0.1 left intact
 ```
 
