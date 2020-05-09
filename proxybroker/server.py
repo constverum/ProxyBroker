@@ -1,8 +1,8 @@
 import asyncio
 import heapq
 import time
+
 from cachetools import TTLCache
-# from pprint import pprint
 
 from .errors import (
     BadResponseError,
@@ -20,7 +20,10 @@ from .errors import (
 from .resolver import Resolver
 from .utils import log, parse_headers, parse_status_line
 
-history = TTLCache(maxsize=10000,ttl=600)
+# from pprint import pprint
+
+
+history = TTLCache(maxsize=10000, ttl=600)
 CONNECTED = b'HTTP/1.1 200 Connection established\r\n\r\n'
 
 
@@ -34,7 +37,7 @@ class ProxyPool:
         max_error_rate=0.5,
         max_resp_time=8,
         min_queue=5,
-        strategy='best'
+        strategy='best',
     ):
         self._proxies = proxies
         self._pool = []
@@ -51,9 +54,9 @@ class ProxyPool:
 
     async def get(self, scheme):
         scheme = scheme.upper()
-        if (len(self._pool) + len(self._newcomers) < self._min_queue):
+        if len(self._pool) + len(self._newcomers) < self._min_queue:
             chosen = await self._import(scheme)
-        elif (len(self._newcomers) > 0):
+        elif len(self._newcomers) > 0:
             chosen = self._newcomers.pop(0)
         elif self._strategy == 'best':
             for priority, proxy in self._pool:
@@ -84,9 +87,7 @@ class ProxyPool:
             (proxy.error_rate > self._max_error_rate)
             or (proxy.avg_resp_time > self._max_resp_time)
         ):
-            log.debug(
-                '%s:%d removed from proxy pool' % (proxy.host, proxy.port)
-            )
+            log.debug('%s:%d removed from proxy pool' % (proxy.host, proxy.port))
         else:
             heapq.heappush(self._pool, (proxy.priority, proxy))
 
@@ -126,7 +127,7 @@ class Server:
         http_allowed_codes=None,
         backlog=100,
         loop=None,
-        **kwargs
+        **kwargs,
     ):
         self.host = host
         self.port = int(port)
@@ -156,9 +157,7 @@ class Server:
         self._server = self._loop.run_until_complete(srv)
 
         log.info(
-            'Listening established on {0}'.format(
-                self._server.sockets[0].getsockname()
-            )
+            'Listening established on {0}'.format(self._server.sockets[0].getsockname())
         )
 
     def stop(self):
@@ -198,8 +197,7 @@ class Server:
 
     async def _handle(self, client_reader, client_writer):
         log.debug(
-            'Accepted connection from %s'
-            % (client_writer.get_extra_info('peername'),)
+            'Accepted connection from %s' % (client_writer.get_extra_info('peername'),)
         )
 
         request, headers = await self._parse_request(client_reader)
@@ -227,23 +225,34 @@ class Server:
                 elif _operation == 'history':
                     query_type, url = _params.split(':', 1)
                     if query_type == 'url':
-                        previous_proxy = history.get(client_reader._transport.get_extra_info('peername')[0] + '-' + url)
+                        previous_proxy = history.get(
+                            client_reader._transport.get_extra_info('peername')[0]
+                            + '-'
+                            + url
+                        )
                         if previous_proxy is None:
                             client_writer.write(b'HTTP/1.1 204 No Content\r\n\r\n')
                             await client_writer.drain()
                             return
                         else:
-                            previous_proxy_bytestring = ('{"proxy": "%s"}' % previous_proxy).encode()
+                            previous_proxy_bytestring = (
+                                '{"proxy": "%s"}' % previous_proxy
+                            ).encode()
                             client_writer.write(b'HTTP/1.1 200 OK\r\n')
                             client_writer.write(b'Content-Type: application/json\r\n')
-                            client_writer.write(b'Content-Length: '+ str(len(previous_proxy_bytestring) + 2).encode() + b'\r\n')
+                            client_writer.write(
+                                b'Content-Length: '
+                                + str(len(previous_proxy_bytestring) + 2).encode()
+                                + b'\r\n'
+                            )
                             client_writer.write(b'Access-Control-Allow-Origin: *\r\n')
-                            client_writer.write(b'Access-Control-Allow-Credentials: true\r\n\r\n')
+                            client_writer.write(
+                                b'Access-Control-Allow-Credentials: true\r\n\r\n'
+                            )
 
                             client_writer.write(previous_proxy_bytestring + b'\r\n')
                             await client_writer.drain()
                             return
-
 
         for attempt in range(self._max_tries):
             stime, err = 0, None
@@ -274,11 +283,13 @@ class Server:
                 else:  # proto: HTTP & HTTPS
                     await proxy.send(request)
 
-                history[client_reader._transport.get_extra_info('peername')[0] + '-' + headers['Path']] = proxy.host + ':' + str(proxy.port)
+                history[
+                    client_reader._transport.get_extra_info('peername')[0]
+                    + '-'
+                    + headers['Path']
+                ] = (proxy.host + ':' + str(proxy.port))
                 inject_resp_header = {
-                    'headers': {
-                        'X-Proxy-Info': proxy.host + ':' + str(proxy.port)
-                    }
+                    'headers': {'X-Proxy-Info': proxy.host + ':' + str(proxy.port)}
                 }
 
                 stime = time.time()
@@ -291,7 +302,7 @@ class Server:
                             reader=proxy.reader,
                             writer=client_writer,
                             scheme=scheme,
-                            inject=inject_resp_header
+                            inject=inject_resp_header,
                         )
                     ),
                 ]
@@ -369,9 +380,7 @@ class Server:
 
         try:
             while not reader.at_eof():
-                data = await asyncio.wait_for(
-                    reader.read(length), self._timeout
-                )
+                data = await asyncio.wait_for(reader.read(length), self._timeout)
                 if not data:
                     writer.close()
                     break
@@ -405,8 +414,7 @@ class Server:
                 raise BadResponseError
             if header['Status'] not in self._http_allowed_codes:
                 raise BadStatusError(
-                    '%r not in %r'
-                    % (header['Status'], self._http_allowed_codes)
+                    '%r not in %r' % (header['Status'], self._http_allowed_codes)
                 )
 
     def _inject_headers(self, data, scheme, headers):
@@ -417,10 +425,9 @@ class Server:
             custom_lines.append(status_line)
 
             for k, v in headers.items():
-                custom_lines.append(('%s: %s' % (k,v)).encode())
+                custom_lines.append(('%s: %s' % (k, v)).encode())
 
             custom_lines.append(rest_lines)
             data = b'\r\n'.join(custom_lines)
 
         return data
-

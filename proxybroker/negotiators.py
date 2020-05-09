@@ -135,9 +135,7 @@ class Connect25Ngtr(BaseNegotiator):
         resp = await self._proxy.recv(length=3)
         code = get_status_code(resp, start=0, stop=3)
         if code != SMTP_READY:
-            self._proxy.log(
-                'Failed (invalid data): %s' % code, err=BadStatusError
-            )
+            self._proxy.log('Failed (invalid data): %s' % code, err=BadStatusError)
             raise BadStatusError
 
 

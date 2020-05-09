@@ -40,7 +40,6 @@ def main():
     types = [('HTTP', 'High'), 'HTTPS', 'CONNECT:80']
     codes = [200, 301, 302]
 
-
     urls = [
         'http://httpbin.org/get',
         'https://httpbin.org/get',

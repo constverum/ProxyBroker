@@ -165,14 +165,7 @@ def add_find_args(group):
         nargs='+',
         type=str.upper,
         required=True,
-        choices=[
-            'HTTP',
-            'HTTPS',
-            'SOCKS4',
-            'SOCKS5',
-            'CONNECT:80',
-            'CONNECT:25',
-        ],
+        choices=['HTTP', 'HTTPS', 'SOCKS4', 'SOCKS5', 'CONNECT:80', 'CONNECT:25',],
         help='Type(s) (protocols) that need to be check on support by proxy',
     )
     group.add_argument(
@@ -189,9 +182,7 @@ def add_find_args(group):
         help='''Path to the file with proxies.
                 If specified, used instead of providers''',
     )
-    group.add_argument(
-        '--dnsbl', nargs='+', help='Spam databases for proxy checking'
-    )
+    group.add_argument('--dnsbl', nargs='+', help='Spam databases for proxy checking')
     group.add_argument(
         '--post',
         action='store_true',
@@ -219,10 +210,7 @@ def add_grab_args(group):
 
 def add_serve_args(group):
     group.add_argument(
-        '--host',
-        type=str,
-        default='127.0.0.1',
-        help='Host of local proxy server',
+        '--host', type=str, default='127.0.0.1', help='Host of local proxy server',
     )
     group.add_argument(
         '--port', type=int, default=8888, help='Port of local proxy server'

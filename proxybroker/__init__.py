@@ -25,17 +25,15 @@ __license__ = 'Apache License, Version 2.0'
 __copyright__ = 'Copyright 2015-2018 Constverum'
 
 
-from .proxy import Proxy  # noqa
-from .judge import Judge  # noqa
-from .providers import Provider  # noqa
-from .checker import Checker  # noqa
-from .server import Server, ProxyPool  # noqa
-from .api import Broker  # noqa
-
-
 import logging  # noqa
 import warnings  # noqa
 
+from .api import Broker  # noqa
+from .checker import Checker  # noqa
+from .judge import Judge  # noqa
+from .providers import Provider  # noqa
+from .proxy import Proxy  # noqa
+from .server import ProxyPool, Server  # noqa
 
 logger = logging.getLogger('asyncio')
 logger.addFilter(logging.Filter('has no effect when using ssl'))

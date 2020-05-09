@@ -109,9 +109,7 @@ class Resolver:
             raise RuntimeError('Could not get the external IP')
         return ip
 
-    async def resolve(
-        self, host, port=80, family=None, qtype='A', logging=True
-    ):
+    async def resolve(self, host, port=80, family=None, qtype='A', logging=True):
         """Return resolving IP address(es) from host name."""
         if self.host_is_ip(host):
             return host
@@ -139,9 +137,7 @@ class Resolver:
             else:
                 self._cached_hosts[host] = hosts[0]['host']
             if logging:
-                log.debug(
-                    '%s: Host resolved: %s' % (host, self._cached_hosts[host])
-                )
+                log.debug('%s: Host resolved: %s' % (host, self._cached_hosts[host]))
         else:
             if logging:
                 log.warning('%s: Could not resolve host' % host)

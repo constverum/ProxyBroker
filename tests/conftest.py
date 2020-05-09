@@ -8,9 +8,7 @@ import logging
 
 import pytest
 
-_LoggingWatcher = collections.namedtuple(
-    "_LoggingWatcher", ["records", "output"]
-)
+_LoggingWatcher = collections.namedtuple("_LoggingWatcher", ["records", "output"])
 
 
 class _CapturingHandler(logging.Handler):
