@@ -81,12 +81,12 @@ class ProxyPool:
                 return proxy
 
     def put(self, proxy):
+        is_exceed_time = (proxy.error_rate > self._max_error_rate) or (
+            proxy.avg_resp_time > self._max_resp_time
+        )
         if proxy.stat['requests'] < self._min_req_proxy:
             self._newcomers.append(proxy)
-        elif proxy.stat['requests'] >= self._min_req_proxy and (
-            (proxy.error_rate > self._max_error_rate)
-            or (proxy.avg_resp_time > self._max_resp_time)
-        ):
+        elif proxy.stat['requests'] >= self._min_req_proxy and is_exceed_time:
             log.debug('%s:%d removed from proxy pool' % (proxy.host, proxy.port))
         else:
             heapq.heappush(self._pool, (proxy.priority, proxy))
@@ -226,9 +226,7 @@ class Server:
                     query_type, url = _params.split(':', 1)
                     if query_type == 'url':
                         previous_proxy = history.get(
-                            client_reader._transport.get_extra_info('peername')[0]
-                            + '-'
-                            + url
+                            f"{client_reader._transport.get_extra_info('peername')[0]}-{url}"
                         )
                         if previous_proxy is None:
                             client_writer.write(b'HTTP/1.1 204 No Content\r\n\r\n')
@@ -241,9 +239,7 @@ class Server:
                             client_writer.write(b'HTTP/1.1 200 OK\r\n')
                             client_writer.write(b'Content-Type: application/json\r\n')
                             client_writer.write(
-                                b'Content-Length: '
-                                + str(len(previous_proxy_bytestring) + 2).encode()
-                                + b'\r\n'
+                                f"Content-Length: {str(len(previous_proxy_bytestring) + 2).encode()}\r\n"
                             )
                             client_writer.write(b'Access-Control-Allow-Origin: *\r\n')
                             client_writer.write(
@@ -284,9 +280,7 @@ class Server:
                     await proxy.send(request)
 
                 history[
-                    client_reader._transport.get_extra_info('peername')[0]
-                    + '-'
-                    + headers['Path']
+                    f"{client_reader._transport.get_extra_info('peername')[0]}-{headers['Path']}"
                 ] = (proxy.host + ':' + str(proxy.port))
                 inject_resp_header = {
                     'headers': {'X-Proxy-Info': proxy.host + ':' + str(proxy.port)}
@@ -387,7 +381,7 @@ class Server:
                 elif scheme and not checked:
                     self._check_response(data, scheme)
 
-                    if inject.get('headers') != None and len(inject['headers']) > 0:
+                    if inject.get('headers') is not None and len(inject['headers']) > 0:
                         data = self._inject_headers(data, scheme, inject['headers'])
 
                     checked = True

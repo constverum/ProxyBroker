@@ -360,7 +360,7 @@ class Gatherproxy_com(Provider):
                 continue
             lastPageId = max([int(n) for n in re.findall(expNumPages, page)])
             urls = [
-                {'url': url, 'data': {'Type': t, 'PageIdx': pid}, 'method': method,}
+                {'url': url, 'data': {'Type': t, 'PageIdx': pid}, 'method': method}
                 for pid in range(1, lastPageId + 1)
             ]
         # urls.append({'url': 'http://www.gatherproxy.com/sockslist/',
@@ -628,7 +628,7 @@ class Proxyb_net(Provider):
         }
         hdrs = {'X-Requested-With': 'XMLHttpRequest'}
         urls = [
-            {'url': url, 'data': {**data, 'p': p}, 'method': method, 'headers': hdrs,}
+            {'url': url, 'data': {**data, 'p': p}, 'method': method, 'headers': hdrs}
             for p in range(0, 151)
         ]
         await self._find_on_pages(urls)

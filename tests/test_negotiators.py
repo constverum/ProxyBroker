@@ -45,13 +45,13 @@ def test_base_attrs(proxy, ngtr, check_anon_lvl, use_full_path):
             'SOCKS5',
             80,
             future_iter(b'\x05\x00', b'\x05\x00\x00\x01\xc0\xa8\x00\x18\xce\xdf'),
-            [call(b'\x05\x01\x00'), call(b'\x05\x01\x00\x01\x7f\x00\x00\x01\x00P'),],
+            [call(b'\x05\x01\x00'), call(b'\x05\x01\x00\x01\x7f\x00\x00\x01\x00P')],
         ),
         (
             'SOCKS5',
             443,
             future_iter(b'\x05\x00', b'\x05\x00'),
-            [call(b'\x05\x01\x00'), call(b'\x05\x01\x00\x01\x7f\x00\x00\x01\x01\xbb'),],
+            [call(b'\x05\x01\x00'), call(b'\x05\x01\x00\x01\x7f\x00\x00\x01\x01\xbb')],
         ),  # noqa
         (
             'SOCKS4',
@@ -95,7 +95,7 @@ async def test_socks_negotiate(proxy, ngtr, port, recv, expected):
         (
             'SOCKS5',
             future_iter(b'\x05\x00', b'\x05\x05'),
-            [call(b'\x05\x01\x00'), call(b'\x05\x01\x00\x01\x7f\x00\x00\x01\x00P'),],
+            [call(b'\x05\x01\x00'), call(b'\x05\x01\x00\x01\x7f\x00\x00\x01\x00P')],
         ),  # noqa
         (
             'SOCKS4',

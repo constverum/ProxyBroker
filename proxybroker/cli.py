@@ -165,7 +165,7 @@ def add_find_args(group):
         nargs='+',
         type=str.upper,
         required=True,
-        choices=['HTTP', 'HTTPS', 'SOCKS4', 'SOCKS5', 'CONNECT:80', 'CONNECT:25',],
+        choices=['HTTP', 'HTTPS', 'SOCKS4', 'SOCKS5', 'CONNECT:80', 'CONNECT:25'],
         help='Type(s) (protocols) that need to be check on support by proxy',
     )
     group.add_argument(

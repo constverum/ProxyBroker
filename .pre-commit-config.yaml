@@ -16,6 +16,8 @@ repos:
                     -   readthedocs.yml
                     -   .travis.yml
             -   id: check-merge-conflict
+            -   id: flake8
+                args: [--config=setup.cfg, --ignore=E501]
     -   repo: https://github.com/psf/black
         rev: stable
         hooks:
