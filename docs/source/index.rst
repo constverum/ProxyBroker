@@ -85,7 +85,7 @@ Find and show 10 HTTP(S) proxies from United States with the high level of anony
 Grab
 """"
 
-Find and save to a file 10 US proxies (without a check): 
+Find and save to a file 10 US proxies (without a check):
 
 .. code-block:: bash
 
@@ -108,7 +108,7 @@ of found HTTP(S) proxies with the high level of anonymity:
 .. image:: _static/cli_serve_example.gif
 
 .. note::
-    
+
     Run ``proxybroker --help`` for more information on the options available.
 
     Run ``proxybroker <command> --help`` for more information on a command.
@@ -171,4 +171,3 @@ Indices and tables
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
-

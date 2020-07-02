@@ -59,7 +59,7 @@ class Broker:
         providers=None,
         verify_ssl=False,
         loop=None,
-        **kwargs
+        **kwargs,
     ):
         self._loop = loop or asyncio.get_event_loop()
         self._proxies = queue or asyncio.Queue(loop=self._loop)
@@ -133,7 +133,7 @@ class Broker:
         strict=False,
         dnsbl=None,
         limit=0,
-        **kwargs
+        **kwargs,
     ):
         """Gather and check proxies from providers or from a passed data.
 
@@ -287,7 +287,7 @@ class Broker:
             timeout=self._timeout,
             max_tries=kwargs.pop('max_tries', self._max_tries),
             loop=self._loop,
-            **kwargs
+            **kwargs,
         )
         self._server.start()
 
@@ -320,8 +320,7 @@ class Broker:
             ]
             while providers:
                 tasks = [
-                    asyncio.ensure_future(pr.get_proxies())
-                    for pr in providers[:by]
+                    asyncio.ensure_future(pr.get_proxies()) for pr in providers[:by]
                 ]
                 del providers[:by]
                 self._all_tasks.extend(tasks)
@@ -392,8 +391,7 @@ class Broker:
 
         if self._server and not self._proxies.empty() and self._limit <= 0:
             log.debug(
-                'pause. proxies: %s; limit: %s'
-                % (self._proxies.qsize(), self._limit)
+                'pause. proxies: %s; limit: %s' % (self._proxies.qsize(), self._limit)
             )
             await self._proxies.join()
             log.debug('unpause. proxies: %s' % self._proxies.qsize())
@@ -443,8 +441,7 @@ class Broker:
         if kwargs:
             verbose = True
             warnings.warn(
-                '`full` in `show_stats` is deprecated, '
-                'use `verbose` instead.',
+                '`full` in `show_stats` is deprecated, ' 'use `verbose` instead.',
                 DeprecationWarning,
             )
 
@@ -501,9 +498,7 @@ class Broker:
                             full_log.append('\t\t-------------------')
                         else:
                             full_log.append(
-                                '\t\t{:<66} Runtime: {:.2f}'.format(
-                                    event, runtime
-                                )
+                                '\t\t{:<66} Runtime: {:.2f}'.format(event, runtime)
                             )
                 for row in full_log:
                     print(row)

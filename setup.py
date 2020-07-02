@@ -1,7 +1,7 @@
-import re
 import codecs
-from setuptools import setup
+import re
 
+from setuptools import setup
 
 # https://packaging.python.org/en/latest/distributing/
 

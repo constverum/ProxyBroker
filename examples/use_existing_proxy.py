@@ -5,8 +5,6 @@ import asyncio
 
 import aiohttp
 
-from proxybroker import Broker
-
 
 async def fetch(url, proxy_url):
     resp = None
@@ -37,9 +35,8 @@ def main():
 
     loop = asyncio.get_event_loop()
 
-    types = [('HTTP', 'High'), 'HTTPS', 'CONNECT:80']
-    codes = [200, 301, 302]
-
+    # types = [('HTTP', 'High'), 'HTTPS', 'CONNECT:80']
+    # codes = [200, 301, 302]
 
     urls = [
         'http://httpbin.org/get',
