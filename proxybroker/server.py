@@ -44,7 +44,7 @@ class ProxyPool:
         self._newcomers = []
         self._strategy = strategy
         self._min_req_proxy = min_req_proxy
-        # if num of erros greater or equal 50% - proxy will be remove from pool
+        # if num of errors greater or equal 50% - proxy will be remove from pool
         self._max_error_rate = max_error_rate
         self._max_resp_time = max_resp_time
         self._min_queue = min_queue
