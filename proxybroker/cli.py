@@ -307,7 +307,7 @@ def add_format_arg(group):
         nargs='?',
         type=str.lower,
         help='''Flag indicating in what format the results will be presented.
-                Available formats: default and json''',
+                Available formats: default, txt and json''',
     )
 
 
