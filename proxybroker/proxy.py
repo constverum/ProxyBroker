@@ -254,6 +254,14 @@ class Proxy:
             info['types'].append({'type': tp, 'level': lvl or ''})
         return info
 
+    def as_text(self):
+        """
+        Return proxy as host:port
+
+        :rtype: str
+        """
+        return "{}:{}\n".format(self.host, self.port)
+
     def log(self, msg, stime=0, err=None):
         ngtr = self.ngtr.name if self.ngtr else 'INFO'
         runtime = time.time() - stime if stime else 0
