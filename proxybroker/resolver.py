@@ -36,6 +36,8 @@ class Resolver:
         'http://ipinfo.io/ip',
         'http://ifconfig.io/ip',
     ]
+    # the list of resolvers will point a copy of original one
+    _temp_host = []
 
     def __init__(self, timeout=5, loop=None):
         self._timeout = timeout
@@ -85,13 +87,16 @@ class Resolver:
         return GeoData(code, name, region_code, region_name, city_name)
 
     def _pop_random_ip_host(self):
-        host = random.choice(self._ip_hosts)
-        self._ip_hosts.remove(host)
+        host = random.choice(self._temp_host)
+        self._temp_host.remove(host)
         return host
 
     async def get_real_ext_ip(self):
         """Return real external IP address."""
-        while self._ip_hosts:
+        # make a copy of original one to temp one
+        # so original one will stay no change
+        self._temp_host = self._ip_hosts.copy()
+        while self._temp_host:
             try:
                 timeout = aiohttp.ClientTimeout(total=self._timeout)
                 async with aiohttp.ClientSession(
