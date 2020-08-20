@@ -43,6 +43,8 @@ class Broker:
         (optional) Flag indicating whether to check the SSL certificates.
         Set to True to check ssl certifications
     :param loop: (optional) asyncio compatible event loop
+    :param stop_broker_on_sigint: (optional) whether set SIGINT signal on broker object. 
+        Useful for a thread other than main thread.
 
     .. deprecated:: 0.2.0
         Use :attr:`max_conn` and :attr:`max_tries` instead of
@@ -59,6 +61,7 @@ class Broker:
         providers=None,
         verify_ssl=False,
         loop=None,
+        stop_broker_on_sigint=True,
         **kwargs,
     ):
         self._loop = loop or asyncio.get_event_loop()
@@ -101,13 +104,13 @@ class Broker:
             p if isinstance(p, Provider) else Provider(p)
             for p in (providers or PROVIDERS)
         ]
-
-        try:
-            self._loop.add_signal_handler(signal.SIGINT, self.stop)
-            # add_signal_handler() is not implemented on Win
-            # https://docs.python.org/3.5/library/asyncio-eventloops.html#windows
-        except NotImplementedError:
-            pass
+        if stop_broker_on_sigint:
+            try:
+                self._loop.add_signal_handler(signal.SIGINT, self.stop)
+                # add_signal_handler() is not implemented on Win
+                # https://docs.python.org/3.5/library/asyncio-eventloops.html#windows
+            except NotImplementedError:
+                pass
 
     async def grab(self, *, countries=None, limit=0):
         """Gather proxies from the providers without checking.
