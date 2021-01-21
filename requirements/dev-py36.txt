@@ -40,7 +40,7 @@ pytest-isort==1.0.0
 pytest-mock==3.1.0
 pytest-runner==5.2
 pytest==5.4.2
-pyyaml==5.3.1
+pyyaml==5.4
 regex==2020.5.7
 six==1.14.0
 toml==0.10.0
