@@ -86,6 +86,8 @@ Find and save to a file 10 US proxies (without a check):
 
 .. image:: https://raw.githubusercontent.com/constverum/ProxyBroker/master/docs/source/_static/cli_grab_example.gif
 
+Regex expression for cleaning the outputed file:
+``(<\w{5}\s\w{2}\s\d\.\d{2}\w\s)|(\[\w{5}\d[,\]]\s)|(\w{5}\d\]\s)|(>)``
 
 Serve
 """""
