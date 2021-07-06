@@ -73,7 +73,7 @@ $ docker run --rm bluet/proxybroker2 --help
 Requirements
 ------------
 
--   Python **3.5** or higher
+-   Python **3.5**, **3.6** or **3.7**. (need help on porting to 3.8+)
 -   [aiohttp](https://pypi.python.org/pypi/aiohttp)
 -   [aiodns](https://pypi.python.org/pypi/aiodns)
 -   [maxminddb](https://pypi.python.org/pypi/maxminddb)
