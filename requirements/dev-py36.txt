@@ -4,7 +4,7 @@ aiohttp==4.0.0a1
 appdirs==1.4.3
 async-timeout==3.0.1
 attrs==19.1.0
-black==19.10b0
+black
 cachetools==4.1.0
 cffi==1.14.0
 cfgv==3.1.0
