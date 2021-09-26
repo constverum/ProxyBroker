@@ -720,7 +720,8 @@ PROVIDERS = [
         proto=('HTTP', 'CONNECT:80', 'HTTPS', 'CONNECT:25'),
     ),  # 200
     Provider(
-        url='http://cn-proxy.com/', proto=('HTTP', 'CONNECT:80', 'HTTPS', 'CONNECT:25'),
+        url='http://cn-proxy.com/',
+        proto=('HTTP', 'CONNECT:80', 'HTTPS', 'CONNECT:25'),
     ),  # 70
     Provider(
         url='https://hugeproxies.com/home/',

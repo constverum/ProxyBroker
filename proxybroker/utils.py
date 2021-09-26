@@ -58,6 +58,8 @@ def get_all_ip(page):
 
 def get_status_code(resp, start=9, stop=12):
     try:
+        if not isinstance(resp, (bytes, str)):
+            raise TypeError(f'{type(resp).__name__} is not supported')
         code = int(resp[start:stop])
     except ValueError:
         return 400  # Bad Request

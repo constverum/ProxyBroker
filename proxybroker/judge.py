@@ -33,8 +33,7 @@ class Judge:
         self._resolver = Resolver(loop=self._loop)
 
     def __repr__(self):
-        """Class representation
-        """
+        """Class representation"""
         return '<Judge [%s] %s>' % (self.scheme, self.host)
 
     @classmethod

@@ -86,7 +86,9 @@ async def test_resolve_cache(event_loop, mocker, resolver):
 
     resolver._cached_hosts.clear()
     f = future_iter(
-        [ResolveResult('127.0.0.1', 0)], [ResolveResult('127.0.0.2', 0)], [Exception],
+        [ResolveResult('127.0.0.1', 0)],
+        [ResolveResult('127.0.0.2', 0)],
+        [Exception],
     )
     with mocker.patch('aiodns.DNSResolver.query', side_effect=f):
         await resolver.resolve('test.com')

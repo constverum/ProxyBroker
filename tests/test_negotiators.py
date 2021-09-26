@@ -44,13 +44,13 @@ def test_base_attrs(proxy, ngtr, check_anon_lvl, use_full_path):
         (
             'SOCKS5',
             80,
-            future_iter(b'\x05\x00', b'\x05\x00\x00\x01\xc0\xa8\x00\x18\xce\xdf'),
+            [b'\x05\x00', b'\x05\x00\x00\x01\xc0\xa8\x00\x18\xce\xdf'],
             [call(b'\x05\x01\x00'), call(b'\x05\x01\x00\x01\x7f\x00\x00\x01\x00P')],
         ),
         (
             'SOCKS5',
             443,
-            future_iter(b'\x05\x00', b'\x05\x00'),
+            [b'\x05\x00', b'\x05\x00'],
             [call(b'\x05\x01\x00'), call(b'\x05\x01\x00\x01\x7f\x00\x00\x01\x01\xbb')],
         ),  # noqa
         (
@@ -85,7 +85,7 @@ async def test_socks_negotiate(proxy, ngtr, port, recv, expected):
     'ngtr,recv,expected',
     [
         # wrong response:
-        ('SOCKS5', future_iter(b'\x05\xff'), [call(b'\x05\x01\x00')]),
+        ('SOCKS5', [b'\x05\xff'], [call(b'\x05\x01\x00')]),
         (
             'SOCKS4',
             future_iter(b'HTTP/1.1 400 Bad Request'),
@@ -94,7 +94,7 @@ async def test_socks_negotiate(proxy, ngtr, port, recv, expected):
         # failed to connect:
         (
             'SOCKS5',
-            future_iter(b'\x05\x00', b'\x05\x05'),
+            (b'\x05\x00', b'\x05\x05'),
             [call(b'\x05\x01\x00'), call(b'\x05\x01\x00\x01\x7f\x00\x00\x01\x00P')],
         ),  # noqa
         (
@@ -122,19 +122,20 @@ async def test_socks_negotiate_error(proxy, ngtr, recv, expected):
         (
             'CONNECT:80',
             80,
-            future_iter(b'HTTP/1.1 200 Connection established\r\n\r\n'),
+            [b'HTTP/1.1 200 Connection established\r\n\r\n'],
         ),  # noqa
         (
             'CONNECT:25',
             25,
-            future_iter(
-                b'HTTP/1.1 200 Connection established\r\n\r\n', b'220 smtp2.test.com',
-            ),
+            [
+                b'HTTP/1.1 200 Connection established\r\n\r\n',
+                b'220 smtp2.test.com',
+            ],
         ),  # noqa
         (
             'HTTPS',
             443,
-            future_iter(b'HTTP/1.1 200 Connection established\r\n\r\n'),
+            [b'HTTP/1.1 200 Connection established\r\n\r\n'],
         ),  # noqa
     ],
 )
@@ -155,21 +156,21 @@ async def test_connect_negotiate(proxy, ngtr, port, recv):
 @pytest.mark.parametrize(
     'ngtr,recv',
     [
-        ('CONNECT:80', future_iter(b'HTTP/1.1 400 Bad Request\r\n\r\n')),
+        ('CONNECT:80', [b'HTTP/1.1 400 Bad Request\r\n\r\n']),
         (
             'CONNECT:80',
-            future_iter(b'<html>\r\n<head><title>400 Bad Request</title></head>\r\n'),
+            [b'<html>\r\n<head><title>400 Bad Request</title></head>\r\n'],
         ),  # noqa
-        ('CONNECT:25', future_iter(b'HTTP/1.1 400 Bad Request\r\n\r\n')),
+        ('CONNECT:25', [b'HTTP/1.1 400 Bad Request\r\n\r\n']),
         (
             'CONNECT:25',
-            future_iter(b'<html>\r\n<head><title>400 Bad Request</title></head>\r\n'),
+            [b'<html>\r\n<head><title>400 Bad Request</title></head>\r\n'],
         ),  # noqa
-        ('CONNECT:25', future_iter(b'HTTP/1.1 200 OK\r\n\r\n', b'')),
-        ('HTTPS', future_iter(b'HTTP/1.1 400 Bad Request\r\n\r\n')),
+        ('CONNECT:25', [b'HTTP/1.1 200 OK\r\n\r\n', b'']),
+        ('HTTPS', [b'HTTP/1.1 400 Bad Request\r\n\r\n']),
         (
             'HTTPS',
-            future_iter(b'<html>\r\n<head><title>400 Bad Request</title></head>\r\n'),
+            [b'<html>\r\n<head><title>400 Bad Request</title></head>\r\n'],
         ),  # noqa
     ],
 )
