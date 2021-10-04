@@ -1,3 +1,5 @@
+Forked version recognizes the "@" delimeter symbol as well while reading a file with ip addresses in it.
+
 ProxyBroker
 ===========
 
