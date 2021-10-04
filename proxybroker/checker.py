@@ -18,6 +18,11 @@ from .negotiators import NGTRS
 from .resolver import Resolver
 from .utils import get_all_ip, get_headers, get_status_code, log, parse_headers
 
+from requests.auth import _basic_auth_str
+from .resolver import Resolver
+from .utils import get_all_ip, get_headers, get_status_code, log, parse_headers
+
+
 
 class Checker:
     """Proxy checker."""
@@ -238,13 +243,21 @@ class Checker:
         return result
 
 
-def _request(method, host, path, fullpath=False, data=''):
+def _request(proxy, method, host, path, fullpath=False, data=''):
     hdrs, rv = get_headers(rv=True)
     hdrs['Host'] = host
     hdrs['Connection'] = 'close'
     hdrs['Content-Length'] = len(data)
     if method == 'POST':
         hdrs['Content-Type'] = 'application/octet-stream'
+    if proxy.login and proxy.password:
+        hdrs['Proxy-Authorization'] = _basic_auth_str(proxy.login, proxy.password)
+    kw = {'method': method,
+          'path': 'http://%s%s' % (host, path) if fullpath else path,  # HTTP
+          'headers': '\r\n'.join(('%s: %s' % (k, v) for k, v in hdrs.items())),
+          'data': data}
+    req = (('{method} {path} HTTP/1.1\r\n{headers}\r\n\r\n{data}')
+           .format(**kw).encode())
     kw = {
         'method': method,
         'path': 'http://%s%s' % (host, path) if fullpath else path,  # HTTP
@@ -261,12 +274,8 @@ def _request(method, host, path, fullpath=False, data=''):
 
 async def _send_test_request(method, proxy, judge):
     resp, content, err = None, None, None
-    request, rv = _request(
-        method=method,
-        host=judge.host,
-        path=judge.path,
-        fullpath=proxy.ngtr.use_full_path,
-    )
+    request, rv = _request(proxy, method=method, host=judge.host, path=judge.path,
+                           fullpath=proxy.ngtr.use_full_path)
     try:
         await proxy.send(request)
         resp = await proxy.recv()

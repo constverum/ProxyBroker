@@ -12,7 +12,7 @@ from .providers import PROVIDERS, Provider
 from .proxy import Proxy
 from .resolver import Resolver
 from .server import Server
-from .utils import IPPortPatternLine, log
+from .utils import IPPortPatternLine, IPPortAuthPatternLine, log
 
 # Pause between grabbing cycles; in seconds.
 GRAB_PAUSE = 180
@@ -297,7 +297,7 @@ class Broker:
         if isinstance(data, io.TextIOWrapper):
             data = data.read()
         if isinstance(data, str):
-            data = IPPortPatternLine.findall(data)
+            data = IPPortAuthPatternLine.findall(data)
         proxies = set(data)
         for proxy in proxies:
             await self._handle(proxy, check=check)

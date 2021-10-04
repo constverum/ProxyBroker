@@ -64,9 +64,7 @@ class Proxy:
             raise
         return self
 
-    def __init__(
-        self, host=None, port=None, types=(), timeout=8, verify_ssl=False
-    ):
+    def __init__(self, host=None, port=None, login=None, password=None, types=(), timeout=8, verify_ssl=False):
         self.host = host
         if not Resolver.host_is_ip(self.host):
             raise ValueError(
@@ -77,6 +75,9 @@ class Proxy:
         self.port = int(port)
         if self.port > 65535:
             raise ValueError('The port of proxy cannot be greater than 65535')
+
+        self.login = login
+        self.password = password
 
         self.expected_types = set(types) & {
             'HTTP',
