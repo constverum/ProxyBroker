@@ -1,0 +1,24 @@
+{
+  "files": [
+    "README.md"
+  ],
+  "imageSize": 100,
+  "commit": false,
+  "contributors": [
+    {
+      "login": "a5r0n",
+      "name": "a5r0n",
+      "avatar_url": "https://avatars.githubusercontent.com/u/32464596?v=4",
+      "profile": "https://github.com/a5r0n",
+      "contributions": [
+        "code"
+      ]
+    }
+  ],
+  "contributorsPerLine": 7,
+  "projectName": "proxybroker2",
+  "projectOwner": "bluet",
+  "repoType": "github",
+  "repoHost": "https://github.com",
+  "skipCi": true
+}
