@@ -6,6 +6,17 @@
   "commit": false,
   "contributors": [
     {
+      "login": "afunTW",
+      "name": "C.M. Yang",
+      "avatar_url": "https://avatars.githubusercontent.com/u/4820492?v=4",
+      "profile": "https://afun.tw",
+      "contributions": [
+        "code",
+        "ideas",
+        "review"
+      ]
+    },
+    {
       "login": "ivaano",
       "name": "Ivan Villareal",
       "avatar_url": "https://avatars.githubusercontent.com/u/190708?v=4",
