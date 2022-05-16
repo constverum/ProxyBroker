@@ -355,7 +355,6 @@ Refs
 ----
 
 -   <https://github.com/constverum/ProxyBroker/pull/161>
--   <https://github.com/davidsarkany/docker-ProxyBroker>
 
 ## Contributors ✨
 
