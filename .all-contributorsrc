@@ -22,6 +22,16 @@
       "contributions": [
         "ideas"
         ]
+    },
+    {
+      "login": "vincentinttsh",
+      "name": "vincentinttsh",
+      "avatar_url": "https://avatars.githubusercontent.com/u/14941597?v=4",
+      "profile": "https://www.vincentinttsh.tw/",
+      "contributions": [
+        "code",
+        "review"
+      ]
     }
   ],
   "contributorsPerLine": 7,
