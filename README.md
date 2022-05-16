@@ -367,6 +367,7 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
 <table>
   <tr>
     <td align="center"><a href="http://ivanvillareal.com"><img src="https://avatars.githubusercontent.com/u/190708?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Ivan Villareal</b></sub></a><br /><a href="https://github.com/bluet/proxybroker2/commits?author=ivaano" title="Code">💻</a></td>
+    <td align="center"><a href="https://github.com/synchronizing"><img src="https://avatars.githubusercontent.com/u/2829082?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Felipe</b></sub></a><br /><a href="#ideas-synchronizing" title="Ideas, Planning, & Feedback">🤔</a></td>
   </tr>
 </table>
 
