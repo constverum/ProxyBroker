@@ -1,0 +1,26 @@
+{
+  "files": [
+    "README.md"
+  ],
+  "imageSize": 100,
+  "commit": false,
+  "contributors": [
+    {
+      "login": "afunTW",
+      "name": "C.M. Yang",
+      "avatar_url": "https://avatars.githubusercontent.com/u/4820492?v=4",
+      "profile": "https://afun.tw",
+      "contributions": [
+        "code",
+        "ideas",
+        "review"
+      ]
+    }
+  ],
+  "contributorsPerLine": 7,
+  "projectName": "proxybroker2",
+  "projectOwner": "bluet",
+  "repoType": "github",
+  "repoHost": "https://github.com",
+  "skipCi": true
+}
