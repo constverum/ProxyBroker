@@ -7,3 +7,5 @@ __pycache__
 .cache
 build
 dist
+/venv
+Pipfile*

@@ -65,7 +65,7 @@ class Broker:
         **kwargs,
     ):
         self._loop = loop or asyncio.get_event_loop()
-        self._proxies = queue or asyncio.Queue(loop=self._loop)
+        self._proxies = queue or asyncio.Queue()
         self._resolver = Resolver(loop=self._loop)
         self._timeout = timeout
         self._verify_ssl = verify_ssl
@@ -97,7 +97,7 @@ class Broker:
             max_tries = attempts_conn
 
         # The maximum number of concurrent checking proxies
-        self._on_check = asyncio.Queue(maxsize=max_conn, loop=self._loop)
+        self._on_check = asyncio.Queue(maxsize=max_conn)
         self._max_tries = max_tries
         self._judges = judges
         self._providers = [
