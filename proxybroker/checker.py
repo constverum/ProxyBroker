@@ -340,6 +340,7 @@ def _get_anonymity_lvl(real_ext_ip, proxy, judge, content):
 class ProxyChecker(Checker):
     def __init__(self, *args, **kwargs):
         warnings.warn(
-            '`ProxyChecker` is deprecated, use `Checker` instead.', DeprecationWarning,
+            '`ProxyChecker` is deprecated, use `Checker` instead.',
+            DeprecationWarning,
         )
         super().__init__(*args, **kwargs)
