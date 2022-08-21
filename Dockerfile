@@ -20,7 +20,6 @@ RUN poetry config virtualenvs.create false && \
     poetry install --no-interaction --no-ansi --no-dev
 
 COPY proxybroker proxybroker
-VOLUME "/data"
-EXPOSE 8080
+EXPOSE 8888
 
 ENTRYPOINT ["python", "-m", "proxybroker" ]
