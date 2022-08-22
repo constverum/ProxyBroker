@@ -5,7 +5,7 @@ ProxyBroker
 ===========
 
 ![image](https://img.shields.io/pypi/v/proxybroker.svg?style=flat-square%0A%20:target:%20https://pypi.python.org/pypi/proxybroker/)
-![image](https://img.shields.io/travis/constverum/ProxyBroker.svg?style=flat-square%0A%20:target:%20https://travis-ci.org/constverum/ProxyBroker)
+![test result](https://github.com/bluet/proxybroker2/actions/workflows/python-test-versions.yml/badge.svg)
 ![image](https://img.shields.io/pypi/wheel/proxybroker.svg?style=flat-square%0A%20:target:%20https://pypi.python.org/pypi/proxybroker/)
 ![image](https://img.shields.io/pypi/pyversions/proxybroker.svg?style=flat-square%0A%20:target:%20https://pypi.python.org/pypi/proxybroker/)
 ![image](https://img.shields.io/pypi/l/proxybroker.svg?style=flat-square%0A%20:target:%20https://pypi.python.org/pypi/proxybroker/)
