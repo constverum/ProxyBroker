@@ -1,9 +1,9 @@
 
 [tool.poetry]
-name = "proxybroker2"
+name = "proxybroker"
 version = "2.0.0-alpha.1"
 description = "The New (auto rotate) Proxy [Finder | Checker | Server]. HTTP(S) & SOCKS."
-authors = ["BlueT - Matthew Lien - 練喆明 <bluet@bluet.org>"]
+authors = ["BlueT - Matthew Lien - 練喆明 <bluet@bluet.org>", "Denis Constverum <constverum@gmail.com>"]
 repository = "https://github.com/bluet/proxybroker2"
 homepage = "http://proxybroker.readthedocs.io/"
 documentation = "http://proxybroker.readthedocs.io/"
