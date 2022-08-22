@@ -385,7 +385,9 @@ def cli(args=sys.argv[1:]):
         ns.types.remove('HTTP')
         ns.types.append(('HTTP', ns.anon_lvl))
 
+    # https://github.com/pytest-dev/pytest-asyncio/issues/212#issuecomment-841992444
     loop = asyncio.get_event_loop()
+    # loop = asyncio.get_running_loop()
     proxies = asyncio.Queue()
     broker = Broker(
         proxies,
@@ -441,7 +443,7 @@ def cli(args=sys.argv[1:]):
 
     try:
         if tasks:
-            loop.run_until_complete(asyncio.gather(*tasks, loop=loop))
+            loop.run_until_complete(asyncio.gather(*tasks))
             if ns.show_stats:
                 broker.show_stats(verbose=True)
         else:
