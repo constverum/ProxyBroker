@@ -50,7 +50,7 @@
       "profile": "https://github.com/synchronizing",
       "contributions": [
         "ideas"
-        ]
+      ]
     },
     {
       "login": "vincentinttsh",
@@ -60,6 +60,15 @@
       "contributions": [
         "code",
         "review"
+      ]
+    },
+    {
+      "login": "ziloka",
+      "name": "Ziloka",
+      "avatar_url": "https://avatars.githubusercontent.com/u/50429450?v=4",
+      "profile": "https://github.com/ziloka",
+      "contributions": [
+        "code"
       ]
     }
   ],
