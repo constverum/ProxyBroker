@@ -28,6 +28,7 @@ jobs:
         uses: snok/install-poetry@v1.3.1
         with:
           version: ${{ matrix.poetry-version }}
+          virtualenvs-in-project: true
       - name: Load cached venv
         id: cached-poetry-dependencies
         uses: actions/cache@v2
