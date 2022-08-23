@@ -385,9 +385,7 @@ def cli(args=sys.argv[1:]):
         ns.types.remove('HTTP')
         ns.types.append(('HTTP', ns.anon_lvl))
 
-    # https://github.com/pytest-dev/pytest-asyncio/issues/212#issuecomment-841992444
     loop = asyncio.get_event_loop()
-    # loop = asyncio.get_running_loop()
     proxies = asyncio.Queue()
     broker = Broker(
         proxies,
@@ -450,6 +448,3 @@ def cli(args=sys.argv[1:]):
             loop.run_forever()
     except KeyboardInterrupt:
         broker.stop()
-    finally:
-        loop.stop()
-        loop.close()
