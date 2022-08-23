@@ -363,6 +363,9 @@ async def handle(proxies, outfile, format):
             outfile.write(line)
             is_first = False
 
+async def cli_helper(tasks):
+    results = await asyncio.gather(*tasks)
+    return results
 
 def cli(args=sys.argv[1:]):
     parser = create_parser()
@@ -385,7 +388,7 @@ def cli(args=sys.argv[1:]):
         ns.types.remove('HTTP')
         ns.types.append(('HTTP', ns.anon_lvl))
 
-    loop = asyncio.get_event_loop()
+    loop = asyncio.get_event_loop_policy().get_event_loop()
     proxies = asyncio.Queue()
     broker = Broker(
         proxies,
@@ -441,7 +444,7 @@ def cli(args=sys.argv[1:]):
 
     try:
         if tasks:
-            loop.run_until_complete(asyncio.gather(*tasks))
+            loop.run_until_complete(cli_helper(tasks))
             if ns.show_stats:
                 broker.show_stats(verbose=True)
         else:
