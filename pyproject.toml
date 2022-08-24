@@ -47,6 +47,7 @@ alabaster = "^0.7.12"
 pytest-isort = "^3.0.0"
 pytest-flake8 = "^1.1.1"
 pytest-mock = "^3.8.2"
+pytest-cov = "^3.0.0"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

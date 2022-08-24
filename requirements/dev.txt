@@ -9,3 +9,4 @@ pytest-runner>=4.4
 pytest-isort>=0.3
 pytest-flake8>=1.0
 pytest-mock>=1.10.1
+pytest-cov
