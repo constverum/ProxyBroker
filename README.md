@@ -100,6 +100,31 @@ The latest development version can be installed directly from GitHub:
 $ pip install -U git+https://github.com/bluet/proxybroker2.git
 ```
 
+Compiling to a dynamically linked executable
+
+Important Notes: 
+- Installs the package on your system
+
+Unix
+
+Requirements: 
+- objdump command (usually located in binutils package)
+- Upx (decreases executable size, optional)
+
+```
+pip install pyinstaller \
+&& pip install . \
+&& mkdir -p build \
+&& cd build \
+&& pyinstaller --onefile --add-data "../proxybroker/data:data" --workpath ./tmp --distpath . --clean $(which proxybroker) \
+&& rm -rf tmp
+```
+
+The executable is now in dist/proxybroker directory
+
+Debug
+- pyi-archive_viewer ./dist/proxybroker to view the archived contents in the executable
+
 Usage
 -----
 
