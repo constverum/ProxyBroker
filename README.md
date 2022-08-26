@@ -87,6 +87,8 @@ Installation
 ### Install locally
 
 To install last stable release from pypi:
+> NOT RECOMMEND. It will install the out-dated original proxybroker package, which is no longer maintained by original maintainer. [https://github.com/constverum/ProxyBroker](https://github.com/constverum/ProxyBroker/issues/195)
+> We will upload the up-to-date package under new name (proxybroker2) when the support for 3.10 is ready. [https://github.com/bluet/proxybroker2/issues/89](https://github.com/bluet/proxybroker2/issues/89)
 
 ``` {.sourceCode .bash}
 $ pip install proxybroker
