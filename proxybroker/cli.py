@@ -363,10 +363,6 @@ async def handle(proxies, outfile, format):
             outfile.write(line)
             is_first = False
 
-async def cli_helper(tasks):
-    results = await asyncio.gather(*tasks)
-    return results
-
 def cli(args=sys.argv[1:]):
     parser = create_parser()
     ns = parser.parse_args(args)
@@ -444,7 +440,7 @@ def cli(args=sys.argv[1:]):
 
     try:
         if tasks:
-            loop.run_until_complete(cli_helper(tasks))
+            loop.run_until_complete(asyncio.gather(*tasks))
             if ns.show_stats:
                 broker.show_stats(verbose=True)
         else:
