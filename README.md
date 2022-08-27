@@ -100,31 +100,42 @@ The latest development version can be installed directly from GitHub:
 $ pip install -U git+https://github.com/bluet/proxybroker2.git
 ```
 
-Compiling to a dynamically linked executable
+### Build bundled one-file executable with pyinstaller
 
-Important Notes: 
-- Installs the package on your system
+#### Requirements
 
-Unix
+- Operating system type is one of the following: Windows, Linux, MacOS
 
-Requirements: 
-- objdump command (usually located in binutils package)
-- Upx (decreases executable size, optional)
+Install these packages on your system:
 
+- upx
+- objdump (usually in binutils package)
+
+Linux
 ```
 pip install pyinstaller \
 && pip install . \
 && mkdir -p build \
 && cd build \
-&& pyinstaller --onefile --add-data "../proxybroker/data:data" --workpath ./tmp --distpath . --clean $(which proxybroker) \
+&& pyinstaller --onefile --name proxybroker --add-data "../proxybroker/data:data" --workpath ./tmp --distpath . --clean ../py2exe_entrypoint.py \
+&& rm -rf tmp *.spec
+```
+
+The executable is now in the build directory
+
+Windows
+```
+pip install pyinstaller \
+&& pip install . \
+&& mkdir -p build \
+&& cd build \
+&& pyinstaller --onefile --name proxybroker --add-data "../proxybroker/data;data" --workpath ./tmp --distpath . --clean ../py2exe_entrypoint.py \
 && rm -rf tmp
 ```
 
-The executable is now in dist/proxybroker directory
-
-Debug
-- pyi-archive_viewer ./dist/proxybroker to view the archived contents in the executable
-
+### Use pre-built Docker image
+``` {.sourceCode .bash}
+$ docker pull bluet/proxybroker2
 Usage
 -----
 
