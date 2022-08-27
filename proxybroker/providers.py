@@ -607,7 +607,7 @@ class Proxyb_net(Provider):
             return []
         _hosts, _ports = page.split('","ports":"')
         hosts, ports = [], []
-        for host in _hosts.split('<\/tr><tr>'):  # noqa: W605
+        for host in _hosts.split('</tr><tr>'):  # noqa: W605
             host = IPPattern.findall(host)
             if not host:
                 continue

@@ -43,9 +43,9 @@ class Proxy:
 
         :param str host: A passed host can be a domain or IP address.
                          If the host is a domain, try to resolve it
-        :param str \*args:
+        :param str *args:
             (optional) Positional arguments that :class:`Proxy` takes
-        :param str \*\*kwargs:
+        :param str **kwargs:
             (optional) Keyword arguments that :class:`Proxy` takes
 
         :return: :class:`Proxy` object

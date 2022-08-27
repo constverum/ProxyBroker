@@ -363,7 +363,6 @@ async def handle(proxies, outfile, format):
             outfile.write(line)
             is_first = False
 
-
 def cli(args=sys.argv[1:]):
     parser = create_parser()
     ns = parser.parse_args(args)
@@ -385,9 +384,7 @@ def cli(args=sys.argv[1:]):
         ns.types.remove('HTTP')
         ns.types.append(('HTTP', ns.anon_lvl))
 
-    # https://github.com/pytest-dev/pytest-asyncio/issues/212#issuecomment-841992444
-    loop = asyncio.get_event_loop()
-    # loop = asyncio.get_running_loop()
+    loop = asyncio.get_event_loop_policy().get_event_loop()
     proxies = asyncio.Queue()
     broker = Broker(
         proxies,
@@ -450,6 +447,3 @@ def cli(args=sys.argv[1:]):
             loop.run_forever()
     except KeyboardInterrupt:
         broker.stop()
-    finally:
-        loop.stop()
-        loop.close()
