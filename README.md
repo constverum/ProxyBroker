@@ -100,33 +100,83 @@ The latest development version can be installed directly from GitHub:
 $ pip install -U git+https://github.com/bluet/proxybroker2.git
 ```
 
-Compiling to a dynamically linked executable
+### Build bundled one-file executable with pyinstaller
 
-Important Notes: 
-- Installs the package on your system
+#### Requirements
 
-Unix
+Unix based systems
 
-Requirements: 
-- objdump command (usually located in binutils package)
-- Upx (decreases executable size, optional)
+Install these tools
+ - upx
+ - objdump (this tool is usually in the bintools package)
 
 ```
 pip install pyinstaller \
 && pip install . \
 && mkdir -p build \
 && cd build \
-&& pyinstaller --onefile --add-data "../proxybroker/data:data" --workpath ./tmp --distpath . --clean $(which proxybroker) \
+&& pyinstaller --onefile --name proxybroker --add-data "../proxybroker/data:data" --workpath ./tmp --distpath . --clean ../py2exe_entrypoint.py \
 && rm -rf tmp
 ```
 
-The executable is now in dist/proxybroker directory
+The executable is now in the build directory
 
-Debug
-- pyi-archive_viewer ./dist/proxybroker to view the archived contents in the executable
+Windows
 
-Usage
+```
+pip install pyinstaller \
+&& pip install . \
+&& mkdir -p build \
+&& cd build \
+&& pyinstaller --onefile --name proxybroker --add-data "../proxybroker/data;data" --workpath ./tmp --distpath . --clean ../py2exe_entrypoint.py \
+&& rm -rf tmp
+```
+
+
+### Use pre-built Docker image
+``` {.sourceCode .bash}
+$ docker run --rm bluet/proxybroker2 --help
+  usage: proxybroker [--max-conn MAX_CONN] [--max-tries MAX_TRIES]
+                     [--timeout SECONDS] [--judge JUDGES] [--provider PROVIDERS]
+                     [--verify-ssl]
+                     [--log [{NOTSET,DEBUG,INFO,WARNING,ERROR,CRITICAL}]]
+                     [--min-queue MINIMUM_PROXIES_IN_QUEUE]
+                     [--version] [--help]
+                     {find,grab,serve,update-geo} ...
+
+  Proxy [Finder | Checker | Server]
+
+  Commands:
+    These are common commands used in various situations
+
+    {find,grab,serve,update-geo}
+      find                Find and check proxies
+      grab                Find proxies without a check
+      serve               Run a local proxy server
+      update-geo          Download and use a detailed GeoIP database
+
+  Options:
+    --max-conn MAX_CONN   The maximum number of concurrent checks of proxies
+    --max-tries MAX_TRIES
+                          The maximum number of attempts to check a proxy
+    --timeout SECONDS, -t SECONDS
+                          Timeout of a request in seconds. The default value is
+                          8 seconds
+    --judge JUDGES        Urls of pages that show HTTP headers and IP address
+    --provider PROVIDERS  Urls of pages where to find proxies
+    --verify-ssl, -ssl    Flag indicating whether to check the SSL certificates
+    --min-queue MINIMUM_PROXIES_IN_QUEUE   The minimum number of proxies in the queue for checking connectivity
+    --log [{NOTSET,DEBUG,INFO,WARNING,ERROR,CRITICAL}]
+                          Logging level
+    --version, -v         Show program's version number and exit
+    --help, -h            Show this help message and exit
+
+  Run 'proxybroker <command> --help' for more information on a command.
+  Suggestions and bug reports are greatly appreciated:
+  <https://github.com/bluet/proxybroker2/issues>
+
 -----
+```
 
 ### CLI Examples
 
