@@ -106,12 +106,9 @@ $ pip install -U git+https://github.com/bluet/proxybroker2.git
 
 - Operating system type is one of the following: Windows, Linux, MacOS
 
-Install these packages on your system:
-
-- upx
-- objdump (usually in binutils package)
-
-Linux
+Installs these packages on your system:
+``` {.sourceCode .bash}
+$ apt-get install -y binutils upx-ucl
 ```
 pip install pyinstaller \
 && pip install . \
@@ -122,16 +119,6 @@ pip install pyinstaller \
 ```
 
 The executable is now in the build directory
-
-Windows
-```
-pip install pyinstaller \
-&& pip install . \
-&& mkdir -p build \
-&& cd build \
-&& pyinstaller --onefile --name proxybroker --add-data "../proxybroker/data;data" --workpath ./tmp --distpath . --clean ../py2exe_entrypoint.py \
-&& rm -rf tmp
-```
 
 ### Use pre-built Docker image
 ``` {.sourceCode .bash}
