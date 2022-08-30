@@ -6,7 +6,7 @@ docker build --pull -t bluet/proxybroker2 .
 docker scan bluet/proxybroker2:latest
 
 docker tag bluet/proxybroker2:latest bluet/proxybroker2:${VERSION}
-git tag "${VERSION}" -a -m "vback ${VERSION}"
+git tag "${VERSION}" -a -m "proxybroker2 ${VERSION}"
 git push
 git push --tags
 
@@ -18,7 +18,7 @@ docker buildx create --use
 while true; do
         read -p "Have I Updated VERSION Info? (Is current VERSION=${VERSION} ?) [y/N]" yn
         case $yn in
-                [Yy]* ) docker buildx build -t bluet/proxybroker2:latest -t bluet/proxybroker2:${VERSION} --platform linux/amd64,linux/arm/v5,linux/arm/v7,linux/arm64/v8,linux/ppc64le,linux/s390x --pull --push .; break;;
+                [Yy]* ) docker buildx build -t bluet/proxybroker2:latest -t bluet/proxybroker2:${VERSION} --platform linux/amd64,linux/arm64/v8 --pull --push .; break;;
                 [Nn]* ) exit;;
                 * ) echo "";;
         esac
