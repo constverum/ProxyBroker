@@ -4,11 +4,12 @@ ProxyBroker
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
 ===========
 
-![image](https://img.shields.io/pypi/v/proxybroker.svg?style=flat-square%0A%20:target:%20https://pypi.python.org/pypi/proxybroker/)
 ![test result](https://github.com/bluet/proxybroker2/actions/workflows/python-test-versions.yml/badge.svg)
-![image](https://img.shields.io/pypi/wheel/proxybroker.svg?style=flat-square%0A%20:target:%20https://pypi.python.org/pypi/proxybroker/)
-![image](https://img.shields.io/pypi/pyversions/proxybroker.svg?style=flat-square%0A%20:target:%20https://pypi.python.org/pypi/proxybroker/)
-![image](https://img.shields.io/pypi/l/proxybroker.svg?style=flat-square%0A%20:target:%20https://pypi.python.org/pypi/proxybroker/)
+[![GitHub stars](https://img.shields.io/github/stars/bluet/proxybroker2)](https://github.com/bluet/proxybroker2/stargazers)
+[![GitHub forks](https://img.shields.io/github/forks/bluet/proxybroker2)](https://github.com/bluet/proxybroker2/network)
+[![GitHub issues](https://img.shields.io/github/issues/bluet/proxybroker2)](https://github.com/bluet/proxybroker2/issues)
+[![GitHub license](https://img.shields.io/github/license/bluet/proxybroker2)](https://github.com/bluet/proxybroker2/blob/master/LICENSE)
+[![Twitter](https://img.shields.io/twitter/url?style=social&url=https%3A%2F%2Fgithub.com%2Fbluet%2Fproxybroker2)](https://twitter.com/intent/tweet?text=Wow:&url=https%3A%2F%2Fgithub.com%2Fbluet%2Fproxybroker2)
 
 ProxyBroker is an open source tool that asynchronously finds public proxies from multiple sources and concurrently checks them.
 
