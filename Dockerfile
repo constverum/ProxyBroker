@@ -8,6 +8,10 @@ ENV \
     PIP_NO_CACHE_DIR=1 \
     PIP_DISABLE_PIP_VERSION_CHECK=1
 
+RUN apt-get update \
+    && apt-get install --no-install-recommends gcc -y \
+    && apt-get clean
+
 RUN \
     pip install -U poetry
 
