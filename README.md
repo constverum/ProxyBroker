@@ -4,10 +4,11 @@ ProxyBroker
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
 ===========
 
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=bluet_proxybroker2&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=bluet_proxybroker2)
 ![test result](https://github.com/bluet/proxybroker2/actions/workflows/python-test-versions.yml/badge.svg)
+[![GitHub issues](https://img.shields.io/github/issues/bluet/proxybroker2)](https://github.com/bluet/proxybroker2/issues)
 [![GitHub stars](https://img.shields.io/github/stars/bluet/proxybroker2)](https://github.com/bluet/proxybroker2/stargazers)
 [![GitHub forks](https://img.shields.io/github/forks/bluet/proxybroker2)](https://github.com/bluet/proxybroker2/network)
-[![GitHub issues](https://img.shields.io/github/issues/bluet/proxybroker2)](https://github.com/bluet/proxybroker2/issues)
 [![GitHub license](https://img.shields.io/github/license/bluet/proxybroker2)](https://github.com/bluet/proxybroker2/blob/master/LICENSE)
 [![Twitter](https://img.shields.io/twitter/url?style=social&url=https%3A%2F%2Fgithub.com%2Fbluet%2Fproxybroker2)](https://twitter.com/intent/tweet?text=Wow:&url=https%3A%2F%2Fgithub.com%2Fbluet%2Fproxybroker2)
 
