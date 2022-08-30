@@ -94,21 +94,34 @@ To install last stable release from pypi:
 $ pip install proxybroker
 ```
 
-The latest development version can be installed directly from GitHub:
+To install the latest development version from GitHub:
 
 ``` {.sourceCode .bash}
 $ pip install -U git+https://github.com/bluet/proxybroker2.git
 ```
 
+### Use pre-built Docker image
+
+``` {.sourceCode .bash}
+$ docker pull bluet/proxybroker2
+```
+
 ### Build bundled one-file executable with pyinstaller
 
 #### Requirements
+Supported Operating System: Windows, Linux, MacOS
 
-- Operating system type is one of the following: Windows, Linux, MacOS
+*On UNIX-like systems (Linux / macOSX / BSD)*
 
-Installs these packages on your system:
+Install these tools
+ - upx
+ - objdump (this tool is usually in the binutils package)
 ``` {.sourceCode .bash}
-$ apt-get install -y binutils upx-ucl
+$ sudo apt install -y upx-ucl binutils # On Ubuntu / Debian
+```
+
+#### Build
+
 ```
 pip install pyinstaller \
 && pip install . \
@@ -120,9 +133,6 @@ pip install pyinstaller \
 
 The executable is now in the build directory
 
-### Use pre-built Docker image
-``` {.sourceCode .bash}
-$ docker pull bluet/proxybroker2
 Usage
 -----
 
@@ -370,6 +380,7 @@ Contributing
 -   Commit your changes: `git commit -am 'Add some feature'`
 -   Push to the branch: `git push origin my-new-feature`
 -   Submit a pull request!
+-   [Contributor workflow](https://github.com/bluet/proxybroker2/issues/93)
 
 License
 -------
