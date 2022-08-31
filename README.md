@@ -1,14 +1,16 @@
 ProxyBroker
 <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
-[![All Contributors](https://img.shields.io/badge/all_contributors-7-orange.svg?style=flat-square)](#contributors-)
+[![All Contributors](https://img.shields.io/badge/all_contributors-8-orange.svg?style=flat-square)](#contributors-)
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
 ===========
 
-![image](https://img.shields.io/pypi/v/proxybroker.svg?style=flat-square%0A%20:target:%20https://pypi.python.org/pypi/proxybroker/)
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=bluet_proxybroker2&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=bluet_proxybroker2)
 ![test result](https://github.com/bluet/proxybroker2/actions/workflows/python-test-versions.yml/badge.svg)
-![image](https://img.shields.io/pypi/wheel/proxybroker.svg?style=flat-square%0A%20:target:%20https://pypi.python.org/pypi/proxybroker/)
-![image](https://img.shields.io/pypi/pyversions/proxybroker.svg?style=flat-square%0A%20:target:%20https://pypi.python.org/pypi/proxybroker/)
-![image](https://img.shields.io/pypi/l/proxybroker.svg?style=flat-square%0A%20:target:%20https://pypi.python.org/pypi/proxybroker/)
+[![GitHub issues](https://img.shields.io/github/issues/bluet/proxybroker2)](https://github.com/bluet/proxybroker2/issues)
+[![GitHub stars](https://img.shields.io/github/stars/bluet/proxybroker2)](https://github.com/bluet/proxybroker2/stargazers)
+[![GitHub forks](https://img.shields.io/github/forks/bluet/proxybroker2)](https://github.com/bluet/proxybroker2/network)
+[![GitHub license](https://img.shields.io/github/license/bluet/proxybroker2)](https://github.com/bluet/proxybroker2/blob/master/LICENSE)
+[![Twitter](https://img.shields.io/twitter/url?style=social&url=https%3A%2F%2Fgithub.com%2Fbluet%2Fproxybroker2)](https://twitter.com/intent/tweet?text=Wow:&url=https%3A%2F%2Fgithub.com%2Fbluet%2Fproxybroker2)
 
 ProxyBroker is an open source tool that asynchronously finds public proxies from multiple sources and concurrently checks them.
 
@@ -410,6 +412,9 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
     <td align="center"><a href="https://github.com/synchronizing"><img src="https://avatars.githubusercontent.com/u/2829082?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Felipe</b></sub></a><br /><a href="#ideas-synchronizing" title="Ideas, Planning, & Feedback">🤔</a></td>
     <td align="center"><a href="https://www.vincentinttsh.tw/"><img src="https://avatars.githubusercontent.com/u/14941597?v=4?s=100" width="100px;" alt=""/><br /><sub><b>vincentinttsh</b></sub></a><br /><a href="https://github.com/bluet/proxybroker2/commits?author=vincentinttsh" title="Code">💻</a> <a href="https://github.com/bluet/proxybroker2/pulls?q=is%3Apr+reviewed-by%3Avincentinttsh" title="Reviewed Pull Requests">👀</a></td>
     <td align="center"><a href="https://github.com/ziloka"><img src="https://avatars.githubusercontent.com/u/50429450?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Ziloka</b></sub></a><br /><a href="https://github.com/bluet/proxybroker2/commits?author=ziloka" title="Code">💻</a></td>
+  </tr>
+  <tr>
+    <td align="center"><a href="http://hhming.moe"><img src="https://avatars.githubusercontent.com/u/43672033?v=4?s=100" width="100px;" alt=""/><br /><sub><b>hms5232</b></sub></a><br /><a href="https://github.com/bluet/proxybroker2/commits?author=hms5232" title="Code">💻</a></td>
   </tr>
 </table>
 
