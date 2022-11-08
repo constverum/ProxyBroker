@@ -1,12 +1,12 @@
 {
-	"name": "Python 3",
-	"image": "mcr.microsoft.com/devcontainers/python:3.10-bullseye",
+	"name": "proxybroker2",
+	"context": "..",
+	"dockerFile": "../Dockerfile",
 	"features": {
-		"ghcr.io/devcontainers/features/node:1": {
-			"version": "none"
-		},
-		"ghcr.io/devcontainers/features/docker-in-docker:1": {},
-		"ghcr.io/devcontainers/features/git:1": {}
+		"ghcr.io/devcontainers/features/docker-from-docker:1": {},
+		"ghcr.io/devcontainers/features/git:1": {},
+		"ghcr.io/dhoeric/features/act:1": {}
+		// act -P ubuntu-latest=catthehacker/ubuntu:act-latest --artifact-server-path build/artifacts -W ./.github/workflows/py-to-exe.yml
 	},
 
 	// Use 'forwardPorts' to make a list of ports inside the container available locally.
@@ -15,8 +15,12 @@
 	// Use 'postCreateCommand' to run commands after the container is created.
 	"postCreateCommand": "apt-get update && apt-get install -y binutils upx-ucl && pip install pyinstaller && pip install .",
 
-	// Set `remoteUser` to `root` to connect as root instead. More info: https://aka.ms/vscode-remote/containers/non-root.
-	"remoteUser": "vscode",
+	// Configure tool-specific properties.
+	// "customizations": {},
+
+	// Uncomment to connect as root instead. More info: https://aka.ms/dev-containers-non-root.
+	"remoteUser": "root",
+
 	"customizations": {
 		"vscode": {
 			"extensions": [
