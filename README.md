@@ -111,13 +111,16 @@ $ docker pull bluet/proxybroker2
 ### Build bundled one-file executable with pyinstaller
 
 #### Requirements
+Supported Operating System: Windows, Linux, MacOS
 
 *On UNIX-like systems (Linux / macOSX / BSD)*
 
 Install these tools
  - upx
  - objdump (this tool is usually in the binutils package)
- - `$ sudo apt install upx-ucl binutils` (On Ubuntu / Debian)
+``` {.sourceCode .bash}
+$ sudo apt install -y upx-ucl binutils # On Ubuntu / Debian
+```
 
 #### Build
 
@@ -127,7 +130,7 @@ pip install pyinstaller \
 && mkdir -p build \
 && cd build \
 && pyinstaller --onefile --name proxybroker --add-data "../proxybroker/data:data" --workpath ./tmp --distpath . --clean ../py2exe_entrypoint.py \
-&& rm -rf tmp
+&& rm -rf tmp *.spec
 ```
 
 The executable is now in the build directory
