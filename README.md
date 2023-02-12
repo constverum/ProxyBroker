@@ -1,8 +1,12 @@
+*Porting to Python3.10+ is painful and the progress is moving slowly.*  
+*We need more volunteers to join. PRs welcome! :joy:*
+
 ProxyBroker
+===========
 <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
 [![All Contributors](https://img.shields.io/badge/all_contributors-8-orange.svg?style=flat-square)](#contributors-)
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
-===========
+
 
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=bluet_proxybroker2&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=bluet_proxybroker2)
 ![test result](https://github.com/bluet/proxybroker2/actions/workflows/python-test-versions.yml/badge.svg)
