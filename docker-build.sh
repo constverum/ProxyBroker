@@ -1,6 +1,6 @@
 #!/bin/bash
 
-VERSION=v2.0.0-alpha4
+VERSION=v2.0.0-alpha5
 
 docker build --pull -t bluet/proxybroker2 .
 docker scan bluet/proxybroker2:latest
