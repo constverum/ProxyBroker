@@ -1,9 +1,14 @@
+In compliance with the `APACHE-2.0 <https://opensource.org/licenses/Apache-2.0>`_ license: I declare that this version of the program contains my modifications, which can be seen through the usual "git" mechanism.
 
 Change Log
 ==========
+`Unreleased`_ (2020-07)
+-----------------------
+Author(s): BlueT - Matthew Lien - 練喆明, afunTW  
 
-`0.4.0`_ (Unreleased)
----------------------
+* Merge pull request #4 from afunTW/masterWIP: ADD: using pre-commit for code quality  
+* update: end of file fixer  
+* bugfix: installation error due to renaming README.rst to README.md  
 
 
 `0.3.2`_ (2018-03-12)
