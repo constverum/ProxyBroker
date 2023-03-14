@@ -54,7 +54,7 @@ class Resolver:
         try:
             host = '.'.join(f'{int(n):03d}' for n in host.split('.'))
             ipaddress.IPv4Address(host)
-        except (ipaddress.AddressValueError, builtins.ValueError):
+        except (ipaddress.AddressValueError, ValueError):
             return False
         else:
             return True
