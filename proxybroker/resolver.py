@@ -52,8 +52,9 @@ class Resolver:
         """Check a host is IP address."""
         # TODO: add IPv6 support
         try:
+            host = '.'.join(f'{int(n)}' for n in host.split('.'))
             ipaddress.IPv4Address(host)
-        except ipaddress.AddressValueError:
+        except (ipaddress.AddressValueError, ValueError):
             return False
         else:
             return True
