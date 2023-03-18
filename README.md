@@ -4,7 +4,7 @@
 ProxyBroker
 ===========
 <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
-[![All Contributors](https://img.shields.io/badge/all_contributors-9-orange.svg?style=flat-square)](#contributors-)
+[![All Contributors](https://img.shields.io/badge/all_contributors-10-orange.svg?style=flat-square)](#contributors-)
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
 
 
@@ -422,6 +422,7 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
     <tr>
       <td align="center" valign="top" width="14.28%"><a href="http://hhming.moe"><img src="https://avatars.githubusercontent.com/u/43672033?v=4?s=100" width="100px;" alt="hms5232"/><br /><sub><b>hms5232</b></sub></a><br /><a href="https://github.com/bluet/proxybroker2/commits?author=hms5232" title="Code">💻</a></td>
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/stefanDeveloper"><img src="https://avatars.githubusercontent.com/u/18898803?v=4?s=100" width="100px;" alt="Stefan Machmeier"/><br /><sub><b>Stefan Machmeier</b></sub></a><br /><a href="https://github.com/bluet/proxybroker2/commits?author=stefanDeveloper" title="Code">💻</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/SilverSteven"><img src="https://avatars.githubusercontent.com/u/33377370?v=4?s=100" width="100px;" alt="steven"/><br /><sub><b>steven</b></sub></a><br /><a href="https://github.com/bluet/proxybroker2/commits?author=SilverSteven" title="Documentation">📖</a></td>
     </tr>
   </tbody>
 </table>
