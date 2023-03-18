@@ -79,6 +79,15 @@
       "contributions": [
         "code"
       ]
+    },
+    {
+      "login": "stefanDeveloper",
+      "name": "Stefan Machmeier",
+      "avatar_url": "https://avatars.githubusercontent.com/u/18898803?v=4",
+      "profile": "https://github.com/stefanDeveloper",
+      "contributions": [
+        "code"
+      ]
     }
   ],
   "contributorsPerLine": 7,
@@ -86,5 +95,6 @@
   "projectOwner": "bluet",
   "repoType": "github",
   "repoHost": "https://github.com",
-  "skipCi": true
+  "skipCi": true,
+  "commitConvention": "angular"
 }

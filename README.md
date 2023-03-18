@@ -4,7 +4,7 @@
 ProxyBroker
 ===========
 <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
-[![All Contributors](https://img.shields.io/badge/all_contributors-8-orange.svg?style=flat-square)](#contributors-)
+[![All Contributors](https://img.shields.io/badge/all_contributors-9-orange.svg?style=flat-square)](#contributors-)
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
 
 
@@ -409,18 +409,21 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
 <!-- prettier-ignore-start -->
 <!-- markdownlint-disable -->
 <table>
-  <tr>
-    <td align="center"><a href="https://github.com/a5r0n"><img src="https://avatars.githubusercontent.com/u/32464596?v=4?s=100" width="100px;" alt=""/><br /><sub><b>a5r0n</b></sub></a><br /><a href="https://github.com/bluet/proxybroker2/commits?author=a5r0n" title="Code">💻</a></td>
-    <td align="center"><a href="https://afun.tw"><img src="https://avatars.githubusercontent.com/u/4820492?v=4?s=100" width="100px;" alt=""/><br /><sub><b>C.M. Yang</b></sub></a><br /><a href="https://github.com/bluet/proxybroker2/commits?author=afunTW" title="Code">💻</a> <a href="#ideas-afunTW" title="Ideas, Planning, & Feedback">🤔</a> <a href="https://github.com/bluet/proxybroker2/pulls?q=is%3Apr+reviewed-by%3AafunTW" title="Reviewed Pull Requests">👀</a></td>
-    <td align="center"><a href="http://ivanvillareal.com"><img src="https://avatars.githubusercontent.com/u/190708?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Ivan Villareal</b></sub></a><br /><a href="https://github.com/bluet/proxybroker2/commits?author=ivaano" title="Code">💻</a></td>
-    <td align="center"><a href="https://github.com/quancore"><img src="https://avatars.githubusercontent.com/u/15036825?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Quancore</b></sub></a><br /><a href="https://github.com/bluet/proxybroker2/commits?author=quancore" title="Code">💻</a></td>
-    <td align="center"><a href="https://github.com/synchronizing"><img src="https://avatars.githubusercontent.com/u/2829082?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Felipe</b></sub></a><br /><a href="#ideas-synchronizing" title="Ideas, Planning, & Feedback">🤔</a></td>
-    <td align="center"><a href="https://www.vincentinttsh.tw/"><img src="https://avatars.githubusercontent.com/u/14941597?v=4?s=100" width="100px;" alt=""/><br /><sub><b>vincentinttsh</b></sub></a><br /><a href="https://github.com/bluet/proxybroker2/commits?author=vincentinttsh" title="Code">💻</a> <a href="https://github.com/bluet/proxybroker2/pulls?q=is%3Apr+reviewed-by%3Avincentinttsh" title="Reviewed Pull Requests">👀</a></td>
-    <td align="center"><a href="https://github.com/ziloka"><img src="https://avatars.githubusercontent.com/u/50429450?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Ziloka</b></sub></a><br /><a href="https://github.com/bluet/proxybroker2/commits?author=ziloka" title="Code">💻</a></td>
-  </tr>
-  <tr>
-    <td align="center"><a href="http://hhming.moe"><img src="https://avatars.githubusercontent.com/u/43672033?v=4?s=100" width="100px;" alt=""/><br /><sub><b>hms5232</b></sub></a><br /><a href="https://github.com/bluet/proxybroker2/commits?author=hms5232" title="Code">💻</a></td>
-  </tr>
+  <tbody>
+    <tr>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/a5r0n"><img src="https://avatars.githubusercontent.com/u/32464596?v=4?s=100" width="100px;" alt="a5r0n"/><br /><sub><b>a5r0n</b></sub></a><br /><a href="https://github.com/bluet/proxybroker2/commits?author=a5r0n" title="Code">💻</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://afun.tw"><img src="https://avatars.githubusercontent.com/u/4820492?v=4?s=100" width="100px;" alt="C.M. Yang"/><br /><sub><b>C.M. Yang</b></sub></a><br /><a href="https://github.com/bluet/proxybroker2/commits?author=afunTW" title="Code">💻</a> <a href="#ideas-afunTW" title="Ideas, Planning, & Feedback">🤔</a> <a href="https://github.com/bluet/proxybroker2/pulls?q=is%3Apr+reviewed-by%3AafunTW" title="Reviewed Pull Requests">👀</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="http://ivanvillareal.com"><img src="https://avatars.githubusercontent.com/u/190708?v=4?s=100" width="100px;" alt="Ivan Villareal"/><br /><sub><b>Ivan Villareal</b></sub></a><br /><a href="https://github.com/bluet/proxybroker2/commits?author=ivaano" title="Code">💻</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/quancore"><img src="https://avatars.githubusercontent.com/u/15036825?v=4?s=100" width="100px;" alt="Quancore"/><br /><sub><b>Quancore</b></sub></a><br /><a href="https://github.com/bluet/proxybroker2/commits?author=quancore" title="Code">💻</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/synchronizing"><img src="https://avatars.githubusercontent.com/u/2829082?v=4?s=100" width="100px;" alt="Felipe"/><br /><sub><b>Felipe</b></sub></a><br /><a href="#ideas-synchronizing" title="Ideas, Planning, & Feedback">🤔</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://www.vincentinttsh.tw/"><img src="https://avatars.githubusercontent.com/u/14941597?v=4?s=100" width="100px;" alt="vincentinttsh"/><br /><sub><b>vincentinttsh</b></sub></a><br /><a href="https://github.com/bluet/proxybroker2/commits?author=vincentinttsh" title="Code">💻</a> <a href="https://github.com/bluet/proxybroker2/pulls?q=is%3Apr+reviewed-by%3Avincentinttsh" title="Reviewed Pull Requests">👀</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/ziloka"><img src="https://avatars.githubusercontent.com/u/50429450?v=4?s=100" width="100px;" alt="Ziloka"/><br /><sub><b>Ziloka</b></sub></a><br /><a href="https://github.com/bluet/proxybroker2/commits?author=ziloka" title="Code">💻</a></td>
+    </tr>
+    <tr>
+      <td align="center" valign="top" width="14.28%"><a href="http://hhming.moe"><img src="https://avatars.githubusercontent.com/u/43672033?v=4?s=100" width="100px;" alt="hms5232"/><br /><sub><b>hms5232</b></sub></a><br /><a href="https://github.com/bluet/proxybroker2/commits?author=hms5232" title="Code">💻</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/stefanDeveloper"><img src="https://avatars.githubusercontent.com/u/18898803?v=4?s=100" width="100px;" alt="Stefan Machmeier"/><br /><sub><b>Stefan Machmeier</b></sub></a><br /><a href="https://github.com/bluet/proxybroker2/commits?author=stefanDeveloper" title="Code">💻</a></td>
+    </tr>
+  </tbody>
 </table>
 
 <!-- markdownlint-restore -->
