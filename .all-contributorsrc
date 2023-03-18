@@ -88,6 +88,15 @@
       "contributions": [
         "code"
       ]
+    },
+    {
+      "login": "SilverSteven",
+      "name": "steven",
+      "avatar_url": "https://avatars.githubusercontent.com/u/33377370?v=4",
+      "profile": "https://github.com/SilverSteven",
+      "contributions": [
+        "doc"
+      ]
     }
   ],
   "contributorsPerLine": 7,
