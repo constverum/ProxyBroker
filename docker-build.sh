@@ -8,9 +8,9 @@ docker scan bluet/proxybroker2:latest
 docker tag bluet/proxybroker2:latest bluet/proxybroker2:${VERSION}
 
 while true; do
-        read -p "Add new git tag v${VERSION} and push? (Have you git add and git commit already?) [y/N]" yn
+        read -p "Add new git tag ${VERSION} and push? (Have you git add and git commit already?) [y/N]" yn
         case $yn in
-                [Yy]* ) git tag "v${VERSION}" -a -m "v${VERSION}" && git push && git push --tags; break;;
+                [Yy]* ) git tag "${VERSION}" -a -m "${VERSION}" && git push && git push --tags; break;;
                 [Nn]* ) exit;;
                 * ) echo "";;
         esac
