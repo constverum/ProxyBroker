@@ -38,7 +38,7 @@ class Resolver:
     ]
 
     def __init__(self, timeout=5, loop=None):
-        self._timeout = timeout
+        # self._timeout = timeout
         self._loop = loop or asyncio.get_event_loop()
         self._resolver = aiodns.DNSResolver(loop=self._loop)
 
