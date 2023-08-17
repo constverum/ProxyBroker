@@ -286,7 +286,6 @@ class Aliveproxy_com(Provider):
         await self._find_on_pages(urls)
 
 
-# редиректит хуй поми кудаъ
 class Maxiproxies_com(Provider):
     domain = 'maxiproxies.com'
 
