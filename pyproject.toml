@@ -30,7 +30,7 @@ classifiers = [
 
 [tool.poetry.dependencies]
 python = "^3.8"
-aiohttp = "^3.8.5"
+aiohttp = "^3.9.0"
 aiodns = "^3.0.0"
 attrs = "^22.1.0"
 maxminddb = "^2.2.0"
