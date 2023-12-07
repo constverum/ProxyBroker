@@ -7,9 +7,6 @@ import logging
 import sys
 from contextlib import contextmanager
 
-import sys
-import asyncio
-
 if sys.platform == 'win32':
     asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 

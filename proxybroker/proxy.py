@@ -72,6 +72,9 @@ class Proxy:
                 'Try Proxy.create() if the host is a domain'
             )
 
+        if port is None:
+            raise ValueError('The port of proxy cannot be None')
+
         self.port = int(port)
         if self.port > 65535:
             raise ValueError('The port of proxy cannot be greater than 65535')
@@ -197,7 +200,7 @@ class Proxy:
             Use :attr:`avg_resp_time` instead.
         """
         warnings.warn(
-            '`avgRespTime` property is deprecated, ' 'use `avg_resp_time` instead.',
+            '`avgRespTime` property is deprecated, use `avg_resp_time` instead.',
             DeprecationWarning,
         )
         return self.avg_resp_time
