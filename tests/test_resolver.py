@@ -1,4 +1,5 @@
 import socket
+from unittest.mock import AsyncMock
 
 import pytest
 
@@ -34,15 +35,12 @@ def test_get_ip_info(resolver):
 @pytest.mark.asyncio
 async def test_get_real_ext_ip(event_loop, mocker, resolver):
     async def f(*args, **kwargs):
-        async def side_effect(*args, **kwargs):
-            return '127.0.0.1\n'
+        return '127.0.0.1\n'
 
-        resp = mocker.Mock()
-        resp.text.side_effect = side_effect
-        return resp
+    resp = AsyncMock()
+    resp.text = f
 
-    # https://github.com/pytest-dev/pytest-mock#note-about-usage-as-context-manager
-    mocker.patch('aiohttp.client.ClientSession._request', side_effect=f)
+    mocker.patch('aiohttp.client.ClientSession._request', return_value=resp)
     assert await resolver.get_real_ext_ip() == '127.0.0.1'
 
 
