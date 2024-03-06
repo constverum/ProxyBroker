@@ -1,0 +1,16 @@
+{
+  "name": "Your Environment Name",
+  "build": {
+    "dockerfile": "Dockerfile",
+    "context": ".."
+  },
+  "settings": { 
+    "terminal.integrated.shell.linux": "/bin/bash"
+  },
+  "extensions": [
+    "ms-python.python"
+  ],
+  "forwardPorts": [5000],
+  "postCreateCommand": "pip install -r requirements.txt",
+  "remoteUser": "root"
+}
