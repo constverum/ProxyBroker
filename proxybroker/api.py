@@ -43,6 +43,8 @@ class Broker:
         (optional) Flag indicating whether to check the SSL certificates.
         Set to True to check ssl certifications
     :param loop: (optional) asyncio compatible event loop
+    :param stop_broker_on_sigint: (optional) whether set SIGINT signal on broker object.
+        Useful for a thread other than main thread.
 
     .. deprecated:: 0.2.0
         Use :attr:`max_conn` and :attr:`max_tries` instead of
@@ -59,10 +61,11 @@ class Broker:
         providers=None,
         verify_ssl=False,
         loop=None,
-        **kwargs
+        stop_broker_on_sigint=True,
+        **kwargs,
     ):
-        self._loop = loop or asyncio.get_event_loop()
-        self._proxies = queue or asyncio.Queue(loop=self._loop)
+        self._loop = loop or asyncio.get_event_loop_policy().get_event_loop()
+        self._proxies = queue or asyncio.Queue()
         self._resolver = Resolver(loop=self._loop)
         self._timeout = timeout
         self._verify_ssl = verify_ssl
@@ -94,20 +97,20 @@ class Broker:
             max_tries = attempts_conn
 
         # The maximum number of concurrent checking proxies
-        self._on_check = asyncio.Queue(maxsize=max_conn, loop=self._loop)
+        self._on_check = asyncio.Queue(maxsize=max_conn)
         self._max_tries = max_tries
         self._judges = judges
         self._providers = [
             p if isinstance(p, Provider) else Provider(p)
             for p in (providers or PROVIDERS)
         ]
-
-        try:
-            self._loop.add_signal_handler(signal.SIGINT, self.stop)
-            # add_signal_handler() is not implemented on Win
-            # https://docs.python.org/3.5/library/asyncio-eventloops.html#windows
-        except NotImplementedError:
-            pass
+        if stop_broker_on_sigint:
+            try:
+                self._loop.add_signal_handler(signal.SIGINT, self.stop)
+                # add_signal_handler() is not implemented on Win
+                # https://docs.python.org/3.5/library/asyncio-eventloops.html#windows
+            except NotImplementedError:
+                pass
 
     async def grab(self, *, countries=None, limit=0):
         """Gather proxies from the providers without checking.
@@ -133,7 +136,7 @@ class Broker:
         strict=False,
         dnsbl=None,
         limit=0,
-        **kwargs
+        **kwargs,
     ):
         """Gather and check proxies from providers or from a passed data.
 
@@ -228,6 +231,13 @@ class Broker:
             request. If not specified, it will use the value specified during
             the creation of the :class:`Broker` object. Attempts can be made
             with different proxies. The default value is 3
+        :param int strategy:
+            (optional) The strategy used for picking proxy from pool.
+            The default value is 'best'
+        :param int min_queue:
+            (optional) The minimum number of proxies to choose from
+                before deciding which is the most suitable to use.
+                The default value is 5
         :param int min_req_proxy:
             (optional) The minimum number of processed requests to estimate the
             quality of proxy (in accordance with :attr:`max_error_rate` and
@@ -280,7 +290,7 @@ class Broker:
             timeout=self._timeout,
             max_tries=kwargs.pop('max_tries', self._max_tries),
             loop=self._loop,
-            **kwargs
+            **kwargs,
         )
         self._server.start()
 
@@ -313,8 +323,7 @@ class Broker:
             ]
             while providers:
                 tasks = [
-                    asyncio.ensure_future(pr.get_proxies())
-                    for pr in providers[:by]
+                    asyncio.ensure_future(pr.get_proxies()) for pr in providers[:by]
                 ]
                 del providers[:by]
                 self._all_tasks.extend(tasks)
@@ -385,8 +394,7 @@ class Broker:
 
         if self._server and not self._proxies.empty() and self._limit <= 0:
             log.debug(
-                'pause. proxies: %s; limit: %s'
-                % (self._proxies.qsize(), self._limit)
+                'pause. proxies: %s; limit: %s' % (self._proxies.qsize(), self._limit)
             )
             await self._proxies.join()
             log.debug('unpause. proxies: %s' % self._proxies.qsize())
@@ -436,8 +444,7 @@ class Broker:
         if kwargs:
             verbose = True
             warnings.warn(
-                '`full` in `show_stats` is deprecated, '
-                'use `verbose` instead.',
+                '`full` in `show_stats` is deprecated, ' 'use `verbose` instead.',
                 DeprecationWarning,
             )
 
@@ -470,7 +477,7 @@ class Broker:
         }
 
         for p in found_proxies:
-            msgs = ' '.join([l[1] for l in p.get_log()])
+            msgs = ' '.join([x[1] for x in p.get_log()])
             full_log = [p]
             for proto in p.types:
                 proxies_by_type[proto].append(p)
@@ -494,9 +501,7 @@ class Broker:
                             full_log.append('\t\t-------------------')
                         else:
                             full_log.append(
-                                '\t\t{:<66} Runtime: {:.2f}'.format(
-                                    event, runtime
-                                )
+                                '\t\t{:<66} Runtime: {:.2f}'.format(event, runtime)
                             )
                 for row in full_log:
                     print(row)

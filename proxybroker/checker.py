@@ -50,9 +50,7 @@ class Checker:
             ('HTTP', 'CONNECT:80', 'SOCKS4', 'SOCKS5') & types.keys()
         )
         self._req_https_proto = not types or bool(('HTTPS',) & types.keys())
-        self._req_smtp_proto = not types or bool(
-            ('CONNECT:25',) & types.keys()
-        )  # noqa
+        self._req_smtp_proto = not types or bool(('CONNECT:25',) & types.keys())  # noqa
 
         self._ngtrs = {proto for proto in types or NGTRS}
 
@@ -66,8 +64,7 @@ class Checker:
 
         self._judges = [j for j in self._judges if j.is_working]
         log.debug(
-            '%d judges added. Runtime: %.4f;'
-            % (len(self._judges), time.time() - stime)
+            '%d judges added. Runtime: %.4f;' % (len(self._judges), time.time() - stime)
         )
 
         nojudges = []
@@ -122,9 +119,7 @@ class Checker:
                     del proxy.types[proto]
         if self._strict and proxy.types:
             return True
-        proxy.log(
-            'Protocol or the level of anonymity differs from the requested'
-        )
+        proxy.log('Protocol or the level of anonymity differs from the requested')
         return False
 
     async def _in_DNSBL(self, host):
@@ -251,11 +246,7 @@ def _request(method, host, path, fullpath=False, data=''):
         'headers': '\r\n'.join(('%s: %s' % (k, v) for k, v in hdrs.items())),
         'data': data,
     }
-    req = (
-        ('{method} {path} HTTP/1.1\r\n{headers}\r\n\r\n{data}')
-        .format(**kw)
-        .encode()
-    )
+    req = ('{method} {path} HTTP/1.1\r\n{headers}\r\n\r\n{data}').format(**kw).encode()
     return req, rv
 
 
@@ -342,9 +333,7 @@ def _get_anonymity_lvl(real_ext_ip, proxy, judge, content):
         lvl = 'Anonymous'
     else:
         lvl = 'High'
-    proxy.log(
-        'A: {lvl}; {ip}; via(p): {via}'.format(lvl=lvl[:4], ip=foundIP, via=via)
-    )
+    proxy.log('A: {lvl}; {ip}; via(p): {via}'.format(lvl=lvl[:4], ip=foundIP, via=via))
     return lvl
 
 

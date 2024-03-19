@@ -49,7 +49,7 @@ async def get_pages(urls, proxy_pool, timeout=10, loop=None):
 def main():
     loop = asyncio.get_event_loop()
 
-    proxies = asyncio.Queue(loop=loop)
+    proxies = asyncio.Queue()
     proxy_pool = ProxyPool(proxies)
 
     judges = [

@@ -7,6 +7,9 @@ import logging
 import sys
 from contextlib import contextmanager
 
+if sys.platform == 'win32':
+    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+
 from . import __version__ as version
 from .api import Broker
 from .utils import update_geoip_db
@@ -165,14 +168,7 @@ def add_find_args(group):
         nargs='+',
         type=str.upper,
         required=True,
-        choices=[
-            'HTTP',
-            'HTTPS',
-            'SOCKS4',
-            'SOCKS5',
-            'CONNECT:80',
-            'CONNECT:25',
-        ],
+        choices=['HTTP', 'HTTPS', 'SOCKS4', 'SOCKS5', 'CONNECT:80', 'CONNECT:25'],
         help='Type(s) (protocols) that need to be check on support by proxy',
     )
     group.add_argument(
@@ -189,9 +185,7 @@ def add_find_args(group):
         help='''Path to the file with proxies.
                 If specified, used instead of providers''',
     )
-    group.add_argument(
-        '--dnsbl', nargs='+', help='Spam databases for proxy checking'
-    )
+    group.add_argument('--dnsbl', nargs='+', help='Spam databases for proxy checking')
     group.add_argument(
         '--post',
         action='store_true',
@@ -234,6 +228,21 @@ def add_serve_args(group):
         help='''The maximum number of attempts to handle an incoming request.
                 If not specified, will be used the value passed to the %(prog)s
                 command''',
+    )
+    group.add_argument(
+        '--strategy',
+        type=str,
+        default='best',
+        dest='strategy',
+        help='''The strategy used for picking proxy from pool''',
+    )
+    group.add_argument(
+        '--min-queue',
+        type=int,
+        default=5,
+        dest='min_queue',
+        help='''The minimum number of proxies to choose from before deciding
+                which is the most suitable to use''',
     )
     group.add_argument(
         '--min-req-proxy',
@@ -304,7 +313,7 @@ def add_format_arg(group):
         nargs='?',
         type=str.lower,
         help='''Flag indicating in what format the results will be presented.
-                Available formats: default and json''',
+                Available formats: default, txt and json''',
     )
 
 
@@ -338,6 +347,7 @@ def outformat(outfile, format):
 async def handle(proxies, outfile, format):
     with outformat(outfile, format):
         is_json = format == 'json'
+        is_txt = format == 'txt'
         is_first = True
         while True:
             proxy = await proxies.get()
@@ -346,6 +356,8 @@ async def handle(proxies, outfile, format):
 
             if is_json:
                 line = '%s' % json.dumps(proxy.as_json())
+            elif is_txt:
+                line = proxy.as_text()
             else:
                 line = '%r\n' % proxy
 
@@ -353,7 +365,6 @@ async def handle(proxies, outfile, format):
                 outfile.write(',\n')
             outfile.write(line)
             is_first = False
-
 
 def cli(args=sys.argv[1:]):
     parser = create_parser()
@@ -376,8 +387,8 @@ def cli(args=sys.argv[1:]):
         ns.types.remove('HTTP')
         ns.types.append(('HTTP', ns.anon_lvl))
 
-    loop = asyncio.get_event_loop()
-    proxies = asyncio.Queue(loop=loop)
+    loop = asyncio.get_event_loop_policy().get_event_loop()
+    proxies = asyncio.Queue()
     broker = Broker(
         proxies,
         max_conn=ns.max_conn,
@@ -413,6 +424,8 @@ def cli(args=sys.argv[1:]):
             host=ns.host,
             port=ns.port,
             limit=ns.limit,
+            min_queue=ns.min_queue,
+            strategy=ns.strategy,
             min_req_proxy=ns.min_req_proxy,
             max_error_rate=ns.max_error_rate,
             max_resp_time=ns.max_resp_time,
@@ -430,13 +443,10 @@ def cli(args=sys.argv[1:]):
 
     try:
         if tasks:
-            loop.run_until_complete(asyncio.gather(*tasks, loop=loop))
+            loop.run_until_complete(asyncio.gather(*tasks))
             if ns.show_stats:
                 broker.show_stats(verbose=True)
         else:
             loop.run_forever()
     except KeyboardInterrupt:
         broker.stop()
-    finally:
-        loop.stop()
-        loop.close()

@@ -1,0 +1,47 @@
+# See https://pre-commit.com for more information
+# See https://pre-commit.com/hooks.html for more hooks
+default_language_version:
+    python: python3.6
+fail_fast: true
+repos:
+    -   repo: https://github.com/pre-commit/pre-commit-hooks
+        rev: v2.4.0
+        hooks:
+            -   id: trailing-whitespace
+            -   id: end-of-file-fixer
+            -   id: check-yaml
+                args:
+                    -   environment.yml
+                    -   .pre-commit-config.yaml
+                    -   readthedocs.yml
+                    -   .travis.yml
+            -   id: check-merge-conflict
+            -   id: flake8
+                args: [--config=setup.cfg, --ignore=E501]
+    -   repo: https://github.com/psf/black
+        rev: stable
+        hooks:
+            -   id: black
+                name: black
+                language_version: python3.6
+                description: "Black: The uncompromising Python code formatter"
+                entry: black
+                require_serial: true
+                args:
+                    -   -v
+                    -   -l 88
+    -   repo: https://github.com/asottile/seed-isort-config
+        rev: v2.1.0
+        hooks:
+            -   id: seed-isort-config
+    -   repo: https://github.com/pre-commit/mirrors-isort
+        rev: v4.3.21
+        hooks:
+            -   id: isort
+                args:
+                    -   -rc
+    -   repo: https://github.com/PyCQA/pydocstyle
+        rev: 5.0.2
+        hooks:
+            -   id: pydocstyle
+                args: [--select=D105]

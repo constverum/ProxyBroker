@@ -1,5 +1,6 @@
 """Utils."""
 
+import sys
 import logging
 import os
 import os.path
@@ -13,12 +14,16 @@ import urllib.request
 from . import __version__ as version
 from .errors import BadStatusLine
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+BASE_DIR = getattr(sys, '_MEIPASS', os.path.dirname(os.path.abspath(__file__)))
 DATA_DIR = os.path.join(BASE_DIR, 'data')
 log = logging.getLogger(__package__)
 
 IPPattern = re.compile(
     r'(?:(?:25[0-5]|2[0-4]\d|[01]?\d\d?)\.){3}(?:25[0-5]|2[0-4]\d|[01]?\d\d?)'
+)
+
+IPv6Pattern = re.compile(
+    r'\s*((([0-9A-Fa-f]{1,4}:){7}([0-9A-Fa-f]{1,4}|:))|(([0-9A-Fa-f]{1,4}:){6}(:[0-9A-Fa-f]{1,4}|((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})|:))|(([0-9A-Fa-f]{1,4}:){5}(((:[0-9A-Fa-f]{1,4}){1,2})|:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})|:))|(([0-9A-Fa-f]{1,4}:){4}(((:[0-9A-Fa-f]{1,4}){1,3})|((:[0-9A-Fa-f]{1,4})?:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){3}(((:[0-9A-Fa-f]{1,4}){1,4})|((:[0-9A-Fa-f]{1,4}){0,2}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){2}(((:[0-9A-Fa-f]{1,4}){1,5})|((:[0-9A-Fa-f]{1,4}){0,3}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){1}(((:[0-9A-Fa-f]{1,4}){1,6})|((:[0-9A-Fa-f]{1,4}){0,4}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(:(((:[0-9A-Fa-f]{1,4}){1,7})|((:[0-9A-Fa-f]{1,4}){0,5}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:)))(%.+)?\s*'
 )
 
 IPPortPatternLine = re.compile(
@@ -32,14 +37,9 @@ IPPortPatternGlobal = re.compile(
     flags=re.DOTALL,
 )
 
-# IsIpPattern = re.compile(
-#     r'^(?:(?:25[0-5]|2[0-4]\d|[01]?\d\d?)\.){3}(?:25[0-5]|2[0-4]\d|[01]?\d\d?)$')
-
-
 def get_headers(rv=False):
     _rv = str(random.randint(1000, 9999)) if rv else ''
     headers = {
-        # 'User-Agent': 'Mozilla/5.0 (X11; U; Linux i386; ru-RU; rv:2.0) Gecko/20100625 Firefox/3.5.11',  # noqa
         'User-Agent': 'PxBroker/%s/%s' % (version, _rv),
         'Accept': '*/*',
         'Accept-Encoding': 'gzip, deflate',
@@ -52,12 +52,14 @@ def get_headers(rv=False):
 
 
 def get_all_ip(page):
-    # TODO: add IPv6 support
-    return set(IPPattern.findall(page))
+    # NOTE: IPv6 addresses support need to be tested
+    return set(IPPattern.findall(page) + IPv6Pattern.findall(page))
 
 
 def get_status_code(resp, start=9, stop=12):
     try:
+        if not isinstance(resp, (bytes, str)):
+            raise TypeError(f'{type(resp).__name__} is not supported')
         code = int(resp[start:stop])
     except ValueError:
         return 400  # Bad Request

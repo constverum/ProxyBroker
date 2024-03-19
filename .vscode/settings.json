@@ -1,0 +1,18 @@
+{
+        "cSpell.words": [
+                "afun",
+                "aiodns",
+                "aiohttp",
+                "asyncio",
+                "fgroup",
+                "fparser",
+                "gparser",
+                "gunicorn",
+                "maxminddb",
+                "proxybroker",
+                "proxycontrol",
+                "Referer",
+                "uparser"
+        ],
+        "esbonio.sphinx.confDir": "${workspaceFolder}/docs/source"
+}

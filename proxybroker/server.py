@@ -2,6 +2,8 @@ import asyncio
 import heapq
 import time
 
+from cachetools import TTLCache
+
 from .errors import (
     BadResponseError,
     BadStatusError,
@@ -18,6 +20,10 @@ from .errors import (
 from .resolver import Resolver
 from .utils import log, parse_headers, parse_status_line
 
+# from pprint import pprint
+
+
+history = TTLCache(maxsize=10000, ttl=600)
 CONNECTED = b'HTTP/1.1 200 Connection established\r\n\r\n'
 
 
@@ -25,24 +31,42 @@ class ProxyPool:
     """Imports and gives proxies from queue on demand."""
 
     def __init__(
-        self, proxies, min_req_proxy=5, max_error_rate=0.5, max_resp_time=8
+        self,
+        proxies,
+        min_req_proxy=5,
+        max_error_rate=0.5,
+        max_resp_time=8,
+        min_queue=5,
+        strategy='best',
     ):
         self._proxies = proxies
         self._pool = []
+        self._newcomers = []
+        self._strategy = strategy
         self._min_req_proxy = min_req_proxy
-        # if num of erros greater or equal 50% - proxy will be remove from pool
+        # if num of errors greater or equal 50% - proxy will be remove from pool
         self._max_error_rate = max_error_rate
         self._max_resp_time = max_resp_time
+        self._min_queue = min_queue
+
+        if strategy != 'best':
+            raise ValueError('`strategy` only support `best` for now.')
 
     async def get(self, scheme):
         scheme = scheme.upper()
-        for priority, proxy in self._pool:
-            if scheme in proxy.schemes:
-                chosen = proxy
-                self._pool.remove((proxy.priority, proxy))
-                break
-        else:
+        if len(self._pool) + len(self._newcomers) < self._min_queue:
             chosen = await self._import(scheme)
+        elif len(self._newcomers) > 0:
+            chosen = self._newcomers.pop(0)
+        elif self._strategy == 'best':
+            for priority, proxy in self._pool:
+                if scheme in proxy.schemes:
+                    chosen = proxy
+                    self._pool.remove((proxy.priority, proxy))
+                    break
+            else:
+                chosen = await self._import(scheme)
+
         return chosen
 
     async def _import(self, expected_scheme):
@@ -57,16 +81,32 @@ class ProxyPool:
                 return proxy
 
     def put(self, proxy):
-        if proxy.stat['requests'] >= self._min_req_proxy and (
-            (proxy.error_rate > self._max_error_rate)
-            or (proxy.avg_resp_time > self._max_resp_time)
-        ):
-            log.debug(
-                '%s:%d removed from proxy pool' % (proxy.host, proxy.port)
-            )
+        is_exceed_time = (proxy.error_rate > self._max_error_rate) or (
+            proxy.avg_resp_time > self._max_resp_time
+        )
+        if proxy.stat['requests'] < self._min_req_proxy:
+            self._newcomers.append(proxy)
+        elif proxy.stat['requests'] >= self._min_req_proxy and is_exceed_time:
+            log.debug('%s:%d removed from proxy pool' % (proxy.host, proxy.port))
         else:
             heapq.heappush(self._pool, (proxy.priority, proxy))
+
         log.debug('%s:%d stat: %s' % (proxy.host, proxy.port, proxy.stat))
+
+    def remove(self, host, port):
+        for proxy in self._newcomers:
+            if proxy.host == host and proxy.port == port:
+                chosen = proxy
+                self._newcomers.remove(proxy)
+                break
+        else:
+            for priority, proxy in self._pool:
+                if proxy.host == host and proxy.port == port:
+                    chosen = proxy
+                    self._pool.remove((proxy.priority, proxy))
+                    break
+
+        return chosen
 
 
 class Server:
@@ -79,6 +119,7 @@ class Server:
         proxies,
         timeout=8,
         max_tries=3,
+        min_queue=5,
         min_req_proxy=5,
         max_error_rate=0.5,
         max_resp_time=8,
@@ -86,7 +127,7 @@ class Server:
         http_allowed_codes=None,
         backlog=100,
         loop=None,
-        **kwargs
+        **kwargs,
     ):
         self.host = host
         self.port = int(port)
@@ -99,12 +140,13 @@ class Server:
         self._server = None
         self._connections = {}
         self._proxy_pool = ProxyPool(
-            proxies, min_req_proxy, max_error_rate, max_resp_time
+            proxies, min_req_proxy, max_error_rate, max_resp_time, min_queue
         )
         self._resolver = Resolver(loop=self._loop)
         self._http_allowed_codes = http_allowed_codes or []
 
     def start(self):
+
         srv = asyncio.start_server(
             self._accept,
             host=self.host,
@@ -115,9 +157,7 @@ class Server:
         self._server = self._loop.run_until_complete(srv)
 
         log.info(
-            'Listening established on {0}'.format(
-                self._server.sockets[0].getsockname()
-            )
+            'Listening established on {0}'.format(self._server.sockets[0].getsockname())
         )
 
     def stop(self):
@@ -157,8 +197,7 @@ class Server:
 
     async def _handle(self, client_reader, client_writer):
         log.debug(
-            'Accepted connection from %s'
-            % (client_writer.get_extra_info('peername'),)
+            'Accepted connection from %s' % (client_writer.get_extra_info('peername'),)
         )
 
         request, headers = await self._parse_request(client_reader)
@@ -169,6 +208,48 @@ class Server:
             % (client, request, headers, scheme)
         )
 
+        # API for controlling proxybroker2
+        if headers['Host'] == 'proxycontrol':
+            _api, _operation, _params = headers['Path'].split('/', 5)[3:]
+            if _api == 'api':
+                if _operation == 'remove':
+                    proxy_host, proxy_port = _params.split(':', 1)
+                    self._proxy_pool.remove(proxy_host, int(proxy_port))
+                    log.debug(
+                        'Remove Proxy: client: %d; request: %s; headers: %s; scheme: %s; proxy_host: %s; proxy_port: %s'
+                        % (client, request, headers, scheme, proxy_host, proxy_port)
+                    )
+                    client_writer.write(b'HTTP/1.1 204 No Content\r\n\r\n')
+                    await client_writer.drain()
+                    return
+                elif _operation == 'history':
+                    query_type, url = _params.split(':', 1)
+                    if query_type == 'url':
+                        previous_proxy = history.get(
+                            f"{client_reader._transport.get_extra_info('peername')[0]}-{url}"
+                        )
+                        if previous_proxy is None:
+                            client_writer.write(b'HTTP/1.1 204 No Content\r\n\r\n')
+                            await client_writer.drain()
+                            return
+                        else:
+                            previous_proxy_bytestring = (
+                                '{"proxy": "%s"}' % previous_proxy
+                            ).encode()
+                            client_writer.write(b'HTTP/1.1 200 OK\r\n')
+                            client_writer.write(b'Content-Type: application/json\r\n')
+                            client_writer.write(
+                                f"Content-Length: {str(len(previous_proxy_bytestring) + 2).encode()}\r\n"
+                            )
+                            client_writer.write(b'Access-Control-Allow-Origin: *\r\n')
+                            client_writer.write(
+                                b'Access-Control-Allow-Credentials: true\r\n\r\n'
+                            )
+
+                            client_writer.write(previous_proxy_bytestring + b'\r\n')
+                            await client_writer.drain()
+                            return
+
         for attempt in range(self._max_tries):
             stime, err = 0, None
             proxy = await self._proxy_pool.get(scheme)
@@ -177,6 +258,7 @@ class Server:
                 'client: %d; attempt: %d; proxy: %s; proto: %s'
                 % (client, attempt, proxy, proto)
             )
+
             try:
                 await proxy.connect()
 
@@ -197,6 +279,13 @@ class Server:
                 else:  # proto: HTTP & HTTPS
                     await proxy.send(request)
 
+                history[
+                    f"{client_reader._transport.get_extra_info('peername')[0]}-{headers['Path']}"
+                ] = (proxy.host + ':' + str(proxy.port))
+                inject_resp_header = {
+                    'headers': {'X-Proxy-Info': proxy.host + ':' + str(proxy.port)}
+                }
+
                 stime = time.time()
                 stream = [
                     asyncio.ensure_future(
@@ -207,6 +296,7 @@ class Server:
                             reader=proxy.reader,
                             writer=client_writer,
                             scheme=scheme,
+                            inject=inject_resp_header,
                         )
                     ),
                 ]
@@ -279,21 +369,26 @@ class Server:
             proto = relevant.pop()
         return proto
 
-    async def _stream(self, reader, writer, length=65536, scheme=None):
+    async def _stream(self, reader, writer, length=65536, scheme=None, inject=None):
         checked = False
+
         try:
             while not reader.at_eof():
-                data = await asyncio.wait_for(
-                    reader.read(length), self._timeout
-                )
+                data = await asyncio.wait_for(reader.read(length), self._timeout)
                 if not data:
                     writer.close()
                     break
                 elif scheme and not checked:
                     self._check_response(data, scheme)
+
+                    if inject.get('headers') is not None and len(inject['headers']) > 0:
+                        data = self._inject_headers(data, scheme, inject['headers'])
+
                     checked = True
+
                 writer.write(data)
                 await writer.drain()
+
         except (
             asyncio.TimeoutError,
             ConnectionResetError,
@@ -313,6 +408,20 @@ class Server:
                 raise BadResponseError
             if header['Status'] not in self._http_allowed_codes:
                 raise BadStatusError(
-                    '%r not in %r'
-                    % (header['Status'], self._http_allowed_codes)
+                    '%r not in %r' % (header['Status'], self._http_allowed_codes)
                 )
+
+    def _inject_headers(self, data, scheme, headers):
+        custom_lines = []
+
+        if scheme == 'HTTP' or scheme == 'HTTPS':
+            status_line, rest_lines = data.split(b'\r\n', 1)
+            custom_lines.append(status_line)
+
+            for k, v in headers.items():
+                custom_lines.append(('%s: %s' % (k, v)).encode())
+
+            custom_lines.append(rest_lines)
+            data = b'\r\n'.join(custom_lines)
+
+        return data

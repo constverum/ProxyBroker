@@ -1,3 +1,4 @@
+import asyncio
 import struct
 from abc import ABC, abstractmethod
 from socket import inet_aton
@@ -61,6 +62,8 @@ class Socks5Ngtr(BaseNegotiator):
         await self._proxy.send(struct.pack('3B', 5, 1, 0))
         resp = await self._proxy.recv(2)
 
+        if not isinstance(resp, (bytes, str)):
+            raise TypeError(f"{type(resp).__name__} is not supported")
         if resp[0] == 0x05 and resp[1] == 0xFF:
             self._proxy.log('Failed (auth is required)', err=BadResponseError)
             raise BadResponseError
@@ -92,6 +95,9 @@ class Socks4Ngtr(BaseNegotiator):
 
         await self._proxy.send(struct.pack('>2BH5B', 4, 1, port, *bip, 0))
         resp = await self._proxy.recv(8)
+        if isinstance(resp, asyncio.Future):
+            resp = await resp
+        assert not isinstance(resp, asyncio.Future)
 
         if resp[0] != 0x00 or resp[1] != 0x5A:
             self._proxy.log('Failed (invalid data)', err=BadResponseError)
@@ -135,9 +141,7 @@ class Connect25Ngtr(BaseNegotiator):
         resp = await self._proxy.recv(length=3)
         code = get_status_code(resp, start=0, stop=3)
         if code != SMTP_READY:
-            self._proxy.log(
-                'Failed (invalid data): %s' % code, err=BadStatusError
-            )
+            self._proxy.log('Failed (invalid data): %s' % code, err=BadStatusError)
             raise BadStatusError
 
 

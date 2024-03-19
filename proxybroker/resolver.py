@@ -1,9 +1,12 @@
+
 import asyncio
 import ipaddress
 import os.path
 import random
 import socket
+import sys
 from collections import namedtuple
+from importlib.util import find_spec
 
 import aiodns
 import aiohttp
@@ -36,6 +39,8 @@ class Resolver:
         'http://ipinfo.io/ip',
         'http://ifconfig.io/ip',
     ]
+    # the list of resolvers will point a copy of original one
+    _temp_host = []
 
     def __init__(self, timeout=5, loop=None):
         self._timeout = timeout
@@ -47,8 +52,9 @@ class Resolver:
         """Check a host is IP address."""
         # TODO: add IPv6 support
         try:
+            host = '.'.join(f'{int(n)}' for n in host.split('.'))
             ipaddress.IPv4Address(host)
-        except ipaddress.AddressValueError:
+        except (ipaddress.AddressValueError, ValueError):
             return False
         else:
             return True
@@ -85,13 +91,16 @@ class Resolver:
         return GeoData(code, name, region_code, region_name, city_name)
 
     def _pop_random_ip_host(self):
-        host = random.choice(self._ip_hosts)
-        self._ip_hosts.remove(host)
+        host = random.choice(self._temp_host)
+        self._temp_host.remove(host)
         return host
 
     async def get_real_ext_ip(self):
         """Return real external IP address."""
-        while self._ip_hosts:
+        # make a copy of original one to temp one
+        # so original one will stay no change
+        self._temp_host = self._ip_hosts.copy()
+        while self._temp_host:
             try:
                 timeout = aiohttp.ClientTimeout(total=self._timeout)
                 async with aiohttp.ClientSession(
@@ -109,9 +118,7 @@ class Resolver:
             raise RuntimeError('Could not get the external IP')
         return ip
 
-    async def resolve(
-        self, host, port=80, family=None, qtype='A', logging=True
-    ):
+    async def resolve(self, host, port=80, family=None, qtype='A', logging=True):
         """Return resolving IP address(es) from host name."""
         if self.host_is_ip(host):
             return host
@@ -139,9 +146,7 @@ class Resolver:
             else:
                 self._cached_hosts[host] = hosts[0]['host']
             if logging:
-                log.debug(
-                    '%s: Host resolved: %s' % (host, self._cached_hosts[host])
-                )
+                log.debug('%s: Host resolved: %s' % (host, self._cached_hosts[host]))
         else:
             if logging:
                 log.warning('%s: Could not resolve host' % host)

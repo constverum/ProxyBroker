@@ -1,0 +1,109 @@
+{
+  "files": [
+    "README.md"
+  ],
+  "imageSize": 100,
+  "commit": false,
+  "contributors": [
+    {
+      "login": "a5r0n",
+      "name": "a5r0n",
+      "avatar_url": "https://avatars.githubusercontent.com/u/32464596?v=4",
+      "profile": "https://github.com/a5r0n",
+      "contributions": [
+        "code"
+      ]
+    },
+    {
+      "login": "afunTW",
+      "name": "C.M. Yang",
+      "avatar_url": "https://avatars.githubusercontent.com/u/4820492?v=4",
+      "profile": "https://afun.tw",
+      "contributions": [
+        "code",
+        "ideas",
+        "review"
+      ]
+    },
+    {
+      "login": "ivaano",
+      "name": "Ivan Villareal",
+      "avatar_url": "https://avatars.githubusercontent.com/u/190708?v=4",
+      "profile": "http://ivanvillareal.com",
+      "contributions": [
+        "code"
+      ]
+    },
+    {
+      "login": "quancore",
+      "name": "Quancore",
+      "avatar_url": "https://avatars.githubusercontent.com/u/15036825?v=4",
+      "profile": "https://github.com/quancore",
+      "contributions": [
+        "code"
+      ]
+    },
+    {
+      "login": "synchronizing",
+      "name": "Felipe",
+      "avatar_url": "https://avatars.githubusercontent.com/u/2829082?v=4",
+      "profile": "https://github.com/synchronizing",
+      "contributions": [
+        "ideas"
+      ]
+    },
+    {
+      "login": "vincentinttsh",
+      "name": "vincentinttsh",
+      "avatar_url": "https://avatars.githubusercontent.com/u/14941597?v=4",
+      "profile": "https://www.vincentinttsh.tw/",
+      "contributions": [
+        "code",
+        "review"
+      ]
+    },
+    {
+      "login": "ziloka",
+      "name": "Ziloka",
+      "avatar_url": "https://avatars.githubusercontent.com/u/50429450?v=4",
+      "profile": "https://github.com/ziloka",
+      "contributions": [
+        "code"
+      ]
+    },
+    {
+      "login": "hms5232",
+      "name": "hms5232",
+      "avatar_url": "https://avatars.githubusercontent.com/u/43672033?v=4",
+      "profile": "http://hhming.moe",
+      "contributions": [
+        "code"
+      ]
+    },
+    {
+      "login": "stefanDeveloper",
+      "name": "Stefan Machmeier",
+      "avatar_url": "https://avatars.githubusercontent.com/u/18898803?v=4",
+      "profile": "https://github.com/stefanDeveloper",
+      "contributions": [
+        "code"
+      ]
+    },
+    {
+      "login": "SilverSteven",
+      "name": "steven",
+      "avatar_url": "https://avatars.githubusercontent.com/u/33377370?v=4",
+      "profile": "https://github.com/SilverSteven",
+      "contributions": [
+        "doc"
+      ]
+    }
+  ],
+  "contributorsPerLine": 7,
+  "projectName": "proxybroker2",
+  "projectOwner": "bluet",
+  "repoType": "github",
+  "repoHost": "https://github.com",
+  "skipCi": true,
+  "commitConvention": "angular"
+}

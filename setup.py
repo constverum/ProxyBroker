@@ -1,21 +1,22 @@
-import re
 import codecs
-from setuptools import setup
+import re
 
+from setuptools import setup
 
 # https://packaging.python.org/en/latest/distributing/
 
 with codecs.open('proxybroker/__init__.py', mode='r', encoding='utf-8') as f:
     INFO = dict(re.findall(r"__(\w+)__ = '([^']+)'", f.read(), re.MULTILINE))
 
-with codecs.open('README.rst', mode='r', encoding='utf-8') as f:
+with codecs.open('README.md', mode='r', encoding='utf-8') as f:
     INFO['long_description'] = f.read()
 
 REQUIRES = [
     'aiohttp>=3.5.4',
     'aiodns>=2.0.0',
-    'attrs==19.1.0',
+    'attrs==19.3.0',
     'maxminddb>=1.4.1',
+    'cachetools==4.1.0',
 ]
 SETUP_REQUIRES = ['pytest-runner>=4.4']
 TEST_REQUIRES = [

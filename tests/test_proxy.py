@@ -30,9 +30,12 @@ async def test_create_by_ip():
 @pytest.mark.asyncio
 async def test_create_by_domain(mocker):
     f = future_iter([ResolveResult('127.0.0.1', 0)])
-    with mocker.patch('aiodns.DNSResolver.query', side_effect=f):
-        proxy = await Proxy.create('testhost.com', '80')
-        assert proxy.host == '127.0.0.1'
+    # pytest-mock teardonw is done when existing thr fixture object
+    # no need context manager
+    # https://github.com/pytest-dev/pytest-mock#note-about-usage-as-context-manager
+    mocker.patch('aiodns.DNSResolver.query', side_effect=f)
+    proxy = await Proxy.create('testhost.com', '80')
+    assert proxy.host == '127.0.0.1'
 
 
 def test_repr():

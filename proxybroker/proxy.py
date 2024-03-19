@@ -43,9 +43,9 @@ class Proxy:
 
         :param str host: A passed host can be a domain or IP address.
                          If the host is a domain, try to resolve it
-        :param str \*args:
+        :param str *args:
             (optional) Positional arguments that :class:`Proxy` takes
-        :param str \*\*kwargs:
+        :param str **kwargs:
             (optional) Keyword arguments that :class:`Proxy` takes
 
         :return: :class:`Proxy` object
@@ -64,15 +64,16 @@ class Proxy:
             raise
         return self
 
-    def __init__(
-        self, host=None, port=None, types=(), timeout=8, verify_ssl=False
-    ):
+    def __init__(self, host=None, port=None, types=(), timeout=8, verify_ssl=False):
         self.host = host
         if not Resolver.host_is_ip(self.host):
             raise ValueError(
                 'The host of proxy should be the IP address. '
                 'Try Proxy.create() if the host is a domain'
             )
+
+        if port is None:
+            raise ValueError('The port of proxy cannot be None')
 
         self.port = int(port)
         if self.port > 65535:
@@ -87,9 +88,7 @@ class Proxy:
             'SOCKS5',
         }
         self._timeout = timeout
-        self._ssl_context = (
-            True if verify_ssl else _ssl._create_unverified_context()
-        )
+        self._ssl_context = True if verify_ssl else _ssl._create_unverified_context()
         self._types = {}
         self._is_working = False
         self.stat = {'requests': 0, 'errors': Counter()}
@@ -103,7 +102,9 @@ class Proxy:
         self._writer = {'conn': None, 'ssl': None}
 
     def __repr__(self):
-        # <Proxy US 1.12 [HTTP: Anonymous, HTTPS] 10.0.0.1:8080>
+        """Class representation
+        e.g. <Proxy US 1.12 [HTTP: Anonymous, HTTPS] 10.0.0.1:8080>
+        """
         tpinfo = []
         order = lambda tp_lvl: (len(tp_lvl[0]), tp_lvl[0][-1])  # noqa: 731
         for tp, lvl in sorted(self.types.items(), key=order):
@@ -168,9 +169,7 @@ class Proxy:
         """
         if not self.stat['requests']:
             return 0
-        return round(
-            sum(self.stat['errors'].values()) / self.stat['requests'], 2
-        )
+        return round(sum(self.stat['errors'].values()) / self.stat['requests'], 2)
 
     @property
     def schemes(self):
@@ -201,8 +200,7 @@ class Proxy:
             Use :attr:`avg_resp_time` instead.
         """
         warnings.warn(
-            '`avgRespTime` property is deprecated, '
-            'use `avg_resp_time` instead.',
+            '`avgRespTime` property is deprecated, use `avg_resp_time` instead.',
             DeprecationWarning,
         )
         return self.avg_resp_time
@@ -258,6 +256,14 @@ class Proxy:
         for tp, lvl in sorted(self.types.items(), key=order):
             info['types'].append({'type': tp, 'level': lvl or ''})
         return info
+
+    def as_text(self):
+        """
+        Return proxy as host:port
+
+        :rtype: str
+        """
+        return "{}:{}\n".format(self.host, self.port)
 
     def log(self, msg, stime=0, err=None):
         ngtr = self.ngtr.name if self.ngtr else 'INFO'

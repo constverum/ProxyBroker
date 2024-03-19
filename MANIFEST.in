@@ -1,6 +1,5 @@
 include LICENSE
-include README.rst
+include README.md
 include CHANGELOG.rst
-include requirements.txt
-include requirements/*.txt
+include poetry.lock
 include proxybroker/data/*.mmdb
